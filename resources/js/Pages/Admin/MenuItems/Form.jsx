@@ -1,0 +1,187 @@
+import AppLayout from '@/Layouts/AppLayout';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { ArrowLeft, Save, Image as ImageIcon } from 'lucide-react';
+import TextInput from '@/Components/TextInput';
+import InputLabel from '@/Components/InputLabel';
+import InputError from '@/Components/InputError';
+import PrimaryButton from '@/Components/PrimaryButton';
+import { useState, useRef } from 'react';
+
+export default function Form({ item = null }) {
+    const fileInput = useRef();
+    const [preview, setPreview] = useState(item?.image_url ? `/storage/${item.image_url}` : null);
+
+    const { data, setData, post, processing, errors } = useForm({
+        name: item?.name || '',
+        description: item?.description || '',
+        category: item?.category || '',
+        price: item?.price || '',
+        is_available: item?.is_available ?? true,
+        image: null,
+        _method: item ? 'PUT' : 'POST', // For file uploads in Laravel PUT requests
+    });
+
+    const submit = (e) => {
+        e.preventDefault();
+        if (item) {
+            // Using POST with _method=PUT to support multipart/form-data
+            post(route('admin.menu-items.update', item.id));
+        } else {
+            post(route('admin.menu-items.store'));
+        }
+    };
+
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        setData('image', file);
+        if (file) {
+            setPreview(URL.createObjectURL(file));
+        } else {
+            setPreview(item?.image_url ? `/storage/${item.image_url}` : null);
+        }
+    };
+
+    return (
+        <AppLayout title={item ? 'Edit Menu' : 'Tambah Menu'}>
+            <Head title={item ? 'Edit Menu — Wawi Kadio' : 'Tambah Menu — Wawi Kadio'} />
+
+            <div className="max-w-4xl mx-auto space-y-6">
+                <div className="flex items-center gap-4">
+                    <Link href={route('admin.menu-items.index')} className="p-2 hover:bg-white rounded-xl transition-colors">
+                        <ArrowLeft size={20} className="text-slate-500" />
+                    </Link>
+                    <h2 className="text-2xl font-bold text-slate-900">
+                        {item ? 'Edit Menu' : 'Tambah Menu Baru'}
+                    </h2>
+                </div>
+
+                <div className="bg-white rounded-[2rem] border border-stone-100 p-6 md:p-8 shadow-sm">
+                    <form onSubmit={submit} className="space-y-6" encType="multipart/form-data">
+                        <div className="grid md:grid-cols-2 gap-8">
+                            {/* Left Column - Image Upload */}
+                            <div className="space-y-4">
+                                <InputLabel value="Foto Menu" />
+                                <div 
+                                    onClick={() => fileInput.current.click()}
+                                    className={`relative aspect-square md:aspect-[4/3] rounded-3xl border-2 border-dashed overflow-hidden flex flex-col items-center justify-center cursor-pointer transition-all ${
+                                        preview ? 'border-emerald-500 bg-emerald-50' : 'border-stone-300 bg-stone-50 hover:bg-stone-100 hover:border-stone-400'
+                                    }`}
+                                >
+                                    {preview ? (
+                                        <>
+                                            <img src={preview} alt="Preview" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <p className="text-white font-semibold">Ganti Foto</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="text-center p-6 text-stone-500">
+                                            <ImageIcon size={48} className="mx-auto mb-3 opacity-50" />
+                                            <p className="font-semibold text-sm">Klik untuk mengunggah foto</p>
+                                            <p className="text-xs mt-1 opacity-75">PNG, JPG, JPEG (Max 2MB)</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    ref={fileInput}
+                                    onChange={handleImageChange}
+                                    accept="image/*"
+                                />
+                                <InputError message={errors.image} />
+                            </div>
+
+                            {/* Right Column - Form Fields */}
+                            <div className="space-y-6">
+                                <div>
+                                    <InputLabel htmlFor="name" value="Nama Menu" />
+                                    <TextInput
+                                        id="name"
+                                        type="text"
+                                        className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        required
+                                    />
+                                    <InputError message={errors.name} className="mt-2" />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel htmlFor="category" value="Kategori" />
+                                        <select
+                                            id="category"
+                                            className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl shadow-sm"
+                                            value={data.category}
+                                            onChange={(e) => setData('category', e.target.value)}
+                                            required
+                                        >
+                                            <option value="">Pilih...</option>
+                                            <option value="makanan">Makanan</option>
+                                            <option value="minuman">Minuman</option>
+                                            <option value="snack">Snack</option>
+                                            <option value="dessert">Dessert</option>
+                                            <option value="tiket">Tiket Masuk Kolam</option>
+                                        </select>
+                                        <InputError message={errors.category} className="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel htmlFor="price" value="Harga (Rp)" />
+                                        <TextInput
+                                            id="price"
+                                            type="number"
+                                            className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
+                                            value={data.price}
+                                            onChange={(e) => setData('price', e.target.value)}
+                                            required
+                                            min="0"
+                                        />
+                                        <InputError message={errors.price} className="mt-2" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <InputLabel htmlFor="description" value="Deskripsi (Opsional)" />
+                                    <textarea
+                                        id="description"
+                                        className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl shadow-sm min-h-[100px]"
+                                        value={data.description}
+                                        onChange={(e) => setData('description', e.target.value)}
+                                    />
+                                    <InputError message={errors.description} className="mt-2" />
+                                </div>
+
+                                <div className="flex items-center gap-3 bg-stone-50 p-4 rounded-xl border border-stone-100">
+                                    <input
+                                        type="checkbox"
+                                        id="is_available"
+                                        checked={data.is_available}
+                                        onChange={(e) => setData('is_available', e.target.checked)}
+                                        className="rounded border-stone-300 text-emerald-600 focus:ring-emerald-500 w-5 h-5"
+                                    />
+                                    <label htmlFor="is_available" className="text-sm font-semibold text-slate-700 cursor-pointer">
+                                        Menu Tersedia untuk Dipesan
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center justify-end gap-4 pt-8 border-t border-stone-100">
+                            <Link
+                                href={route('admin.menu-items.index')}
+                                className="px-6 py-3 text-slate-600 font-semibold hover:bg-stone-100 rounded-xl transition-colors"
+                            >
+                                Batal
+                            </Link>
+                            <PrimaryButton className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl flex items-center gap-2" disabled={processing}>
+                                <Save size={18} /> {item ? 'Simpan Perubahan' : 'Tambah Menu'}
+                            </PrimaryButton>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </AppLayout>
+    );
+}

@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Policies;
+
+use App\Models\Reservation;
+use App\Models\User;
+use Illuminate\Auth\Access\Response;
+
+class ReservationPolicy
+{
+    /**
+     * Determine whether the user can view any models.
+     */
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermissionTo('view all reservations') || $user->hasPermissionTo('view own reservations');
+    }
+
+    /**
+     * Determine whether the user can view the model.
+     */
+    public function view(User $user, Reservation $reservation): bool
+    {
+        if ($user->hasPermissionTo('view all reservations')) {
+            return true;
+        }
+
+        return $user->hasPermissionTo('view own reservations') && $user->id === $reservation->user_id;
+    }
+
+    /**
+     * Determine whether the user can create models.
+     */
+    public function create(User $user): bool
+    {
+        return $user->hasPermissionTo('create reservations');
+    }
+
+    /**
+     * Determine whether the user can update the model.
+     */
+    public function update(User $user, Reservation $reservation): bool
+    {
+        if ($user->hasPermissionTo('edit reservations')) {
+            return true;
+        }
+
+        // Custom logic: customers can edit if pending? Or no edit, just cancel.
+        return false;
+    }
+
+    /**
+     * Determine whether the user can delete the model.
+     */
+    public function delete(User $user, Reservation $reservation): bool
+    {
+        return $user->hasPermissionTo('cancel reservations');
+    }
+
+    public function cancel(User $user, Reservation $reservation): bool
+    {
+        if ($user->hasPermissionTo('cancel reservations')) {
+            // Admins/managers can cancel anything
+            if ($user->hasPermissionTo('edit reservations')) {
+                return true;
+            }
+            // Customer can only cancel their own
+            return $user->id === $reservation->user_id;
+        }
+        
+        return false;
+    }
+}

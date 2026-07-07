@@ -1,0 +1,134 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+use App\Models\Facility;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
+use Inertia\Response;
+
+class FacilityController extends Controller implements \Illuminate\Routing\Controllers\HasMiddleware
+{
+    public static function middleware(): array
+    {
+        return [
+            new \Illuminate\Routing\Controllers\Middleware('can:view facilities', only: ['index', 'show']),
+            new \Illuminate\Routing\Controllers\Middleware('can:create facilities', only: ['create', 'store']),
+            new \Illuminate\Routing\Controllers\Middleware('can:edit facilities', only: ['edit', 'update', 'toggleStatus']),
+            new \Illuminate\Routing\Controllers\Middleware('can:delete facilities', only: ['destroy']),
+        ];
+    }
+
+    public function index(Request $request): Response
+    {
+        $facilities = Facility::query()
+            ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->type, fn($q) => $q->where('type', $request->type))
+            ->when($request->status !== null, fn($q) => $q->where('is_active', $request->status === 'active'))
+            ->withCount('reservations')
+            ->latest()
+            ->paginate(12)
+            ->withQueryString();
+
+        return Inertia::render('Admin/Facilities/Index', [
+            'facilities' => $facilities,
+            'filters' => $request->only(['search', 'type', 'status']),
+        ]);
+    }
+
+    public function create(): Response
+    {
+        return Inertia::render('Admin/Facilities/Form');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:homestay,gazebo,pool,cafe',
+            'description' => 'nullable|string',
+            'capacity' => 'nullable|integer|min:1',
+            'price_per_day' => 'nullable|numeric|min:0',
+            'price_per_hour' => 'nullable|numeric|min:0',
+            'image' => 'nullable|image|max:2048',
+            'is_active' => 'boolean',
+        ]);
+
+        if ($request->hasFile('image')) {
+            $validated['image_url'] = $request->file('image')->store('facilities', 'public');
+        }
+
+        Facility::create($validated);
+
+        return redirect()->route('admin.facilities.index')
+            ->with('success', 'Fasilitas berhasil ditambahkan.');
+    }
+
+    public function show(Facility $facility): Response
+    {
+        $facility->load(['reservations' => fn($q) => $q->latest()->limit(10)->with('user')]);
+
+        return Inertia::render('Admin/Facilities/Show', [
+            'facility' => $facility,
+        ]);
+    }
+
+    public function edit(Facility $facility): Response
+    {
+        return Inertia::render('Admin/Facilities/Form', [
+            'facility' => $facility,
+        ]);
+    }
+
+    public function update(Request $request, Facility $facility)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|in:homestay,gazebo,pool,cafe',
+            'description' => 'nullable|string',
+            'capacity' => 'nullable|integer|min:1',
+            'price_per_day' => 'nullable|numeric|min:0',
+            'price_per_hour' => 'nullable|numeric|min:0',
+            'image' => 'nullable|image|max:2048',
+            'is_active' => 'boolean',
+        ]);
+
+        if ($request->hasFile('image')) {
+            // Delete old image
+            if ($facility->image_url && !str_starts_with($facility->image_url, 'http')) {
+                Storage::disk('public')->delete($facility->image_url);
+            }
+            $validated['image_url'] = $request->file('image')->store('facilities', 'public');
+        }
+
+        $facility->update($validated);
+
+        return redirect()->route('admin.facilities.index')
+            ->with('success', 'Fasilitas berhasil diperbarui.');
+    }
+
+    public function destroy(Facility $facility)
+    {
+        if ($facility->reservations()->whereIn('status', ['pending', 'confirmed'])->exists()) {
+            return back()->with('error', 'Fasilitas tidak dapat dihapus karena masih ada reservasi aktif.');
+        }
+
+        if ($facility->image_url && !str_starts_with($facility->image_url, 'http')) {
+            Storage::disk('public')->delete($facility->image_url);
+        }
+
+        $facility->delete();
+
+        return redirect()->route('admin.facilities.index')
+            ->with('success', 'Fasilitas berhasil dihapus.');
+    }
+
+    public function toggleStatus(Facility $facility)
+    {
+        $facility->update(['is_active' => !$facility->is_active]);
+
+        return back()->with('success', 'Status fasilitas berhasil diubah.');
+    }
+}

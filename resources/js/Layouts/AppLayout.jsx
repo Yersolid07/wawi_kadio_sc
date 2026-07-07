@@ -1,0 +1,298 @@
+import { useState, useEffect } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import {
+    LayoutDashboard, Hotel, CalendarDays, UtensilsCrossed,
+    CreditCard, Star, Users, FileText, Menu, X, ChevronDown,
+    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart
+} from 'lucide-react';
+
+const navItems = [
+    { label: 'Dashboard', href: 'dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'customer'] },
+    // Admin/Manager
+    { label: 'Fasilitas', href: 'admin.facilities.index', icon: Hotel, roles: ['admin', 'manager'] },
+    { label: 'Semua Reservasi', href: 'admin.reservations.index', icon: CalendarDays, roles: ['admin', 'manager'] },
+    { label: 'Menu Café', href: 'admin.menu-items.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
+    { label: 'Food Orders', href: 'admin.food-orders.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
+    { label: 'Kasir POS', href: 'staff.pos.index', icon: ShoppingCart, roles: ['admin', 'manager', 'staff'] },
+    { label: 'Pembayaran', href: 'admin.payments.index', icon: CreditCard, roles: ['admin', 'manager'] },
+    { label: 'Ulasan', href: 'admin.reviews.index', icon: Star, roles: ['admin', 'manager'] },
+    { label: 'Pengguna', href: 'admin.users.index', icon: Users, roles: ['admin'] },
+    { label: 'Laporan', href: 'admin.reports.index', icon: FileText, roles: ['admin', 'manager'] },
+    { label: 'Inventori Stok', href: 'admin.inventories.index', icon: Package, roles: ['admin'] },
+    { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin'] },
+    { label: 'QR Codes', href: 'admin.qrcodes.index', icon: QrCode, roles: ['admin'] },
+    // Staff / Kitchen
+    { label: 'Monitor Dapur', href: 'staff.kds', icon: UtensilsCrossed, roles: ['admin', 'manager', 'staff'] },
+    { label: 'Check-in/out', href: 'staff.reservations.index', icon: CalendarDays, roles: ['staff'] },
+    { label: 'Orders Aktif', href: 'staff.food-orders.index', icon: UtensilsCrossed, roles: ['staff'] },
+    // Customer
+    { label: 'Reservasi Saya', href: 'customer.reservations.index', icon: CalendarDays, roles: ['customer'] },
+    { label: 'Pesanan Saya', href: 'customer.orders.index', icon: UtensilsCrossed, roles: ['customer'] },
+];
+
+export default function AppLayout({ children, title }) {
+    const { auth, cms_settings } = usePage().props;
+    const userRoles = auth?.user?.roles?.map(r => r.name) || [];
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
+    const [notifOpen, setNotifOpen] = useState(false);
+    
+    // Polling for notifications every 30 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ only: ['auth'], preserveState: true, preserveScroll: true });
+        }, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const markAsRead = (id) => {
+        router.post(route('notifications.read', id), {}, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => setNotifOpen(false)
+        });
+    };
+
+    const visibleNav = navItems.filter(item =>
+        item.roles.some(role => userRoles.includes(role))
+    );
+
+    const isActive = (href) => {
+        try {
+            return route().current(href) || route().current(href + '.*');
+        } catch {
+            return false;
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-stone-50 text-slate-900 font-sans flex">
+            {/* Mobile sidebar backdrop */}
+            {sidebarOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
+            <aside className={`
+                fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-300 ease-in-out
+                lg:translate-x-0 lg:static
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+            `}>
+                <div className="flex h-full flex-col bg-white border-r border-stone-200">
+                    {/* Logo */}
+                    <div className="flex items-center gap-3 px-8 py-8">
+                        {cms_settings?.primary_logo ? (
+                            <div className="w-12 h-12 rounded-xl flex items-center justify-center">
+                                <img src={cms_settings.primary_logo} alt="Logo" className="max-w-full max-h-full object-contain" />
+                            </div>
+                        ) : (
+                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                                <span className="text-white font-black text-lg">W</span>
+                            </div>
+                        )}
+                        <div>
+                            <p className="text-slate-900 font-extrabold text-base leading-tight tracking-wide">{cms_settings?.site_name || 'Wawi Kadio'}</p>
+                            <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold mt-0.5">{cms_settings?.site_description || 'Retreat & Nature'}</p>
+                        </div>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="ml-auto lg:hidden text-slate-400 hover:text-slate-600"
+                        >
+                            <X size={18} />
+                        </button>
+                    </div>
+
+                    {/* Navigation */}
+                    <nav className="flex-1 overflow-y-auto px-5 py-4 space-y-1.5">
+                        {visibleNav.map((item) => {
+                            const Icon = item.icon;
+                            const active = isActive(item.href);
+                            return (
+                                <Link
+                                    key={item.href}
+                                    href={route(item.href)}
+                                    className={`
+                                        flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all
+                                        ${active
+                                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
+                                            : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'}
+                                    `}
+                                >
+                                    <Icon size={18} className={active ? 'text-white' : 'text-slate-400'} />
+                                    {item.label}
+                                </Link>
+                            );
+                        })}
+                    </nav>
+
+                    {/* User Info at Bottom */}
+                    <div className="p-6">
+                        <div className="flex items-center gap-3 bg-stone-50 p-4 rounded-2xl border border-stone-200/60">
+                            <img
+                                src={auth?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'U')}&background=047857&color=fff`}
+                                alt={auth?.user?.name}
+                                className="w-10 h-10 rounded-xl object-cover shadow-sm"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <p className="text-slate-800 text-sm font-bold truncate">{auth?.user?.name}</p>
+                                <p className="text-emerald-600 text-xs capitalize font-bold">
+                                    {userRoles[0] || 'user'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            {/* Main Content Area */}
+            <div className="flex-1 flex flex-col min-w-0 max-h-screen overflow-hidden">
+                {/* Top Bar */}
+                <header className="bg-transparent border-none z-30 pt-6 px-6 lg:px-10 pb-4">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button
+                                onClick={() => setSidebarOpen(true)}
+                                className="lg:hidden p-2 rounded-xl text-slate-500 hover:bg-stone-100"
+                            >
+                                <Menu size={20} />
+                            </button>
+                            {title && (
+                                <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{title}</h1>
+                            )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* Notifications */}
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setNotifOpen(!notifOpen)}
+                                    className="relative p-2 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+                                >
+                                    <Bell size={20} />
+                                    {auth?.user?.unreadCount > 0 && (
+                                        <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
+                                    )}
+                                </button>
+                                
+                                {notifOpen && (
+                                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden flex flex-col max-h-[400px]">
+                                        <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                                            <h3 className="font-bold text-slate-800">Notifikasi</h3>
+                                            {auth?.user?.unreadCount > 0 && (
+                                                <Link 
+                                                    href={route('notifications.read-all')} 
+                                                    method="post" 
+                                                    as="button"
+                                                    className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
+                                                    onClick={() => setNotifOpen(false)}
+                                                >
+                                                    Tandai Semua Dibaca
+                                                </Link>
+                                            )}
+                                        </div>
+                                        <div className="overflow-y-auto flex-1 p-2 space-y-1">
+                                            {auth?.user?.unreadNotifications?.length > 0 ? (
+                                                auth.user.unreadNotifications.map(notif => (
+                                                    <div key={notif.id} className="p-3 bg-white hover:bg-emerald-50 rounded-xl transition-colors text-left flex gap-3 relative group">
+                                                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                                            <Bell size={14} />
+                                                        </div>
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-bold text-slate-800">{notif.data.title}</p>
+                                                            <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{notif.data.message}</p>
+                                                            <Link 
+                                                                href={notif.data.url} 
+                                                                className="text-xs font-bold text-emerald-600 mt-2 inline-block hover:underline"
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    markAsRead(notif.id);
+                                                                    router.visit(notif.data.url);
+                                                                }}
+                                                            >
+                                                                Lihat Detail
+                                                            </Link>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="p-6 text-center text-slate-400">
+                                                    <Check size={24} className="mx-auto mb-2 opacity-50" />
+                                                    <p className="text-sm">Tidak ada notifikasi baru</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-2 border-t border-stone-100 bg-stone-50 text-center">
+                                            <Link href={route('notifications.index')} className="text-xs font-bold text-slate-600 hover:text-emerald-600" onClick={() => setNotifOpen(false)}>
+                                                Lihat Semua Notifikasi
+                                            </Link>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* User dropdown */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                    className="flex items-center gap-3 pl-4 pr-2 py-2 rounded-full bg-white border border-stone-200 shadow-sm hover:border-emerald-200 transition-all"
+                                >
+                                    <span className="hidden sm:block text-sm font-bold text-slate-700">
+                                        {auth?.user?.name}
+                                    </span>
+                                    <img
+                                        src={auth?.user?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(auth?.user?.name || 'U')}&background=047857&color=fff`}
+                                        alt=""
+                                        className="w-8 h-8 rounded-full object-cover shadow-sm"
+                                    />
+                                    <ChevronDown size={16} className="text-slate-400 mr-1" />
+                                </button>
+
+                                {userMenuOpen && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 overflow-hidden">
+                                        <Link
+                                            href={route('profile.edit')}
+                                            className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                                            onClick={() => setUserMenuOpen(false)}
+                                        >
+                                            <User size={16} /> Profil Saya
+                                        </Link>
+                                        <Link href={route('staff.food-orders.index')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${route().current('staff.food-orders.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-stone-50 hover:text-emerald-600'}`}>
+                                            <UtensilsCrossed size={20} />
+                                            Manajemen Pesanan
+                                        </Link>
+                                        <Link href={route('staff.pos.index')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${route().current('staff.pos.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-stone-50 hover:text-emerald-600'}`}>
+                                            <ShoppingCart size={20} />
+                                            Kasir POS
+                                        </Link>
+                                        <div className="h-px bg-stone-100 my-1"></div>
+                                        <Link
+                                            href={route('logout')}
+                                            method="post"
+                                            as="button"
+                                            className="flex w-full items-center gap-3 px-4 py-3 text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                                            onClick={() => setUserMenuOpen(false)}
+                                        >
+                                            <LogOut size={16} /> Keluar
+                                        </Link>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </header>
+
+                {/* Page Content */}
+                <main className="flex-1 overflow-y-auto px-6 lg:px-10 pb-10">
+                    {children}
+                </main>
+
+                {/* Footer */}
+                <footer className="py-3 text-center text-xs text-gray-400 border-t border-gray-200">
+                    © {new Date().getFullYear()} {cms_settings?.footer_text || 'Wawi Kadio Resort. Desa Tonsewer, Minahasa.'}
+                </footer>
+            </div>
+        </div>
+    );
+}
