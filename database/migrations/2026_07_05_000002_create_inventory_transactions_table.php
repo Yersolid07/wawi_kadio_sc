@@ -12,15 +12,15 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('inventory_id');
             $table->foreign('inventory_id')->references('id')->on('inventories')->cascadeOnDelete();
-            
+
             $table->enum('type', ['in', 'out', 'adjustment']);
             $table->decimal('quantity', 10, 2);
             $table->decimal('stock_after', 10, 2)->default(0);
-            
+
             $table->text('notes')->nullable();
-            
+
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete(); // User who did the transaction
-            
+
             $table->timestamps();
         });
     }

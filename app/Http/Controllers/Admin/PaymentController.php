@@ -4,10 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
-use App\Models\Reservation;
-use App\Models\FoodOrder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,10 +14,10 @@ class PaymentController extends Controller
     {
         $payments = Payment::query()
             ->with(['reservation.user', 'reservation.facility', 'foodOrder.user'])
-            ->when($request->status, fn($q) => $q->where('payment_status', $request->status))
-            ->when($request->method, fn($q) => $q->where('payment_method', $request->method))
-            ->when($request->date_from, fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->date_to, fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->status, fn ($q) => $q->where('payment_status', $request->status))
+            ->when($request->method, fn ($q) => $q->where('payment_method', $request->method))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -76,10 +73,12 @@ class PaymentController extends Controller
 
         if ($validated['action'] === 'approve') {
             $payment->markAsSuccess();
+
             return back()->with('success', 'Pembayaran berhasil diverifikasi.');
         }
 
         $payment->update(['payment_status' => 'failed']);
+
         return back()->with('success', 'Pembayaran ditolak.');
     }
 
@@ -98,7 +97,7 @@ class PaymentController extends Controller
 
         $payment = Payment::where('transaction_id', $data['merchant_ref'])->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return response()->json(['message' => 'Payment not found'], 404);
         }
 

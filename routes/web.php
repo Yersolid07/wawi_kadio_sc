@@ -1,28 +1,34 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use App\Http\Controllers\Admin\BannerController;
+use App\Http\Controllers\Admin\CouponController as AdminCouponController;
+use App\Http\Controllers\Admin\FacilityController as AdminFacilityController;
+use App\Http\Controllers\Admin\FoodOrderController as AdminFoodOrderController;
+use App\Http\Controllers\Admin\InventoryController;
+use App\Http\Controllers\Admin\MenuItemController as AdminMenuItemController;
+use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
+use App\Http\Controllers\Admin\QRCodeController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
+use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
+use App\Http\Controllers\Admin\SettingController as AdminSettingController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Auth\GoogleController;
+use App\Http\Controllers\Customer\FoodOrderController as CustomerFoodOrderController;
+use App\Http\Controllers\Customer\InvoiceController;
+use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
+use App\Http\Controllers\Customer\ReservationController as CustomerReservationController;
+use App\Http\Controllers\Customer\ReviewController as CustomerReviewController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Customer\InvoiceController;
-use App\Http\Controllers\Admin\FacilityController as AdminFacilityController;
-use App\Http\Controllers\Admin\ReservationController as AdminReservationController;
-use App\Http\Controllers\Admin\MenuItemController as AdminMenuItemController;
-use App\Http\Controllers\Admin\FoodOrderController as AdminFoodOrderController;
-use App\Http\Controllers\Admin\PaymentController as AdminPaymentController;
-use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
-use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Admin\ReportController as AdminReportController;
-use App\Http\Controllers\Admin\SettingController as AdminSettingController;
-use App\Http\Controllers\Customer\ReservationController as CustomerReservationController;
-use App\Http\Controllers\Customer\FoodOrderController as CustomerFoodOrderController;
-use App\Http\Controllers\Customer\ReviewController as CustomerReviewController;
-use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
-use App\Http\Controllers\Staff\ReservationController as StaffReservationController;
-use App\Http\Controllers\Staff\FoodOrderController as StaffFoodOrderController;
 use App\Http\Controllers\Public\FacilityController as PublicFacilityController;
+use App\Http\Controllers\Public\MenuItemController;
+use App\Http\Controllers\Staff\FoodOrderController as StaffFoodOrderController;
+use App\Http\Controllers\Staff\POSController;
+use App\Http\Controllers\Staff\ReservationController as StaffReservationController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -35,7 +41,7 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/fasilitas', [PublicFacilityController::class, 'index'])->name('facilities.public');
 Route::get('/fasilitas/{facility}', [PublicFacilityController::class, 'show'])->name('facilities.public.show');
 Route::get('/fasilitas/{facility}/booked-dates', [PublicFacilityController::class, 'bookedDates'])->name('facilities.public.booked-dates');
-Route::get('/katalog', [App\Http\Controllers\Public\MenuItemController::class, 'index'])->name('catalog.public');
+Route::get('/katalog', [MenuItemController::class, 'index'])->name('catalog.public');
 
 // Payment gateway webhooks (no auth)
 Route::post('/webhook/tripay', [AdminPaymentController::class, 'tripayWebhook'])->name('webhook.tripay');
@@ -88,8 +94,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', [CustomerFoodOrderController::class, 'index'])->name('index');
     });
 
-
-
     Route::prefix('ulasan')->name('customer.reviews.')->middleware('role:customer|admin|manager|staff')->group(function () {
         Route::post('/', [CustomerReviewController::class, 'store'])->name('store');
         Route::put('/{review}', [CustomerReviewController::class, 'update'])->name('update');
@@ -108,13 +112,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::prefix('staff')->name('staff.')->middleware('role:admin|manager|staff')->group(function () {
         Route::get('/reservations', [StaffReservationController::class, 'index'])->name('reservations.index');
+        Route::get('/reservations/scan', [StaffReservationController::class, 'scan'])->name('reservations.scan');
+        Route::post('/reservations/verify', [StaffReservationController::class, 'verify'])->name('reservations.verify');
         Route::patch('/reservations/{reservation}/status', [StaffReservationController::class, 'updateStatus'])->name('reservations.status');
-        
+
         // POS & Food Orders
-        Route::get('/pos', [\App\Http\Controllers\Staff\POSController::class, 'index'])->name('pos.index');
-        Route::post('/pos', [\App\Http\Controllers\Staff\POSController::class, 'store'])->name('pos.store');
-        Route::get('/pos/print/{order}', [\App\Http\Controllers\Staff\POSController::class, 'print'])->name('pos.print');
-        
+        Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+        Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
+        Route::get('/pos/print/{order}', [POSController::class, 'print'])->name('pos.print');
+
         Route::get('/food-orders', [StaffFoodOrderController::class, 'index'])->name('food-orders.index');
         Route::get('/kds', [StaffFoodOrderController::class, 'kds'])->name('kds');
         Route::patch('/food-orders/{order}/status', [StaffFoodOrderController::class, 'updateStatus'])->name('food-orders.status');
@@ -128,16 +134,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::prefix('admin')->name('admin.')->middleware('role:admin|manager')->group(function () {
         // QR Codes
-        Route::get('/qrcodes', [\App\Http\Controllers\Admin\QRCodeController::class, 'index'])->name('qrcodes.index');
-        Route::post('/qrcodes/generate', [\App\Http\Controllers\Admin\QRCodeController::class, 'generate'])->name('qrcodes.generate');
-        Route::delete('/qrcodes/{qrcode}', [\App\Http\Controllers\Admin\QRCodeController::class, 'destroy'])->name('qrcodes.destroy');
+        Route::get('/qrcodes', [QRCodeController::class, 'index'])->name('qrcodes.index');
+        Route::post('/qrcodes/generate', [QRCodeController::class, 'generate'])->name('qrcodes.generate');
+        Route::delete('/qrcodes/{qrcode}', [QRCodeController::class, 'destroy'])->name('qrcodes.destroy');
 
         // Inventories
-        Route::get('/inventories', [\App\Http\Controllers\Admin\InventoryController::class, 'index'])->name('inventories.index');
-        Route::post('/inventories', [\App\Http\Controllers\Admin\InventoryController::class, 'store'])->name('inventories.store');
-        Route::put('/inventories/{inventory}', [\App\Http\Controllers\Admin\InventoryController::class, 'update'])->name('inventories.update');
-        Route::delete('/inventories/{inventory}', [\App\Http\Controllers\Admin\InventoryController::class, 'destroy'])->name('inventories.destroy');
-        Route::post('/inventories/{inventory}/transaction', [\App\Http\Controllers\Admin\InventoryController::class, 'transaction'])->name('inventories.transaction');
+        Route::get('/inventories', [InventoryController::class, 'index'])->name('inventories.index');
+        Route::post('/inventories', [InventoryController::class, 'store'])->name('inventories.store');
+        Route::put('/inventories/{inventory}', [InventoryController::class, 'update'])->name('inventories.update');
+        Route::delete('/inventories/{inventory}', [InventoryController::class, 'destroy'])->name('inventories.destroy');
+        Route::post('/inventories/{inventory}/transaction', [InventoryController::class, 'transaction'])->name('inventories.transaction');
 
         // Facilities
         Route::resource('facilities', AdminFacilityController::class);
@@ -154,6 +160,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('menu-items', AdminMenuItemController::class);
         Route::patch('menu-items/{menuItem}/toggle', [AdminMenuItemController::class, 'toggleAvailability'])
             ->name('menu-items.toggle');
+
+        // Promo / Coupons
+        Route::middleware('role:admin|manager')->group(function () {
+            Route::resource('coupons', AdminCouponController::class)->except(['show']);
+            Route::patch('coupons/{coupon}/toggle', [AdminCouponController::class, 'toggle'])->name('coupons.toggle');
+        });
 
         // Food Orders
         Route::get('food-orders', [AdminFoodOrderController::class, 'index'])->name('food-orders.index');
@@ -183,7 +195,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Settings
         Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
         Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
+
+        // Banners (CMS)
+        Route::resource('banners', BannerController::class)->except(['create', 'show', 'edit']);
+        Route::patch('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
+        Route::post('banners/reorder', [BannerController::class, 'reorder'])->name('banners.reorder');
     });
 });
+
+// Google OAuth
+Route::get('auth/google', [GoogleController::class, 'redirectToGoogle'])->name('auth.google');
+Route::get('auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 
 require __DIR__.'/auth.php';

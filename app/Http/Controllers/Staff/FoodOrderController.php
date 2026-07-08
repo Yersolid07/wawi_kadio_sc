@@ -29,7 +29,7 @@ class FoodOrderController extends Controller
             ->get();
 
         return Inertia::render('Staff/FoodOrders/KDS', [
-            'orders' => $orders
+            'orders' => $orders,
         ]);
     }
 
@@ -49,7 +49,7 @@ class FoodOrderController extends Controller
             $order->user->notify(new FoodOrderStatusUpdated($order, $validated['status']));
         }
 
-        return back()->with('success', "Status order diperbarui.");
+        return back()->with('success', 'Status order diperbarui.');
     }
 
     public function updateTimer(Request $request, FoodOrder $order)
@@ -59,9 +59,9 @@ class FoodOrderController extends Controller
         ]);
 
         $order->update([
-            'estimated_ready_at' => $validated['estimated_ready_at']
+            'estimated_ready_at' => $validated['estimated_ready_at'],
         ]);
 
-        return back()->with('success', "Waktu estimasi diperbarui.");
+        return back()->with('success', 'Waktu estimasi diperbarui.');
     }
 }

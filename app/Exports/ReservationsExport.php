@@ -4,13 +4,13 @@ namespace App\Exports;
 
 use App\Models\Reservation;
 use Maatwebsite\Excel\Concerns\FromQuery;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class ReservationsExport implements FromQuery, WithHeadings, WithMapping, ShouldAutoSize, WithStyles
+class ReservationsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
 {
     public function __construct(
         private string $dateFrom,
@@ -21,7 +21,7 @@ class ReservationsExport implements FromQuery, WithHeadings, WithMapping, Should
     {
         return Reservation::query()
             ->with(['user', 'facility', 'payment'])
-            ->whereBetween('created_at', [$this->dateFrom, $this->dateTo . ' 23:59:59'])
+            ->whereBetween('created_at', [$this->dateFrom, $this->dateTo.' 23:59:59'])
             ->orderBy('check_in_date');
     }
 
@@ -67,7 +67,7 @@ class ReservationsExport implements FromQuery, WithHeadings, WithMapping, Should
     {
         return [
             1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-                  'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '16a34a']]],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '16a34a']]],
         ];
     }
 }

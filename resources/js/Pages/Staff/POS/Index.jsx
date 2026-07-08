@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Search, ShoppingCart, Plus, Minus, X, CreditCard, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, X, CreditCard, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
 
 export default function POSIndex({ menuItems, activeOrders = [], user }) {
@@ -20,6 +20,12 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [amountPaid, setAmountPaid] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    
+    // Print Modal State
+    const [printUrl, setPrintUrl] = useState(null);
+
+    // Layout State
+    const [layoutDirection, setLayoutDirection] = useState('horizontal'); // 'horizontal' or 'vertical'
 
     // Categories
     const categories = ['Semua', ...Object.keys(menuItems)];
@@ -101,7 +107,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
         setCart([]);
     };
 
-    const totalAmount = cart.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0);
+    const totalAmount = cart.reduce((sum, item) => sum + (parseFloat(item.final_price !== undefined ? item.final_price : item.price) * item.quantity), 0);
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
@@ -148,7 +154,11 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                 setIsProcessing(false);
                 
                 if (page.props.flash.print_order_id) {
-                    window.open(route('staff.pos.print', page.props.flash.print_order_id), '_blank', 'width=400,height=600');
+                    let url = route('staff.pos.print', page.props.flash.print_order_id);
+                    if (page.props.flash.change_amount !== undefined) {
+                        url += '?change_amount=' + page.props.flash.change_amount;
+                    }
+                    setPrintUrl(url);
                 }
             },
             onError: () => setIsProcessing(false)
@@ -157,12 +167,24 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
 
     const quickCashOptions = [50000, 100000, 150000, 200000];
 
+    const toggleFullScreen = () => {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => {
+                alert(`Error attempting to enable fullscreen mode: ${err.message} (${err.name})`);
+            });
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-stone-100 flex flex-col md:flex-row font-sans">
+        <div className={`min-h-screen bg-stone-100 flex font-sans ${layoutDirection === 'horizontal' ? 'flex-col md:flex-row' : 'flex-col'}`}>
             <Head title="Point of Sale (POS)" />
 
             {/* Left Side: Active Orders & Catalog */}
-            <div className="flex-1 flex flex-col h-screen overflow-hidden bg-stone-50">
+            <div className={`flex flex-col bg-stone-50 ${layoutDirection === 'horizontal' ? 'flex-1 h-screen overflow-hidden' : 'h-[60vh] overflow-hidden border-b border-stone-200'}`}>
                 {/* Header */}
                 <header className="bg-white border-b border-stone-200 p-4 flex items-center justify-between shrink-0 shadow-sm z-10">
                     <div className="flex items-center gap-4">
@@ -177,15 +199,26 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                             <p className="text-xs font-bold text-stone-500 uppercase tracking-widest">Kasir: {user.name}</p>
                         </div>
                     </div>
-                    <div className="relative w-64 md:w-96">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
-                        <TextInput
-                            type="text"
-                            placeholder="Cari menu..."
-                            className="w-full pl-10 bg-stone-100 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 rounded-xl"
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
+                    <div className="flex items-center gap-3">
+                        <button 
+                            onClick={() => setLayoutDirection(prev => prev === 'horizontal' ? 'vertical' : 'horizontal')}
+                            className="hidden md:flex p-2 text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 rounded-xl transition-colors" title="Toggle Layout"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                        </button>
+                        <button onClick={toggleFullScreen} className="p-2 text-stone-500 hover:text-emerald-600 bg-stone-100 hover:bg-emerald-50 rounded-xl transition-colors" title="Toggle Fullscreen">
+                            <Maximize size={20} />
+                        </button>
+                        <div className="relative w-48 md:w-80">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" size={20} />
+                            <TextInput
+                                type="text"
+                                placeholder="Cari menu..."
+                                className="w-full pl-10 bg-stone-100 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-emerald-500 rounded-xl"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
                 </header>
 
@@ -264,7 +297,14 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                                 </div>
                                 <div className="p-3 flex flex-col justify-between flex-1">
                                     <h3 className="font-bold text-slate-900 leading-tight mb-1 text-sm line-clamp-2">{item.name}</h3>
-                                    <div className="font-black text-emerald-600 text-sm">Rp {formatPrice(item.price)}</div>
+                                    {item.final_price < item.price ? (
+                                        <div className="flex flex-col">
+                                            <span className="text-xs text-slate-400 line-through">Rp {formatPrice(item.price)}</span>
+                                            <span className="font-black text-rose-600 text-sm">Rp {formatPrice(item.final_price)}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="font-black text-emerald-600 text-sm">Rp {formatPrice(item.price)}</div>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -279,7 +319,11 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
             </div>
 
             {/* Right Side: Cart */}
-            <div className="w-full md:w-[400px] lg:w-[450px] bg-white h-screen flex flex-col border-l border-stone-200 shadow-2xl z-20 shrink-0">
+            <div className={`bg-white flex flex-col border-stone-200 shadow-2xl z-20 shrink-0 ${
+                layoutDirection === 'horizontal' 
+                    ? 'w-full md:w-[400px] lg:w-[450px] h-screen border-l' 
+                    : 'w-full h-[40vh] border-t'
+            }`}>
                 <div className="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center shrink-0">
                     <h2 className="font-black text-slate-900 text-xl flex items-center gap-2">
                         <ShoppingCart className="text-emerald-500" /> 
@@ -315,7 +359,14 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                                         </button>
                                     )}
                                 </div>
-                                <div className="text-emerald-600 font-bold text-sm mb-2">Rp {formatPrice(item.price)}</div>
+                                {item.final_price < item.price && !item.is_existing ? (
+                                    <div className="flex flex-col mb-2">
+                                        <span className="text-xs text-slate-400 line-through">Rp {formatPrice(item.price)}</span>
+                                        <span className="text-rose-600 font-bold text-sm">Rp {formatPrice(item.final_price)}</span>
+                                    </div>
+                                ) : (
+                                    <div className="text-emerald-600 font-bold text-sm mb-2">Rp {formatPrice(item.is_existing ? item.price : (item.final_price !== undefined ? item.final_price : item.price))}</div>
+                                )}
                                 
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3 bg-white border border-stone-200 rounded-lg p-1">
@@ -336,7 +387,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                                         </button>
                                     </div>
                                     <div className="font-black text-slate-900">
-                                        Rp {formatPrice(item.price * item.quantity)}
+                                        Rp {formatPrice((item.is_existing ? item.price : (item.final_price !== undefined ? item.final_price : item.price)) * item.quantity)}
                                     </div>
                                 </div>
                                 {!item.is_existing && (
@@ -523,6 +574,40 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                                 ) : (
                                     <>SELESAIKAN PESANAN & CETAK STRUK</>
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Print Modal (Bypass Pop-up Blocker) */}
+            {printUrl && (
+                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden flex flex-col h-[80vh]">
+                        <div className="p-4 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                            <h3 className="text-lg font-black flex items-center gap-2"><Receipt size={20} /> Cetak Struk</h3>
+                            <button onClick={() => setPrintUrl(null)} className="text-slate-400 hover:text-white transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        <div className="flex-1 w-full bg-stone-100 overflow-hidden relative">
+                            <iframe 
+                                src={printUrl} 
+                                className="w-full h-full border-0 absolute inset-0" 
+                                title="Struk Pembayaran"
+                                onLoad={(e) => {
+                                    try {
+                                        e.target.contentWindow.print();
+                                    } catch (err) {}
+                                }}
+                            ></iframe>
+                        </div>
+                        <div className="p-4 bg-white border-t border-stone-200 shrink-0">
+                            <button
+                                onClick={() => setPrintUrl(null)}
+                                className="w-full py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
+                            >
+                                Tutup & Lanjut Pesanan Baru
                             </button>
                         </div>
                     </div>

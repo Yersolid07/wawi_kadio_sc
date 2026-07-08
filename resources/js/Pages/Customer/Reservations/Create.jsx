@@ -1,7 +1,8 @@
 import { Head, useForm, Link } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Building2, Calendar, Clock, Users, ArrowRight, Wallet, CheckCircle2 } from 'lucide-react';
+import { Building2, Calendar, Clock, Users, ArrowRight, Wallet, CheckCircle2, Tag } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import InputError from '@/Components/InputError';
 import { motion } from 'framer-motion';
 
 export default function Create({ facilities, selectedFacilityId, initialCheckIn, initialCheckOut, initialCheckInTime, initialCheckOutTime }) {
@@ -13,6 +14,7 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
         check_out_time: initialCheckOutTime || '18:00',
         guest_count: 1,
         special_requests: '',
+        coupon_code: '',
     });
 
     const [selectedFacility, setSelectedFacility] = useState(null);
@@ -144,7 +146,20 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                                             onChange={e => setData('guest_count', e.target.value)}
                                             className="w-full bg-stone-50 border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500"
                                         />
-                                        {errors.guest_count && <p className="text-red-500 text-xs mt-1">{errors.guest_count}</p>}
+                                        <InputError message={errors.guest_count} className="mt-2" />
+                                    </div>
+                                    <div>
+                                        <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
+                                            <Tag size={16} className="text-emerald-600"/> Kode Kupon (Opsional)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={data.coupon_code}
+                                            onChange={e => setData('coupon_code', e.target.value.toUpperCase())}
+                                            className="w-full bg-stone-50 border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500 uppercase placeholder-normal"
+                                            placeholder="Masukkan kode kupon"
+                                        />
+                                        <InputError message={errors.coupon_code} className="mt-2" />
                                     </div>
                                 </div>
 

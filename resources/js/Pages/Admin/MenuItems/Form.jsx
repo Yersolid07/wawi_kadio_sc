@@ -17,6 +17,11 @@ export default function Form({ item = null }) {
         category: item?.category || '',
         price: item?.price || '',
         is_available: item?.is_available ?? true,
+        discount_type: item?.discount_type || '',
+        discount_value: item?.discount_value || '',
+        promo_name: item?.promo_name || '',
+        promo_start: item?.promo_start ? item.promo_start.substring(0, 16) : '',
+        promo_end: item?.promo_end ? item.promo_end.substring(0, 16) : '',
         image: null,
         _method: item ? 'PUT' : 'POST', // For file uploads in Laravel PUT requests
     });
@@ -164,6 +169,83 @@ export default function Form({ item = null }) {
                                     <label htmlFor="is_available" className="text-sm font-semibold text-slate-700 cursor-pointer">
                                         Menu Tersedia untuk Dipesan
                                     </label>
+                                </div>
+
+                                <div className="p-5 bg-orange-50 rounded-2xl border border-orange-100 space-y-4">
+                                    <h4 className="font-bold text-orange-800 flex items-center gap-2">
+                                        Pengaturan Diskon / Promo
+                                    </h4>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <InputLabel htmlFor="discount_type" value="Tipe Diskon" />
+                                            <select
+                                                id="discount_type"
+                                                className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 focus:ring-orange-500 rounded-xl shadow-sm text-sm"
+                                                value={data.discount_type}
+                                                onChange={(e) => setData('discount_type', e.target.value)}
+                                            >
+                                                <option value="">Tidak Ada Diskon</option>
+                                                <option value="percentage">Persentase (%)</option>
+                                                <option value="fixed">Potongan Tetap (Rp)</option>
+                                            </select>
+                                            <InputError message={errors.discount_type} className="mt-2" />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="discount_value" value="Nilai Diskon" />
+                                            <TextInput
+                                                id="discount_value"
+                                                type="number"
+                                                className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl"
+                                                value={data.discount_value}
+                                                onChange={(e) => setData('discount_value', e.target.value)}
+                                                disabled={!data.discount_type}
+                                                min="0"
+                                            />
+                                            <InputError message={errors.discount_value} className="mt-2" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="mb-4">
+                                        <InputLabel htmlFor="promo_name" value="Nama Promo / Badge" />
+                                        <TextInput
+                                            id="promo_name"
+                                            type="text"
+                                            placeholder="contoh: Flash Sale"
+                                            className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl"
+                                            value={data.promo_name}
+                                            onChange={(e) => setData('promo_name', e.target.value)}
+                                            disabled={!data.discount_type}
+                                        />
+                                        <InputError message={errors.promo_name} className="mt-2" />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <InputLabel htmlFor="promo_start" value="Mulai Promo" />
+                                            <input
+                                                id="promo_start"
+                                                type="datetime-local"
+                                                className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl text-sm"
+                                                value={data.promo_start}
+                                                onChange={(e) => setData('promo_start', e.target.value)}
+                                                disabled={!data.discount_type}
+                                            />
+                                            <InputError message={errors.promo_start} className="mt-2" />
+                                        </div>
+                                        <div>
+                                            <InputLabel htmlFor="promo_end" value="Selesai Promo" />
+                                            <input
+                                                id="promo_end"
+                                                type="datetime-local"
+                                                className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl text-sm"
+                                                value={data.promo_end}
+                                                onChange={(e) => setData('promo_end', e.target.value)}
+                                                disabled={!data.discount_type}
+                                            />
+                                            <InputError message={errors.promo_end} className="mt-2" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

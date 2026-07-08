@@ -14,9 +14,9 @@ class MenuItemController extends Controller
     public function index(Request $request): Response
     {
         $items = MenuItem::query()
-            ->when($request->search, fn($q) => $q->where('name', 'like', "%{$request->search}%"))
-            ->when($request->category, fn($q) => $q->where('category', $request->category))
-            ->when($request->status !== null, fn($q) => $q->where('is_available', $request->status === 'available'))
+            ->when($request->search, fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->category, fn ($q) => $q->where('category', $request->category))
+            ->when($request->status !== null, fn ($q) => $q->where('is_available', $request->status === 'available'))
             ->orderBy('category')
             ->orderBy('name')
             ->paginate(15)
@@ -42,6 +42,11 @@ class MenuItemController extends Controller
             'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|max:2048',
             'is_available' => 'boolean',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
+            'promo_start' => 'nullable|date',
+            'promo_end' => 'nullable|date|after_or_equal:promo_start',
+            'promo_name' => 'nullable|string|max:255',
         ]);
 
         if ($request->hasFile('image')) {
@@ -68,10 +73,17 @@ class MenuItemController extends Controller
             'price' => 'required|numeric|min:0',
             'image' => 'nullable|image|max:2048',
             'is_available' => 'boolean',
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0',
+            'promo_start' => 'nullable|date',
+            'promo_end' => 'nullable|date|after_or_equal:promo_start',
+            'promo_name' => 'nullable|string|max:255',
         ]);
 
         if ($request->hasFile('image')) {
-            if ($menuItem->image_url) Storage::disk('public')->delete($menuItem->image_url);
+            if ($menuItem->image_url) {
+                Storage::disk('public')->delete($menuItem->image_url);
+            }
             $validated['image_url'] = $request->file('image')->store('menu', 'public');
         }
 
@@ -83,7 +95,9 @@ class MenuItemController extends Controller
 
     public function destroy(MenuItem $menuItem)
     {
-        if ($menuItem->image_url) Storage::disk('public')->delete($menuItem->image_url);
+        if ($menuItem->image_url) {
+            Storage::disk('public')->delete($menuItem->image_url);
+        }
         $menuItem->delete();
 
         return redirect()->route('admin.menu-items.index')
@@ -92,7 +106,8 @@ class MenuItemController extends Controller
 
     public function toggleAvailability(MenuItem $menuItem)
     {
-        $menuItem->update(['is_available' => !$menuItem->is_available]);
+        $menuItem->update(['is_available' => ! $menuItem->is_available]);
+
         return back()->with('success', 'Ketersediaan menu berhasil diubah.');
     }
 }

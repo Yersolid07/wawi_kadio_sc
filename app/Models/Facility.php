@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Facility extends Model
@@ -19,14 +19,40 @@ class Facility extends Model
         'price_per_hour',
         'image_url',
         'is_active',
+        'discount_type',
+        'discount_value',
+        'promo_start',
+        'promo_end',
+        'promo_name',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
         'price_per_day' => 'decimal:2',
+        'discount_value' => 'decimal:2',
+        'promo_start' => 'datetime',
+        'promo_end' => 'datetime',
         'price_per_hour' => 'decimal:2',
         'capacity' => 'integer',
     ];
+
+    protected $appends = ['final_price'];
+
+    public function getFinalPriceAttribute()
+    {
+        $now = now();
+        $basePrice = $this->price_per_day;
+
+        if ($this->promo_start && $this->promo_end && $now->between($this->promo_start, $this->promo_end)) {
+            if ($this->discount_type === 'percentage') {
+                return $basePrice - ($basePrice * ($this->discount_value / 100));
+            } elseif ($this->discount_type === 'fixed') {
+                return max(0, $basePrice - $this->discount_value);
+            }
+        }
+
+        return $basePrice;
+    }
 
     public function reservations(): HasMany
     {
@@ -48,7 +74,7 @@ class Facility extends Model
             ->where(function ($q) use ($checkIn, $checkOut) {
                 // To check overlap: (StartA < EndB) AND (EndA > StartB)
                 $q->whereDate('check_in_date', '<', $checkOut)
-                  ->whereDate('check_out_date', '>', $checkIn);
+                    ->whereDate('check_out_date', '>', $checkIn);
             });
 
         if ($excludeReservationId) {
@@ -68,7 +94,7 @@ class Facility extends Model
         }
 
         return $this->image_url
-            ? asset('storage/' . $this->image_url)
+            ? asset('storage/'.$this->image_url)
             : asset('images/facility-placeholder.jpg');
     }
 

@@ -14,8 +14,8 @@ class FoodOrderController extends Controller
     public function index(Request $request): Response
     {
         $orders = FoodOrder::with(['user', 'items.menuItem', 'reservation'])
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->type, fn($q) => $q->where('order_type', $request->type))
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->type, fn ($q) => $q->where('order_type', $request->type))
             ->latest()
             ->paginate(15)
             ->withQueryString();

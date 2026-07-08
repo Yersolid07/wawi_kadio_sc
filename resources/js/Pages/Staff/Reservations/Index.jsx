@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, router } from '@inertiajs/react';
-import { LogIn, LogOut, Clock, CheckCircle2 } from 'lucide-react';
+import { Head, router, Link } from '@inertiajs/react';
+import { LogIn, LogOut, Clock, CheckCircle2, QrCode } from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function Index({ checkIns, checkOuts, pending }) {
@@ -79,9 +79,17 @@ export default function Index({ checkIns, checkOuts, pending }) {
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                         <Clock className="text-blue-500" /> Operasional Harian
                     </h2>
-                    <span className="bg-white px-4 py-2 rounded-xl text-slate-700 font-bold border border-stone-100 shadow-sm">
-                        {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-                    </span>
+                    <div className="flex gap-4 items-center">
+                        <Link 
+                            href={route('staff.reservations.scan')}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold border border-emerald-500 shadow-sm flex items-center gap-2 transition-colors"
+                        >
+                            <QrCode size={18} /> Scan Kupon
+                        </Link>
+                        <span className="bg-white px-4 py-2 rounded-xl text-slate-700 font-bold border border-stone-100 shadow-sm">
+                            {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                        </span>
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Reservation;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class ReservationPolicy
 {
@@ -64,10 +63,11 @@ class ReservationPolicy
             if ($user->hasPermissionTo('edit reservations')) {
                 return true;
             }
+
             // Customer can only cancel their own
             return $user->id === $reservation->user_id;
         }
-        
+
         return false;
     }
 }

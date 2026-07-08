@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Facility;
 use App\Models\MenuItem;
 use App\Models\Review;
 use App\Models\Setting;
 use Inertia\Inertia;
-use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
@@ -39,11 +39,17 @@ class HomeController extends Controller
             return $setting->value;
         });
 
+        // Get banners
+        $banners = Banner::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
         return Inertia::render('Welcome', [
             'facilities' => $facilities,
-            'menuItems'  => $menuItems,
-            'reviews'    => $reviews,
+            'menuItems' => $menuItems,
+            'reviews' => $reviews,
             'siteSettings' => $settings,
+            'banners' => $banners,
         ]);
     }
 }

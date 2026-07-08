@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class FoodOrderItem extends Model
@@ -11,6 +11,7 @@ class FoodOrderItem extends Model
     use HasUuids;
 
     public $timestamps = false;
+
     protected $table = 'food_order_items';
 
     protected $fillable = [
@@ -28,6 +29,7 @@ class FoodOrderItem extends Model
     ];
 
     const CREATED_AT = 'created_at';
+
     const UPDATED_AT = null;
 
     public function order(): BelongsTo

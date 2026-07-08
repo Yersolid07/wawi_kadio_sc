@@ -3,12 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
 use App\Models\Setting;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Inertia\Inertia;
 
 class SettingController extends Controller implements HasMiddleware
 {
@@ -29,7 +28,7 @@ class SettingController extends Controller implements HasMiddleware
         });
 
         return Inertia::render('Admin/Settings/Index', [
-            'settings' => $settings
+            'settings' => $settings,
         ]);
     }
 
@@ -40,7 +39,7 @@ class SettingController extends Controller implements HasMiddleware
         foreach ($data as $key => $value) {
             if ($request->hasFile($key)) {
                 $path = $request->file($key)->store('settings', 'public');
-                Setting::set($key, '/storage/' . $path, 'image');
+                Setting::set($key, '/storage/'.$path, 'image');
             } else {
                 if ($value !== null) {
                     Setting::set($key, $value);

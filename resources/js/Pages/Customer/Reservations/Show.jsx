@@ -249,19 +249,15 @@ export default function Show({ reservation, canReview, canCancel }) {
                                 <div className="relative z-10 space-y-3">
                                     <p className="text-amber-300 text-sm mb-4 leading-relaxed font-medium">Segera lakukan pembayaran agar reservasi Anda tidak dibatalkan otomatis oleh sistem.</p>
                                     
-                                    <Link 
-                                        href={route('customer.payments.index')}
-                                        className="block w-full text-center py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-colors shadow-lg shadow-emerald-500/20"
+                                    <button 
+                                        onClick={() => router.post(route('customer.payments.store'), { reservation_id: reservation.id, payment_method: 'tripay' })}
+                                        disabled={processing}
+                                        className="block w-full text-center py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-colors shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-2"
                                     >
-                                        Bayar Sekarang
-                                    </Link>
+                                        <CreditCard size={18} /> Bayar Otomatis (QRIS / Virtual Account)
+                                    </button>
                                     
-                                    <Link 
-                                        href={route('customer.payments.index')}
-                                        className="block w-full text-center py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition-colors"
-                                    >
-                                        Konfirmasi Pembayaran Manual
-                                    </Link>
+                                    <p className="text-center text-xs text-slate-400 mt-2">Didukung oleh Tripay</p>
                                 </div>
                             ) : reservation.payment_status === 'paid' ? (
                                 <div className="relative z-10 flex flex-col items-center justify-center py-4 text-emerald-400">

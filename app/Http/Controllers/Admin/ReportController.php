@@ -4,15 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\ReservationsExport;
 use App\Http\Controllers\Controller;
-use App\Models\Reservation;
 use App\Models\FoodOrder;
 use App\Models\InventoryTransaction;
+use App\Models\Reservation;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Inertia\Response;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
@@ -22,18 +21,18 @@ class ReportController extends Controller
         $periodTo = $request->query('period_to', now()->endOfMonth()->toDateString());
 
         // Reservations
-        $reservations = Reservation::whereBetween('created_at', [$periodFrom, $periodTo . ' 23:59:59'])
+        $reservations = Reservation::whereBetween('created_at', [$periodFrom, $periodTo.' 23:59:59'])
             ->whereIn('payment_status', ['paid'])
             ->get();
         $reservationRevenue = $reservations->sum('total_amount');
 
         // Food Orders
         $foodOrders = FoodOrder::with('items.menuItem')
-            ->whereBetween('created_at', [$periodFrom, $periodTo . ' 23:59:59'])
+            ->whereBetween('created_at', [$periodFrom, $periodTo.' 23:59:59'])
             ->whereIn('status', ['delivered', 'ready', 'preparing', 'pending', 'completed'])
             ->whereIn('payment_status', ['paid'])
             ->get();
-            
+
         $foodOrderRevenue = 0;
         $ticketRevenue = 0;
 
@@ -50,9 +49,9 @@ class ReportController extends Controller
         // Inventory Cost (Out transactions * average price, or just sum of price_per_unit at transaction if we had it. We'll estimate based on current price)
         $inventoryOut = InventoryTransaction::with('inventory')
             ->where('type', 'out')
-            ->whereBetween('created_at', [$periodFrom, $periodTo . ' 23:59:59'])
+            ->whereBetween('created_at', [$periodFrom, $periodTo.' 23:59:59'])
             ->get();
-            
+
         $inventoryCost = $inventoryOut->sum(function ($transaction) {
             return $transaction->quantity * ($transaction->inventory->price_per_unit ?? 0);
         });
@@ -75,21 +74,21 @@ class ReportController extends Controller
         // Monthly chart data (if range is wide, group by day, if small group by day)
         // Group by Date for charting
         $chartData = collect();
-        $periodStart = \Carbon\Carbon::parse($periodFrom);
-        $periodEnd = \Carbon\Carbon::parse($periodTo);
-        
+        $periodStart = Carbon::parse($periodFrom);
+        $periodEnd = Carbon::parse($periodTo);
+
         for ($date = $periodStart->copy(); $date->lte($periodEnd); $date->addDay()) {
             $dateStr = $date->toDateString();
-            
-            $dayResRev = $reservations->where('created_at', '>=', $dateStr . ' 00:00:00')
-                                      ->where('created_at', '<=', $dateStr . ' 23:59:59')
-                                      ->sum('total_amount');
-            
+
+            $dayResRev = $reservations->where('created_at', '>=', $dateStr.' 00:00:00')
+                ->where('created_at', '<=', $dateStr.' 23:59:59')
+                ->sum('total_amount');
+
             $dayFoodRev = 0;
             $dayTicketRev = 0;
-            $dayOrders = $foodOrders->where('created_at', '>=', $dateStr . ' 00:00:00')
-                                    ->where('created_at', '<=', $dateStr . ' 23:59:59');
-            
+            $dayOrders = $foodOrders->where('created_at', '>=', $dateStr.' 00:00:00')
+                ->where('created_at', '<=', $dateStr.' 23:59:59');
+
             foreach ($dayOrders as $order) {
                 foreach ($order->items as $item) {
                     if ($item->menuItem && $item->menuItem->category === 'tiket') {
@@ -99,16 +98,18 @@ class ReportController extends Controller
                     }
                 }
             }
-                                     
-            $dayInvCost = $inventoryOut->where('created_at', '>=', $dateStr . ' 00:00:00')
-                                       ->where('created_at', '<=', $dateStr . ' 23:59:59')
-                                       ->sum(function($t) { return $t->quantity * ($t->inventory->price_per_unit ?? 0); });
-            
+
+            $dayInvCost = $inventoryOut->where('created_at', '>=', $dateStr.' 00:00:00')
+                ->where('created_at', '<=', $dateStr.' 23:59:59')
+                ->sum(function ($t) {
+                    return $t->quantity * ($t->inventory->price_per_unit ?? 0);
+                });
+
             $chartData->push([
                 'date' => $date->format('d M'),
                 'revenue' => $dayResRev + $dayFoodRev + $dayTicketRev,
                 'expense' => $dayInvCost,
-                'profit' => ($dayResRev + $dayFoodRev + $dayTicketRev) - $dayInvCost
+                'profit' => ($dayResRev + $dayFoodRev + $dayTicketRev) - $dayInvCost,
             ]);
         }
 
@@ -130,7 +131,7 @@ class ReportController extends Controller
         $periodTo = $request->period_to;
 
         $reservations = Reservation::with(['user', 'facility'])
-            ->whereBetween('created_at', [$periodFrom, $periodTo . ' 23:59:59'])
+            ->whereBetween('created_at', [$periodFrom, $periodTo.' 23:59:59'])
             ->orderBy('check_in_date')
             ->get();
 
@@ -143,7 +144,7 @@ class ReportController extends Controller
             'period_to' => $periodTo,
         ]);
 
-        return $pdf->download('Laporan_Reservasi_' . $periodFrom . '_sd_' . $periodTo . '.pdf');
+        return $pdf->download('Laporan_Reservasi_'.$periodFrom.'_sd_'.$periodTo.'.pdf');
     }
 
     public function exportExcel(Request $request)
@@ -153,7 +154,7 @@ class ReportController extends Controller
             'period_to' => 'required|date|after_or_equal:period_from',
         ]);
 
-        $fileName = 'Laporan_Reservasi_' . $request->period_from . '_sd_' . $request->period_to . '.xlsx';
+        $fileName = 'Laporan_Reservasi_'.$request->period_from.'_sd_'.$request->period_to.'.xlsx';
 
         return Excel::download(
             new ReservationsExport($request->period_from, $request->period_to),

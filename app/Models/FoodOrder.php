@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class FoodOrder extends Model
 {
@@ -46,14 +48,14 @@ class FoodOrder extends Model
         return $this->hasMany(FoodOrderItem::class, 'order_id');
     }
 
-    public function payment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function payment(): HasOne
     {
         return $this->hasOne(Payment::class);
     }
 
     public function recalculateTotal(): void
     {
-        $this->total_amount = $this->items()->sum(\Illuminate\Support\Facades\DB::raw('quantity * price'));
+        $this->total_amount = $this->items()->sum(DB::raw('quantity * price'));
         $this->save();
     }
 

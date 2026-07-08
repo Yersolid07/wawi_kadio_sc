@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Review;
 use App\Models\Reservation;
+use App\Models\Review;
 use Illuminate\Http\Request;
 
 class ReviewController extends Controller
@@ -20,7 +20,9 @@ class ReviewController extends Controller
         $reservation = Reservation::findOrFail($validated['reservation_id']);
 
         // Only the reservation owner can review
-        if ($reservation->user_id !== auth()->id()) abort(403);
+        if ($reservation->user_id !== auth()->id()) {
+            abort(403);
+        }
 
         // Only completed reservations can be reviewed
         if ($reservation->status !== 'completed') {
@@ -45,7 +47,9 @@ class ReviewController extends Controller
 
     public function update(Request $request, Review $review)
     {
-        if ($review->user_id !== auth()->id()) abort(403);
+        if ($review->user_id !== auth()->id()) {
+            abort(403);
+        }
 
         $validated = $request->validate([
             'rating' => 'required|integer|min:1|max:5',

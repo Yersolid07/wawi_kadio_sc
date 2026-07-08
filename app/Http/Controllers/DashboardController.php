@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Reservation;
 use App\Models\Facility;
-use App\Models\Payment;
 use App\Models\FoodOrder;
+use App\Models\Payment;
+use App\Models\Reservation;
 use App\Models\Review;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -63,7 +63,7 @@ class DashboardController extends Controller
             ->get();
 
         $facility_occupancy = Facility::withCount([
-            'reservations as active_reservations_count' => fn($q) => $q->whereIn('status', ['confirmed'])
+            'reservations as active_reservations_count' => fn ($q) => $q->whereIn('status', ['confirmed'])
                 ->whereMonth('check_in_date', $thisMonth),
         ])->get(['id', 'name', 'type']);
 
@@ -99,7 +99,7 @@ class DashboardController extends Controller
                 ->whereIn('status', ['pending', 'preparing', 'ready'])
                 ->latest()
                 ->get(),
-            'pendingPayments' => \App\Models\Payment::with(['reservation.user'])
+            'pendingPayments' => Payment::with(['reservation.user'])
                 ->where('payment_status', 'pending')
                 ->latest()
                 ->limit(10)

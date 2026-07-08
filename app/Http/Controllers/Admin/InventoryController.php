@@ -6,16 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class InventoryController extends Controller
 {
     public function index()
     {
         $inventories = Inventory::orderBy('name')->get();
+
         return Inertia::render('Admin/Inventories/Index', [
-            'inventories' => $inventories
+            'inventories' => $inventories,
         ]);
     }
 
@@ -93,6 +94,7 @@ class InventoryController extends Controller
     public function destroy(Inventory $inventory)
     {
         $inventory->delete();
+
         return redirect()->back()->with('success', 'Bahan baku dihapus');
     }
 }

@@ -136,8 +136,15 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                                             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600"
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                                        <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm">
-                                            {item.category}
+                                        <div className="absolute top-3 left-3 flex flex-col gap-2">
+                                            <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm w-max">
+                                                {item.category}
+                                            </span>
+                                            {item.final_price < item.price && (
+                                                <span className="px-2.5 py-1 bg-rose-500 text-white rounded-full text-[10px] font-black uppercase shadow-sm w-max">
+                                                    {item.promo_name || 'Promo Spesial'}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <h3 className="font-bold text-slate-900 text-base mb-1 truncate group-hover:text-emerald-700 transition-colors">{item.name}</h3>
@@ -145,7 +152,14 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                                     <div className="flex items-center justify-between pt-3 border-t border-stone-100">
                                         <div>
                                             <p className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Harga</p>
-                                            <p className="font-extrabold text-slate-900">Rp {formatPrice(item.price)}</p>
+                                            {item.final_price < item.price ? (
+                                                <div className="flex flex-col">
+                                                    <span className="text-xs text-slate-400 line-through">Rp {formatPrice(item.price)}</span>
+                                                    <span className="font-extrabold text-rose-600">Rp {formatPrice(item.final_price)}</span>
+                                                </div>
+                                            ) : (
+                                                <p className="font-extrabold text-slate-900">Rp {formatPrice(item.price)}</p>
+                                            )}
                                         </div>
                                         <a
                                             href={`${route('customer.orders.create')}${typeof window !== 'undefined' ? window.location.search : ''}`}

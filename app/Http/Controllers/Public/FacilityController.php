@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\Facility;
+use App\Models\Reservation;
 use App\Models\Review;
+use Carbon\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -27,7 +29,7 @@ class FacilityController extends Controller
     public function show(Facility $facility): Response
     {
         $reviews = Review::with('user')
-            ->whereHas('reservation', fn($q) => $q->where('facility_id', $facility->id))
+            ->whereHas('reservation', fn ($q) => $q->where('facility_id', $facility->id))
             ->where('is_public', true)
             ->latest()
             ->limit(10)
@@ -42,7 +44,7 @@ class FacilityController extends Controller
 
     public function bookedDates(Facility $facility)
     {
-        $reservations = \App\Models\Reservation::where('facility_id', $facility->id)
+        $reservations = Reservation::where('facility_id', $facility->id)
             ->whereIn('status', ['confirmed', 'pending'])
             ->where('check_in_date', '>=', now()->toDateString())
             ->get(['check_in_date', 'check_out_date']);
@@ -52,9 +54,9 @@ class FacilityController extends Controller
             // Include dates from check-in to check-out (excluding check-out day if it's purely checkout, but we'll include all to be safe and disable the whole range)
             // Wait, usually check-out day is available for check-in.
             // Let's disable the dates strictly between check_in and check_out. Check-in day is blocked, check-out day is available for check-in.
-            $checkIn = \Carbon\Carbon::parse($res->check_in_date);
-            $checkOut = \Carbon\Carbon::parse($res->check_out_date);
-            
+            $checkIn = Carbon::parse($res->check_in_date);
+            $checkOut = Carbon::parse($res->check_out_date);
+
             // Loop from checkIn to checkOut minus 1 day.
             for ($d = $checkIn; $d->lt($checkOut); $d->addDay()) {
                 $bookedDates[] = $d->format('Y-m-d');

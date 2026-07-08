@@ -26,6 +26,7 @@ const getDelayStatus = (dateString) => {
 
 export default function KDS({ orders }) {
     const [currentTime, setCurrentTime] = useState(new Date());
+    const [layoutDirection, setLayoutDirection] = useState('horizontal');
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -239,6 +240,12 @@ export default function KDS({ orders }) {
                     <div className="text-4xl font-black font-mono text-stone-200 tracking-tighter">
                         {currentTime.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                     </div>
+                    <button 
+                        onClick={() => setLayoutDirection(prev => prev === 'horizontal' ? 'vertical' : 'horizontal')}
+                        className="w-12 h-12 bg-stone-800 hover:bg-stone-700 rounded-full flex items-center justify-center text-stone-400 hover:text-white transition-colors" title="Toggle Layout"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                    </button>
                     <button onClick={toggleFullScreen} className="w-12 h-12 bg-stone-800 hover:bg-stone-700 rounded-full flex items-center justify-center text-stone-400 hover:text-white transition-colors" title="Layar Penuh">
                         <Maximize size={24} />
                     </button>
@@ -246,10 +253,16 @@ export default function KDS({ orders }) {
             </header>
 
             {/* Kanban Board */}
-            <main className="p-6 flex-1 flex gap-6 h-[calc(100vh-88px)]">
+            <main className={`p-6 flex-1 flex gap-6 ${
+                layoutDirection === 'horizontal' 
+                    ? 'flex-col lg:flex-row h-auto lg:h-[calc(100vh-88px)] overflow-y-auto lg:overflow-hidden' 
+                    : 'flex-col h-auto overflow-y-auto'
+            }`}>
                 
                 {/* Pending Column */}
-                <div className="flex-1 flex flex-col h-full bg-stone-900/40 rounded-[2rem] border border-stone-800/50 overflow-hidden">
+                <div className={`flex-1 flex flex-col bg-stone-900/40 rounded-[2rem] border border-stone-800/50 overflow-hidden shrink-0 ${
+                    layoutDirection === 'horizontal' ? 'h-[500px] lg:h-full' : 'h-[600px]'
+                }`}>
                     <div className="bg-orange-500/10 px-6 py-5 border-b-2 border-orange-500 flex justify-between items-center shrink-0">
                         <h2 className="font-black text-2xl text-orange-400 uppercase tracking-widest flex items-center gap-3">
                             <Clock size={28} /> PESANAN MASUK
@@ -279,7 +292,9 @@ export default function KDS({ orders }) {
                 </div>
 
                 {/* Preparing Column */}
-                <div className="flex-1 flex flex-col h-full bg-stone-900/40 rounded-[2rem] border border-stone-800/50 overflow-hidden">
+                <div className={`flex-1 flex flex-col bg-stone-900/40 rounded-[2rem] border border-stone-800/50 overflow-hidden shrink-0 ${
+                    layoutDirection === 'horizontal' ? 'h-[500px] lg:h-full' : 'h-[600px]'
+                }`}>
                     <div className="bg-sky-500/10 px-6 py-5 border-b-2 border-sky-500 flex justify-between items-center shrink-0">
                         <h2 className="font-black text-2xl text-sky-400 uppercase tracking-widest flex items-center gap-3">
                             <Flame size={28} /> SEDANG DIMASAK
@@ -309,7 +324,9 @@ export default function KDS({ orders }) {
                 </div>
 
                 {/* Ready Column */}
-                <div className="flex-1 flex flex-col h-full bg-stone-900/40 rounded-[2rem] border border-stone-800/50 overflow-hidden">
+                <div className={`flex-1 flex flex-col bg-stone-900/40 rounded-[2rem] border border-stone-800/50 overflow-hidden shrink-0 ${
+                    layoutDirection === 'horizontal' ? 'h-[500px] lg:h-full' : 'h-[600px]'
+                }`}>
                     <div className="bg-emerald-500/10 px-6 py-5 border-b-2 border-emerald-500 flex justify-between items-center shrink-0">
                         <h2 className="font-black text-2xl text-emerald-400 uppercase tracking-widest flex items-center gap-3">
                             <CheckCircle2 size={28} /> SIAP DIANTAR

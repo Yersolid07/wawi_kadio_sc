@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Models\Setting;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
-use App\Models\Setting;
 
 class SettingTest extends TestCase
 {
@@ -14,7 +14,7 @@ class SettingTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles first
         // roles seeded in TestCase::setUp()
         // roles seeded in TestCase::setUp()
@@ -43,13 +43,13 @@ class SettingTest extends TestCase
     public function test_admin_can_update_settings()
     {
         $response = $this->actingAs($this->admin)->post(route('admin.settings.update'), [
-            'hero_title' => 'Updated Title by Admin'
+            'hero_title' => 'Updated Title by Admin',
         ]);
 
         $response->assertStatus(302);
         $this->assertDatabaseHas('settings', [
             'key' => 'hero_title',
-            'value' => 'Updated Title by Admin'
+            'value' => 'Updated Title by Admin',
         ]);
     }
 

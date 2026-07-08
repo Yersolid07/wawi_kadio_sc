@@ -66,6 +66,11 @@ export default function Facilities({ facilities = [] }) {
                                             <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold uppercase tracking-wider border border-white/20">
                                                 {facility?.type || 'Akomodasi'}
                                             </span>
+                                            {facility?.final_price < facility?.price_per_day && (
+                                                <span className="px-3 py-1 bg-rose-500 text-white rounded-full text-xs font-black uppercase shadow-sm border border-rose-400">
+                                                    {facility?.promo_name || 'Promo Spesial'}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="md:w-3/5 p-6 flex flex-col justify-between">
@@ -81,10 +86,20 @@ export default function Facilities({ facilities = [] }) {
                                                     <span className="flex items-center gap-1.5"><Bed size={14} className="text-emerald-500" /> 1 Bed</span>
                                                     <span className="flex items-center gap-1.5"><Building2 size={14} className="text-emerald-500" /> {facility?.type || '-'}</span>
                                                 </div>
-                                                <p className="text-xl font-extrabold text-slate-900">
-                                                    Rp {formatPrice(facility?.price_per_day)}
-                                                    <span className="text-sm font-normal text-slate-400 ml-1">/malam</span>
-                                                </p>
+                                                {facility?.final_price < facility?.price_per_day ? (
+                                                    <div className="flex flex-col">
+                                                        <span className="text-xs text-slate-400 line-through">Rp {formatPrice(facility?.price_per_day)}</span>
+                                                        <p className="text-xl font-extrabold text-rose-600">
+                                                            Rp {formatPrice(facility?.final_price)}
+                                                            <span className="text-sm font-normal text-slate-400 ml-1">/malam</span>
+                                                        </p>
+                                                    </div>
+                                                ) : (
+                                                    <p className="text-xl font-extrabold text-slate-900">
+                                                        Rp {formatPrice(facility?.price_per_day)}
+                                                        <span className="text-sm font-normal text-slate-400 ml-1">/malam</span>
+                                                    </p>
+                                                )}
                                             </div>
                                             <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-500 group-hover:text-white group-hover:border-emerald-500 transition-all">
                                                 <ArrowRight size={18} />

@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reservation;
+use App\Models\Coupon;
 use App\Models\Facility;
-use App\Models\Payment;
+use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\NewReservation;
+use App\Notifications\ReservationInvoiceNotification;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -51,12 +54,13 @@ class ReservationController extends Controller
             'check_out_time' => 'nullable|date_format:H:i',
             'guest_count' => 'required|integer|min:1',
             'special_requests' => 'nullable|string|max:1000',
+            'coupon_code' => 'nullable|string|exists:coupons,code',
         ]);
 
         $facility = Facility::findOrFail($validated['facility_id']);
 
         // Check availability
-        if (!$facility->isAvailable($validated['check_in_date'], $validated['check_out_date'])) {
+        if (! $facility->isAvailable($validated['check_in_date'], $validated['check_out_date'])) {
             return back()->withErrors(['check_in_date' => 'Fasilitas tidak tersedia untuk tanggal yang dipilih.']);
         }
 
@@ -65,31 +69,52 @@ class ReservationController extends Controller
         }
 
         // Calculate total
-        $checkIn = \Carbon\Carbon::parse($validated['check_in_date']);
-        $checkOut = \Carbon\Carbon::parse($validated['check_out_date']);
+        $checkIn = Carbon::parse($validated['check_in_date']);
+        $checkOut = Carbon::parse($validated['check_out_date']);
         $days = max($checkIn->diffInDays($checkOut), 1);
 
         if ($facility->type === 'homestay') {
             $total = $facility->price_per_day * $days;
         } else {
             // For gazebo/pool: price per hour, minimum 1 hour
-            $checkInTime = \Carbon\Carbon::parse($validated['check_in_time'] ?? '08:00');
-            $checkOutTime = \Carbon\Carbon::parse($validated['check_out_time'] ?? '17:00');
+            $checkInTime = Carbon::parse($validated['check_in_time'] ?? '08:00');
+            $checkOutTime = Carbon::parse($validated['check_out_time'] ?? '17:00');
             $hours = max($checkInTime->diffInHours($checkOutTime), 1);
             $total = ($facility->price_per_hour ?? 0) * $hours * $days;
+        }
+
+        // Process Coupon
+        $discountAmount = 0;
+        if (! empty($validated['coupon_code'])) {
+            $coupon = Coupon::where('code', $validated['coupon_code'])
+                ->where('is_active', true)
+                ->first();
+
+            if ($coupon && $coupon->isValid($total)) {
+                $discountAmount = $coupon->calculateDiscount($total);
+                $total -= $discountAmount;
+                // Increment use count
+                $coupon->increment('used_count');
+            } else {
+                return back()->withErrors(['coupon_code' => 'Kupon tidak valid atau syarat belum terpenuhi.'])->withInput();
+            }
         }
 
         $reservation = Reservation::create([
             ...$validated,
             'user_id' => auth()->id(),
             'total_amount' => $total,
+            'discount_amount' => $discountAmount,
             'status' => 'pending',
             'payment_status' => 'unpaid',
         ]);
 
         // Notify Admins and Staff
         $adminsAndStaff = User::role(['admin', 'staff', 'manager'])->get();
-        \Illuminate\Support\Facades\Notification::send($adminsAndStaff, new NewReservation($reservation));
+        Notification::send($adminsAndStaff, new NewReservation($reservation));
+
+        // Notify Customer (Invoice)
+        auth()->user()->notify(new ReservationInvoiceNotification($reservation));
 
         return redirect()->route('customer.reservations.coupon', $reservation)
             ->with('success', 'Reservasi berhasil dibuat. Silakan simpan kupon ini.');
@@ -122,7 +147,7 @@ class ReservationController extends Controller
     {
         Gate::authorize('cancel', $reservation);
 
-        if (!$reservation->canBeCancelled()) {
+        if (! $reservation->canBeCancelled()) {
             return back()->with('error', 'Reservasi tidak dapat dibatalkan.');
         }
 

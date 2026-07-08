@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Reservation;
 use App\Models\Facility;
+use App\Models\Reservation;
 use App\Notifications\ReservationStatusUpdated;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -16,11 +16,11 @@ class ReservationController extends Controller
     {
         $reservations = Reservation::query()
             ->with(['user', 'facility'])
-            ->when($request->search, fn($q) => $q->whereHas('user', fn($u) => $u->where('name', 'like', "%{$request->search}%")))
-            ->when($request->status, fn($q) => $q->where('status', $request->status))
-            ->when($request->facility_id, fn($q) => $q->where('facility_id', $request->facility_id))
-            ->when($request->date_from, fn($q) => $q->where('check_in_date', '>=', $request->date_from))
-            ->when($request->date_to, fn($q) => $q->where('check_in_date', '<=', $request->date_to))
+            ->when($request->search, fn ($q) => $q->whereHas('user', fn ($u) => $u->where('name', 'like', "%{$request->search}%")))
+            ->when($request->status, fn ($q) => $q->where('status', $request->status))
+            ->when($request->facility_id, fn ($q) => $q->where('facility_id', $request->facility_id))
+            ->when($request->date_from, fn ($q) => $q->where('check_in_date', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->where('check_in_date', '<=', $request->date_to))
             ->latest()
             ->paginate(15)
             ->withQueryString();

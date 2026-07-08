@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -29,10 +32,11 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-        $cmsSettings = \Illuminate\Support\Facades\Cache::remember('cms_settings', 60 * 24, function () {
-            if (\Illuminate\Support\Facades\Schema::hasTable('settings')) {
-                return \App\Models\Setting::pluck('value', 'key')->toArray();
+        $cmsSettings = Cache::remember('cms_settings', 60 * 24, function () {
+            if (Schema::hasTable('settings')) {
+                return Setting::pluck('value', 'key')->toArray();
             }
+
             return [];
         });
 
@@ -50,9 +54,11 @@ class HandleInertiaRequests extends Middleware
             ],
             'roles' => $request->user() ? $request->user()->getRoleNames() : [],
             'flash' => [
-                'success' => fn() => $request->session()->get('success'),
-                'error' => fn() => $request->session()->get('error'),
-                'warning' => fn() => $request->session()->get('warning'),
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'warning' => fn () => $request->session()->get('warning'),
+                'print_order_id' => fn () => $request->session()->get('print_order_id'),
+                'change_amount' => fn () => $request->session()->get('change_amount'),
             ],
             'cms_settings' => $cmsSettings,
         ];

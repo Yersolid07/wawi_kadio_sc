@@ -9,7 +9,6 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
-use Spatie\Permission\Models\Role;
 
 class TripayWebhookTest extends TestCase
 {
@@ -18,7 +17,7 @@ class TripayWebhookTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         Config::set('services.tripay.private_key', 'test-private-key');
     }
 
@@ -30,7 +29,7 @@ class TripayWebhookTest extends TestCase
     public function test_webhook_processes_paid_status_correctly()
     {
         $user = User::factory()->create();
-        
+
         $facility = Facility::create([
             'name' => 'Villa A',
             'type' => 'homestay',
@@ -82,7 +81,7 @@ class TripayWebhookTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-                 ->assertJson(['success' => true]);
+            ->assertJson(['success' => true]);
 
         $this->assertDatabaseHas('payments', [
             'id' => $payment->id,
@@ -110,13 +109,13 @@ class TripayWebhookTest extends TestCase
         ]);
 
         $response->assertStatus(400)
-                 ->assertJson(['error' => 'Invalid signature']);
+            ->assertJson(['error' => 'Invalid signature']);
     }
 
     public function test_webhook_processes_failed_status()
     {
         $user = User::factory()->create();
-        
+
         $facility = Facility::create([
             'name' => 'Villa A',
             'type' => 'homestay',

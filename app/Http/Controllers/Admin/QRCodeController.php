@@ -6,10 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Facility;
 use App\Models\QRCode as QRCodeModel;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class QRCodeController extends Controller
 {
@@ -20,7 +20,7 @@ class QRCodeController extends Controller
 
         return Inertia::render('Admin/QRCodes/Index', [
             'facilities' => $facilities,
-            'qrcodes' => $qrcodes
+            'qrcodes' => $qrcodes,
         ]);
     }
 
@@ -29,7 +29,7 @@ class QRCodeController extends Controller
         $rules = [
             'label' => 'required|string|max:255',
             'type' => 'required|in:facility,table',
-            'size' => 'nullable|integer|min:100|max:1000'
+            'size' => 'nullable|integer|min:100|max:1000',
         ];
 
         if ($request->type === 'facility') {
@@ -39,23 +39,23 @@ class QRCodeController extends Controller
         }
 
         $request->validate($rules);
-        
+
         $size = $request->input('size', 500); // 500px for print quality
         $url = route('catalog.public');
 
         if ($request->type === 'facility') {
             $facility = Facility::findOrFail($request->facility_id);
-            $url .= '?location_type=facility&location_id=' . $facility->id;
+            $url .= '?location_type=facility&location_id='.$facility->id;
         } else {
-            $url .= '?location_type=table&table_number=' . urlencode($request->table_number);
+            $url .= '?location_type=table&table_number='.urlencode($request->table_number);
         }
 
         // Generate QR code as SVG file
-        $fileName = 'qrcodes/qr_' . Str::random(10) . '.svg';
-        $path = storage_path('app/public/' . $fileName);
-        
+        $fileName = 'qrcodes/qr_'.Str::random(10).'.svg';
+        $path = storage_path('app/public/'.$fileName);
+
         // Ensure directory exists
-        if (!file_exists(storage_path('app/public/qrcodes'))) {
+        if (! file_exists(storage_path('app/public/qrcodes'))) {
             mkdir(storage_path('app/public/qrcodes'), 0755, true);
         }
 
@@ -66,7 +66,7 @@ class QRCodeController extends Controller
             'location_type' => $request->type,
             'location_id' => $request->facility_id,
             'table_number' => $request->table_number,
-            'image_path' => '/storage/' . $fileName,
+            'image_path' => '/storage/'.$fileName,
             'url' => $url,
         ]);
 
@@ -81,7 +81,7 @@ class QRCodeController extends Controller
         }
 
         $qrcode->delete();
-        
+
         return redirect()->back()->with('success', 'QR Code berhasil dihapus.');
     }
 }

@@ -13,8 +13,8 @@ class ReviewController extends Controller
     public function index(Request $request): Response
     {
         $reviews = Review::with(['user', 'reservation.facility'])
-            ->when($request->rating, fn($q) => $q->where('rating', $request->rating))
-            ->when($request->visibility !== null, fn($q) => $q->where('is_public', $request->visibility === 'public'))
+            ->when($request->rating, fn ($q) => $q->where('rating', $request->rating))
+            ->when($request->visibility !== null, fn ($q) => $q->where('is_public', $request->visibility === 'public'))
             ->latest()
             ->paginate(15)
             ->withQueryString();
@@ -32,7 +32,7 @@ class ReviewController extends Controller
 
     public function toggleVisibility(Review $review)
     {
-        $review->update(['is_public' => !$review->is_public]);
+        $review->update(['is_public' => ! $review->is_public]);
 
         return back()->with('success', $review->is_public ? 'Ulasan disembunyikan.' : 'Ulasan dipublish.');
     }

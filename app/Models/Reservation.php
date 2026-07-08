@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -21,6 +21,8 @@ class Reservation extends Model
         'check_out_time',
         'guest_count',
         'total_amount',
+        'coupon_code',
+        'discount_amount',
         'status',
         'payment_status',
         'special_requests',
@@ -32,7 +34,7 @@ class Reservation extends Model
         static::creating(function (Reservation $reservation) {
             if (empty($reservation->unique_code)) {
                 // Generate WK-XXXXXX
-                $reservation->unique_code = 'WK-' . strtoupper(substr(md5(uniqid()), 0, 6));
+                $reservation->unique_code = 'WK-'.strtoupper(substr(md5(uniqid()), 0, 6));
             }
         });
     }
@@ -95,7 +97,7 @@ class Reservation extends Model
 
     public function canBeReviewed(): bool
     {
-        return $this->status === 'completed' && !$this->review()->exists();
+        return $this->status === 'completed' && ! $this->review()->exists();
     }
 
     public function canBeCancelled(): bool

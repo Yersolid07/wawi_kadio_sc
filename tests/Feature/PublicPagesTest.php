@@ -5,8 +5,8 @@ namespace Tests\Feature;
 use App\Models\Facility;
 use App\Models\MenuItem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use Inertia\Testing\AssertableInertia as Assert;
+use Tests\TestCase;
 
 class PublicPagesTest extends TestCase
 {
@@ -19,7 +19,7 @@ class PublicPagesTest extends TestCase
             'type' => 'homestay',
             'description' => 'A nice test homestay',
             'price_per_day' => 500000,
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         MenuItem::create([
@@ -27,7 +27,7 @@ class PublicPagesTest extends TestCase
             'description' => 'Fried rice',
             'price' => 25000,
             'category' => 'makanan',
-            'is_available' => true
+            'is_available' => true,
         ]);
 
         $response = $this->get('/');

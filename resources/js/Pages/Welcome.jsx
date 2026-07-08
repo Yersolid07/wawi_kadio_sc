@@ -1,6 +1,11 @@
 import { Head, Link } from '@inertiajs/react';
 import { Coffee, Star, ArrowRight, HeartPulse, ChevronDown, Utensils, Building2, Leaf, Waves, Sun, Wind, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, EffectFade } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 
 const formatPrice = (val) => {
     const n = parseFloat(val);
@@ -17,7 +22,7 @@ const FADE_UP = {
 };
 const STAGGER = { visible: { transition: { staggerChildren: 0.1 } } };
 
-export default function Welcome({ auth, facilities = [], menuItems = [], reviews = [], siteSettings = {} }) {
+export default function Welcome({ auth, facilities = [], menuItems = [], reviews = [], siteSettings = {}, banners = [] }) {
     
     // Helper to get setting or fallback
     const getSetting = (key, fallback = '') => {
@@ -175,6 +180,50 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                         ))}
                     </div>
                 </section>
+
+                {/* ═══ BANNERS / PROMO CAROUSEL ═══ */}
+                {banners && banners.length > 0 && (
+                    <section className="py-12 bg-white">
+                        <div className="max-w-7xl mx-auto px-6">
+                            <Swiper
+                                modules={[Autoplay, Pagination, EffectFade]}
+                                spaceBetween={30}
+                                slidesPerView={1}
+                                autoplay={{ delay: 5000, disableOnInteraction: false }}
+                                pagination={{ clickable: true, dynamicBullets: true }}
+                                effect="fade"
+                                className="rounded-[2.5rem] overflow-hidden shadow-2xl shadow-stone-200"
+                            >
+                                {banners.map((banner) => (
+                                    <SwiperSlide key={banner.id}>
+                                        <div className="relative aspect-[21/9] md:aspect-[21/7] lg:aspect-[21/6] bg-slate-900 group">
+                                            <img
+                                                src={`/storage/${banner.image_path}`}
+                                                alt={banner.title}
+                                                className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                                                <h3 className="text-2xl md:text-4xl font-black text-white mb-2">{banner.title}</h3>
+                                                {banner.description && (
+                                                    <p className="text-white/80 max-w-2xl text-sm md:text-base mb-6 line-clamp-2">
+                                                        {banner.description}
+                                                    </p>
+                                                )}
+                                                {banner.link_url && (
+                                                    <div>
+                                                        <a href={banner.link_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-emerald-500/30">
+                                                            Lihat Promo <ArrowRight size={18} />
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </SwiperSlide>
+                                ))}
+                            </Swiper>
+                        </div>
+                    </section>
+                )}
 
                 {/* ═══ ABOUT SECTION ═══ */}
                 <section id="about" className="py-20 px-6 bg-white">

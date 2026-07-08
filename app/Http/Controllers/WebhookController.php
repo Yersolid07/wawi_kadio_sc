@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Notifications\PaymentReceiptNotification;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 
 class WebhookController extends Controller
 {
@@ -20,13 +20,13 @@ class WebhookController extends Controller
 
         $data = json_decode($json);
 
-        if (!$data || !isset($data->merchant_ref)) {
+        if (! $data || ! isset($data->merchant_ref)) {
             return response()->json(['error' => 'Invalid payload'], 400);
         }
 
         $payment = Payment::where('payment_reference', $data->merchant_ref)->first();
 
-        if (!$payment) {
+        if (! $payment) {
             return response()->json(['error' => 'Payment not found'], 404);
         }
 
@@ -54,6 +54,14 @@ class WebhookController extends Controller
                     'status' => 'preparing',
                 ]);
             }
+
+            // Notify Customer (Receipt)
+            if ($payment->reservation && $payment->reservation->user) {
+                $payment->reservation->user->notify(new PaymentReceiptNotification($payment));
+            } elseif ($payment->foodOrder && $payment->foodOrder->user) {
+                $payment->foodOrder->user->notify(new PaymentReceiptNotification($payment));
+            }
+
         } elseif (in_array($data->status, ['FAILED', 'EXPIRED'])) {
             $payment->update([
                 'payment_status' => 'failed',

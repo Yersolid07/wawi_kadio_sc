@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\FoodOrder;
-use App\Models\FoodOrderItem;
 use App\Models\MenuItem;
+use App\Models\QRCode;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\NewFoodOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,8 +32,7 @@ class FoodOrderController extends Controller
         if (auth()->check()) {
             $activeReservations = Reservation::with('facility')
                 ->where('user_id', auth()->id())
-                ->whereIn('payment_status', ['paid'])
-                ->whereIn('status', ['confirmed', 'checked_in'])
+                ->whereIn('status', ['pending', 'confirmed', 'checked_in'])
                 ->get();
         }
 
@@ -44,9 +44,9 @@ class FoodOrderController extends Controller
                 ->groupBy('category'),
             'reservationId' => $request->reservation_id,
             'activeReservations' => $activeReservations,
-            'qrCodes' => \App\Models\QRCode::all(),
+            'qrCodes' => QRCode::all(),
             'isAuthenticated' => auth()->check(),
-            'user' => auth()->user()
+            'user' => auth()->user(),
         ]);
     }
 
@@ -62,7 +62,7 @@ class FoodOrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ];
 
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             $rules['guest_name'] = 'required|string|max:255';
             $rules['guest_phone'] = 'required|string|max:50';
         }
@@ -72,7 +72,7 @@ class FoodOrderController extends Controller
         $totalAmount = 0;
         foreach ($validated['items'] as $item) {
             $menuItem = MenuItem::findOrFail($item['menu_item_id']);
-            $totalAmount += $menuItem->price * $item['quantity'];
+            $totalAmount += $menuItem->final_price * $item['quantity'];
         }
 
         $orderData = [
@@ -98,13 +98,13 @@ class FoodOrderController extends Controller
             $order->items()->create([
                 'menu_item_id' => $menuItem->id,
                 'quantity' => $item['quantity'],
-                'price' => $menuItem->price,
+                'price' => $menuItem->final_price,
             ]);
         }
 
         // Notify Admins and Staff
-        $adminsAndStaff = \App\Models\User::role(['admin', 'staff', 'manager'])->get();
-        \Illuminate\Support\Facades\Notification::send($adminsAndStaff, new \App\Notifications\NewFoodOrder($order));
+        $adminsAndStaff = User::role(['admin', 'staff', 'manager'])->get();
+        Notification::send($adminsAndStaff, new NewFoodOrder($order));
 
         return redirect()->route('customer.orders.show', $order->id)
             ->with('success', 'Pesanan makanan berhasil dibuat!');
@@ -116,7 +116,7 @@ class FoodOrderController extends Controller
         if (auth()->check()) {
             if ($order->user_id && $order->user_id !== auth()->id()) {
                 // Allow admin/staff to view
-                if (!auth()->user()->hasRole(['admin', 'manager', 'staff'])) {
+                if (! auth()->user()->hasRole(['admin', 'manager', 'staff'])) {
                     abort(403);
                 }
             }
@@ -128,7 +128,7 @@ class FoodOrderController extends Controller
 
         return Inertia::render('Customer/FoodOrders/Show', [
             'order' => $order->load(['items.menuItem', 'reservation.facility']),
-            'isGuest' => !$order->user_id
+            'isGuest' => ! $order->user_id,
         ]);
     }
 }

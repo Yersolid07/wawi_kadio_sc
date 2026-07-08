@@ -33,7 +33,9 @@ class PaymentController extends Controller
 
         $reservation = Reservation::findOrFail($validated['reservation_id']);
 
-        if ($reservation->user_id !== auth()->id()) abort(403);
+        if ($reservation->user_id !== auth()->id()) {
+            abort(403);
+        }
         if ($reservation->payment_status === 'paid') {
             return back()->with('error', 'Reservasi ini sudah dibayar.');
         }
@@ -55,39 +57,39 @@ class PaymentController extends Controller
                 $apiKey = config('services.tripay.api_key');
                 $privateKey = config('services.tripay.private_key');
                 $merchantCode = config('services.tripay.merchant_code');
-                $merchantRef = 'WAWI-' . time() . '-' . $reservation->id;
-                
+                $merchantRef = 'WAWI-'.time().'-'.$reservation->id;
+
                 $data = [
-                    'method'         => 'QRIS', // Default to QRIS for simple testing
-                    'merchant_ref'   => $merchantRef,
-                    'amount'         => (int) $reservation->total_amount,
-                    'customer_name'  => auth()->user()->name,
+                    'method' => 'QRIS', // Default to QRIS for simple testing
+                    'merchant_ref' => $merchantRef,
+                    'amount' => (int) $reservation->total_amount,
+                    'customer_name' => auth()->user()->name,
                     'customer_email' => auth()->user()->email,
                     'customer_phone' => auth()->user()->phone ?? '081234567890',
-                    'order_items'    => [
+                    'order_items' => [
                         [
-                            'sku'         => 'RES-' . $reservation->unique_code,
-                            'name'        => 'Reservasi ' . $reservation->facility->name,
-                            'price'       => (int) $reservation->total_amount,
-                            'quantity'    => 1,
-                        ]
+                            'sku' => 'RES-'.$reservation->unique_code,
+                            'name' => 'Reservasi '.$reservation->facility->name,
+                            'price' => (int) $reservation->total_amount,
+                            'quantity' => 1,
+                        ],
                     ],
-                    'return_url'   => route('customer.reservations.show', $reservation->id),
+                    'return_url' => route('customer.reservations.show', $reservation->id),
                     'expired_time' => (time() + (24 * 60 * 60)), // 24 hours
-                    'signature'    => hash_hmac('sha256', $merchantCode.$merchantRef.(int)$reservation->total_amount, $privateKey)
+                    'signature' => hash_hmac('sha256', $merchantCode.$merchantRef.(int) $reservation->total_amount, $privateKey),
                 ];
 
                 $curl = curl_init();
                 curl_setopt_array($curl, [
-                    CURLOPT_FRESH_CONNECT  => true,
-                    CURLOPT_URL            => config('services.tripay.api_url', 'https://tripay.co.id/api-sandbox/transaction/create'),
+                    CURLOPT_FRESH_CONNECT => true,
+                    CURLOPT_URL => config('services.tripay.api_url', 'https://tripay.co.id/api-sandbox/transaction/create'),
                     CURLOPT_RETURNTRANSFER => true,
-                    CURLOPT_HEADER         => false,
-                    CURLOPT_HTTPHEADER     => ['Authorization: Bearer '.$apiKey],
-                    CURLOPT_FAILONERROR    => false,
-                    CURLOPT_POST           => true,
-                    CURLOPT_POSTFIELDS     => http_build_query($data),
-                    CURLOPT_IPRESOLVE      => CURL_IPRESOLVE_V4
+                    CURLOPT_HEADER => false,
+                    CURLOPT_HTTPHEADER => ['Authorization: Bearer '.$apiKey],
+                    CURLOPT_FAILONERROR => false,
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => http_build_query($data),
+                    CURLOPT_IPRESOLVE => CURL_IPRESOLVE_V4,
                 ]);
 
                 $response = curl_exec($curl);
@@ -97,12 +99,12 @@ class PaymentController extends Controller
                 if (empty($error)) {
                     $res = json_decode($response, true);
                     if ($res && isset($res['success']) && $res['success'] === true) {
-                        $paymentData['payment_reference'] = $res['data']['reference'];
+                        $paymentData['transaction_id'] = $res['data']['reference'];
                         $paymentData['gateway_response'] = json_encode($res['data']);
-                        $paymentData['transaction_id'] = $merchantRef;
-                        
+                        $paymentData['payment_reference'] = $merchantRef;
+
                         $payment = Payment::create($paymentData);
-                        
+
                         return Inertia::location($res['data']['checkout_url']);
                     } else {
                         // For fallback when Tripay fails or not configured properly
@@ -117,12 +119,15 @@ class PaymentController extends Controller
 
         // Fallback or non-tripay creation
         Payment::create($paymentData);
+
         return back()->with('success', 'Pembayaran berhasil dicatat. Menunggu verifikasi.');
     }
 
     public function show(Payment $payment): Response
     {
-        if ($payment->reservation?->user_id !== auth()->id()) abort(403);
+        if ($payment->reservation?->user_id !== auth()->id()) {
+            abort(403);
+        }
 
         return Inertia::render('Customer/Payments/Show', [
             'payment' => $payment->load(['reservation.facility']),

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
 class ReportTest extends TestCase
@@ -16,9 +15,9 @@ class ReportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // roles seeded in TestCase::setUp()
-        
+
         $this->admin = User::factory()->create();
         $this->admin->assignRole('admin');
     }

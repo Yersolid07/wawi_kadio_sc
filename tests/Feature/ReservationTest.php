@@ -5,27 +5,28 @@ namespace Tests\Feature;
 use App\Models\Facility;
 use App\Models\Reservation;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
-use Spatie\Permission\Models\Role;
 use Carbon\Carbon;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class ReservationTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $customer;
+
     protected Facility $facility;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Role 'customer' is already seeded in TestCase::setUp()
-        
+
         $this->customer = User::factory()->create();
         $this->customer->assignRole('customer');
-        
+
         $this->facility = Facility::create([
             'name' => 'Villa A',
             'type' => 'homestay',
@@ -56,8 +57,8 @@ class ReservationTest extends TestCase
         $this->assertDatabaseHas('reservations', [
             'user_id' => $this->customer->id,
             'facility_id' => $this->facility->id,
-            'check_in_date' => $checkIn . ' 00:00:00',
-            'check_out_date' => $checkOut . ' 00:00:00',
+            'check_in_date' => $checkIn.' 00:00:00',
+            'check_out_date' => $checkOut.' 00:00:00',
             'status' => 'pending',
         ]);
 
@@ -81,7 +82,7 @@ class ReservationTest extends TestCase
             'check_out_date' => $checkOut,
             'guest_count' => 2,
             'total_amount' => 3000000,
-            'status' => 'confirmed'
+            'status' => 'confirmed',
         ]);
 
         // Try to book overlapping dates
@@ -112,7 +113,7 @@ class ReservationTest extends TestCase
             'check_out_date' => $checkOut,
             'guest_count' => 2,
             'total_amount' => 3000000,
-            'status' => 'confirmed'
+            'status' => 'confirmed',
         ]);
 
         // Try to book starting EXACTLY on the $checkOut date

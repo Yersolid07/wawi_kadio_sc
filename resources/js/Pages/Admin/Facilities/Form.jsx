@@ -17,6 +17,7 @@ export default function FacilityForm({ facility }) {
         price_per_day: facility?.price_per_day || '',
         price_per_hour: facility?.price_per_hour || '',
         image: null,
+        promo_name: facility?.promo_name || '',
         is_active: facility?.is_active ?? true,
         _method: isEdit ? 'PUT' : 'POST',
     });
@@ -151,6 +152,20 @@ export default function FacilityForm({ facility }) {
                                     rows={3}
                                     placeholder="Deskripsi fasilitas..."
                                     className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none resize-none"
+                                />
+                            </div>
+
+                            {/* Promo Name */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                    Nama Promo / Campaign (Opsional)
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.promo_name}
+                                    onChange={e => setData('promo_name', e.target.value)}
+                                    placeholder="contoh: Promo Lebaran"
+                                    className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                                 />
                             </div>
 

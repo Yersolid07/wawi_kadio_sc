@@ -13,7 +13,7 @@ class DashboardTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // roles seeded in TestCase::setUp()
         $this->withoutVite();
     }
@@ -24,7 +24,7 @@ class DashboardTest extends TestCase
         $admin->assignRole('admin');
 
         $response = $this->actingAs($admin)->get(route('dashboard'));
-        
+
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('Dashboard/Admin'));
     }
@@ -35,7 +35,7 @@ class DashboardTest extends TestCase
         $staff->assignRole('staff');
 
         $response = $this->actingAs($staff)->get(route('dashboard'));
-        
+
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('Dashboard/Staff'));
     }
@@ -46,7 +46,7 @@ class DashboardTest extends TestCase
         $customer->assignRole('customer');
 
         $response = $this->actingAs($customer)->get(route('dashboard'));
-        
+
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page->component('Dashboard/Customer'));
     }

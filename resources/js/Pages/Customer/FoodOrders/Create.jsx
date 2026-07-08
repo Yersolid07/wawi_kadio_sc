@@ -85,7 +85,10 @@ export default function Create({ menuItems, reservationId, activeReservations = 
     };
 
     const cartTotal = useMemo(() => {
-        return Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        return Object.values(cart).reduce((sum, item) => {
+            const priceToUse = item.final_price !== undefined ? item.final_price : item.price;
+            return sum + (priceToUse * item.quantity);
+        }, 0);
     }, [cart]);
 
     const submit = (e) => {
@@ -137,7 +140,14 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                             <div className="flex-1 flex flex-col justify-between">
                                                 <div>
                                                     <h4 className="font-bold text-slate-900 leading-tight">{item.name}</h4>
-                                                    <p className="font-bold text-emerald-600 mt-1">Rp {formatPrice(item.price)}</p>
+                                                    {item.final_price < item.price ? (
+                                                        <div className="flex flex-col mt-1">
+                                                            <span className="text-xs text-slate-400 line-through">Rp {formatPrice(item.price)}</span>
+                                                            <span className="font-bold text-rose-600">Rp {formatPrice(item.final_price)}</span>
+                                                        </div>
+                                                    ) : (
+                                                        <p className="font-bold text-emerald-600 mt-1">Rp {formatPrice(item.price)}</p>
+                                                    )}
                                                 </div>
                                                 <div className="flex justify-end items-center mt-2">
                                                     {qty === 0 ? (
@@ -198,7 +208,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                             <span>{item.name}</span>
                                         </div>
                                         <span className="font-bold text-slate-900 whitespace-nowrap">
-                                            Rp {formatPrice(item.price * item.quantity)}
+                                            Rp {formatPrice((item.final_price !== undefined ? item.final_price : item.price) * item.quantity)}
                                         </span>
                                     </div>
                                 ))}

@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use App\Models\FoodOrder;
 use App\Models\MenuItem;
+use App\Models\User;
 use App\Notifications\NewFoodOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
-use Illuminate\Support\Facades\Notification;
-use App\Models\User;
 
 class POSController extends Controller
 {
@@ -50,16 +50,16 @@ class POSController extends Controller
         $totalAmount = 0;
         foreach ($validated['items'] as $item) {
             $menuItem = MenuItem::findOrFail($item['menu_item_id']);
-            $totalAmount += $menuItem->price * $item['quantity'];
+            $totalAmount += $menuItem->final_price * $item['quantity'];
         }
 
         if ($validated['payment_method'] === 'cash' && $validated['amount_paid'] < $totalAmount) {
             return back()->withErrors(['amount_paid' => 'Jumlah bayar kurang dari total tagihan.']);
         }
 
-        if (!empty($validated['order_id'])) {
+        if (! empty($validated['order_id'])) {
             $order = FoodOrder::findOrFail($validated['order_id']);
-            
+
             // Check if there are new items to add to this order
             $newItemsAdded = false;
             foreach ($validated['items'] as $item) {
@@ -68,7 +68,7 @@ class POSController extends Controller
                     $order->items()->create([
                         'menu_item_id' => $menuItem->id,
                         'quantity' => $item['quantity'],
-                        'price' => $menuItem->price,
+                        'price' => $menuItem->final_price,
                         'notes' => $item['notes'] ?? null,
                     ]);
                     $newItemsAdded = true;
@@ -77,7 +77,7 @@ class POSController extends Controller
 
             // Always recalculate based on DB state to be safe, or just trust the new sum
             $order->recalculateTotal();
-            
+
             $order->update([
                 'payment_status' => 'paid',
                 'user_id' => auth()->id(), // the cashier who closed this
@@ -98,7 +98,7 @@ class POSController extends Controller
                     Notification::send($kitchenStaff, new NewFoodOrder($order));
                 }
             }
-            
+
         } else {
             $orderData = [
                 'total_amount' => $totalAmount,
@@ -118,7 +118,7 @@ class POSController extends Controller
                 $order->items()->create([
                     'menu_item_id' => $menuItem->id,
                     'quantity' => $item['quantity'],
-                    'price' => $menuItem->price,
+                    'price' => $menuItem->final_price,
                     'notes' => $item['notes'] ?? null,
                 ]);
             }
@@ -150,6 +150,7 @@ class POSController extends Controller
     public function print(FoodOrder $order)
     {
         $order->load(['items.menuItem', 'user']);
+
         return view('reports.pos-receipt', compact('order'));
     }
 }

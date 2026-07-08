@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
-import { ArrowLeft, Clock, ChefHat, Check, Printer, Phone } from 'lucide-react';
+import { ArrowLeft, Clock, ChefHat, Check, Printer, Phone, Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 

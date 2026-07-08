@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Public;
 
 use App\Http\Controllers\Controller;
 use App\Models\MenuItem;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class MenuItemController extends Controller
 {
@@ -18,15 +18,15 @@ class MenuItemController extends Controller
         }
 
         if ($request->has('search') && $request->search) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('description', 'like', '%'.$request->search.'%');
         }
 
         $menuItems = $query->orderBy('category')->orderBy('name')->get();
 
         return Inertia::render('Public/Katalog', [
             'menuItems' => $menuItems,
-            'filters' => $request->only(['category', 'search'])
+            'filters' => $request->only(['category', 'search']),
         ]);
     }
 }

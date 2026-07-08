@@ -8,25 +8,26 @@ use App\Models\MenuItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use Spatie\Permission\Models\Role;
 
 class FoodOrderTest extends TestCase
 {
     use RefreshDatabase;
 
     protected User $customer;
+
     protected MenuItem $menu1;
+
     protected MenuItem $menu2;
 
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // roles seeded in TestCase::setUp()
-        
+
         $this->customer = User::factory()->create();
         $this->customer->assignRole('customer');
-        
+
         $this->menu1 = MenuItem::create([
             'name' => 'Nasi Goreng',
             'category' => 'makanan',
@@ -55,7 +56,7 @@ class FoodOrderTest extends TestCase
                 [
                     'menu_item_id' => $this->menu2->id,
                     'quantity' => 3, // 30,000
-                ]
+                ],
             ],
         ]);
 
@@ -114,14 +115,14 @@ class FoodOrderTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->customer)->get(route('customer.orders.show', $order));
-        
+
         $response->assertStatus(200);
     }
 
     public function test_customer_cannot_view_others_order()
     {
         $otherUser = User::factory()->create();
-        
+
         $order = FoodOrder::create([
             'user_id' => $otherUser->id,
             'order_type' => 'takeaway',
@@ -130,7 +131,7 @@ class FoodOrderTest extends TestCase
         ]);
 
         $response = $this->actingAs($this->customer)->get(route('customer.orders.show', $order));
-        
+
         $response->assertStatus(403);
     }
 }

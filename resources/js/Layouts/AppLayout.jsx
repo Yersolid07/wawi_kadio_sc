@@ -3,7 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import {
     LayoutDashboard, Hotel, CalendarDays, UtensilsCrossed,
     CreditCard, Star, Users, FileText, Menu, X, ChevronDown,
-    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart
+    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart, Image as ImageIcon
 } from 'lucide-react';
 
 const navItems = [
@@ -15,12 +15,15 @@ const navItems = [
     { label: 'Food Orders', href: 'admin.food-orders.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
     { label: 'Kasir POS', href: 'staff.pos.index', icon: ShoppingCart, roles: ['admin', 'manager', 'staff'] },
     { label: 'Pembayaran', href: 'admin.payments.index', icon: CreditCard, roles: ['admin', 'manager'] },
-    { label: 'Ulasan', href: 'admin.reviews.index', icon: Star, roles: ['admin', 'manager'] },
-    { label: 'Pengguna', href: 'admin.users.index', icon: Users, roles: ['admin'] },
+    { label: 'Ulasan Tamu', href: 'admin.reviews.index', icon: Star, roles: ['admin', 'manager'] },
+    { label: 'Kupon & Diskon', href: 'admin.coupons.index', icon: Package, roles: ['admin', 'manager'] },
+    { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin', 'manager'] },
     { label: 'Laporan', href: 'admin.reports.index', icon: FileText, roles: ['admin', 'manager'] },
     { label: 'Inventori Stok', href: 'admin.inventories.index', icon: Package, roles: ['admin'] },
+    { label: 'CMS Banner', href: 'admin.banners.index', icon: ImageIcon, roles: ['admin', 'manager'] },
     { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin'] },
     { label: 'QR Codes', href: 'admin.qrcodes.index', icon: QrCode, roles: ['admin'] },
+    { label: 'Pengguna', href: 'admin.users.index', icon: Users, roles: ['admin'] },
     // Staff / Kitchen
     { label: 'Monitor Dapur', href: 'staff.kds', icon: UtensilsCrossed, roles: ['admin', 'manager', 'staff'] },
     { label: 'Check-in/out', href: 'staff.reservations.index', icon: CalendarDays, roles: ['staff'] },
@@ -258,14 +261,18 @@ export default function AppLayout({ children, title }) {
                                         >
                                             <User size={16} /> Profil Saya
                                         </Link>
-                                        <Link href={route('staff.food-orders.index')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${route().current('staff.food-orders.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-stone-50 hover:text-emerald-600'}`}>
-                                            <UtensilsCrossed size={20} />
-                                            Manajemen Pesanan
-                                        </Link>
-                                        <Link href={route('staff.pos.index')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${route().current('staff.pos.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-stone-50 hover:text-emerald-600'}`}>
-                                            <ShoppingCart size={20} />
-                                            Kasir POS
-                                        </Link>
+                                        {userRoles.some(role => ['admin', 'manager', 'staff'].includes(role)) && (
+                                            <>
+                                                <Link href={route('staff.food-orders.index')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${route().current('staff.food-orders.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-stone-50 hover:text-emerald-600'}`}>
+                                                    <UtensilsCrossed size={20} />
+                                                    Manajemen Pesanan
+                                                </Link>
+                                                <Link href={route('staff.pos.index')} className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${route().current('staff.pos.index') ? 'bg-emerald-50 text-emerald-700' : 'text-slate-600 hover:bg-stone-50 hover:text-emerald-600'}`}>
+                                                    <ShoppingCart size={20} />
+                                                    Kasir POS
+                                                </Link>
+                                            </>
+                                        )}
                                         <div className="h-px bg-stone-100 my-1"></div>
                                         <Link
                                             href={route('logout')}

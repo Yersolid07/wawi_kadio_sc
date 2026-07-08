@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Mail\OrderSuccessMail;
+use App\Mail\ReservationSuccessMail;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Mail;
 
 class Payment extends Model
 {
@@ -41,7 +44,7 @@ class Payment extends Model
 
     public function getProofImageUrlAttribute(): ?string
     {
-        return $this->proof_image ? asset('storage/' . $this->proof_image) : null;
+        return $this->proof_image ? asset('storage/'.$this->proof_image) : null;
     }
 
     public function scopeByStatus($query, string $status)
@@ -49,7 +52,7 @@ class Payment extends Model
         return $query->where('payment_status', $status);
     }
 
-    public function markAsSuccess(string $transactionId = null): void
+    public function markAsSuccess(?string $transactionId = null): void
     {
         $this->update([
             'payment_status' => 'success',
@@ -60,6 +63,18 @@ class Payment extends Model
         // Update related reservation/order payment status
         if ($this->reservation) {
             $this->reservation->update(['payment_status' => 'paid']);
+            if ($this->reservation->user && $this->reservation->user->email) {
+                Mail::to($this->reservation->user->email)
+                    ->send(new ReservationSuccessMail($this->reservation));
+            }
+        }
+
+        if ($this->foodOrder) {
+            $this->foodOrder->update(['payment_status' => 'paid']);
+            if ($this->foodOrder->user && $this->foodOrder->user->email) {
+                Mail::to($this->foodOrder->user->email)
+                    ->send(new OrderSuccessMail($this->foodOrder));
+            }
         }
     }
 }
