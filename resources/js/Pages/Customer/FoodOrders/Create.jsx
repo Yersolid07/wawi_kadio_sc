@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Send, UtensilsCrossed, AlertCircle, Info } from 'lucide-react';
+import { ArrowLeft, ShoppingCart, Plus, Minus, Send, UtensilsCrossed, AlertCircle, Info, CreditCard, Banknote } from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -52,6 +52,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
         items: [],
         guest_name: '',
         guest_phone: '',
+        payment_method: initialOrderType !== 'room_service' ? 'tripay' : '',
     });
 
     // Save cart to localStorage whenever it changes
@@ -316,6 +317,39 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                     placeholder="Contoh: Tidak pakai pedas, es dipisah, dll"
                                 />
                             </div>
+
+                            {data.order_type !== 'room_service' && (
+                                <div className="mt-2">
+                                    <InputLabel value="Metode Pembayaran" />
+                                    <div className="grid grid-cols-2 gap-3 mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('payment_method', 'tripay')}
+                                            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                                                data.payment_method === 'tripay'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-stone-200 bg-white text-slate-500 hover:border-emerald-200'
+                                            }`}
+                                        >
+                                            <CreditCard size={24} />
+                                            <span className="font-bold text-sm">Bayar Online</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('payment_method', 'cash')}
+                                            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                                                data.payment_method === 'cash'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-stone-200 bg-white text-slate-500 hover:border-emerald-200'
+                                            }`}
+                                        >
+                                            <Banknote size={24} />
+                                            <span className="font-bold text-sm">Bayar di Kasir</span>
+                                        </button>
+                                    </div>
+                                    <InputError message={errors.payment_method} className="mt-2" />
+                                </div>
+                            )}
                             
                             {errors.items && (
                                 <div className="p-3 bg-rose-50 text-rose-600 rounded-xl text-sm flex gap-2">
