@@ -22,8 +22,8 @@ class FoodOrder extends Model
         'order_type',
         'table_number',
         'notes',
-        'guest_name',
-        'guest_phone',
+        'customer_name',
+        'customer_phone',
         'session_id',
         'estimated_ready_at',
     ];

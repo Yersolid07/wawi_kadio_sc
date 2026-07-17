@@ -1,0 +1,93 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Coupon;
+use App\Models\Facility;
+use App\Models\Reservation;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class ReservationService
+{
+    /**
+     * Create a new reservation.
+     *
+     * @param array $validated Validated data
+     * @param int|null $userId User ID
+     * @param string|null $sessionId Session ID
+     * @return Reservation
+     * @throws \Illuminate\Validation\ValidationException
+     * @throws \Exception
+     */
+    public function createReservation(array $validated, ?int $userId, ?string $sessionId): Reservation
+    {
+        // Calculate total
+        $checkIn = Carbon::parse($validated['check_in_date']);
+        $checkOut = Carbon::parse($validated['check_out_date']);
+        $days = max($checkIn->diffInDays($checkOut), 1);
+
+        $facility = Facility::findOrFail($validated['facility_id']);
+
+        if ($facility->type === 'homestay' || $facility->type === 'gazebo') {
+            $total = $facility->price_per_day * $days;
+        } else {
+            // For pool/others if billed per hour
+            $checkInTime = Carbon::parse($validated['check_in_time'] ?? '08:00');
+            $checkOutTime = Carbon::parse($validated['check_out_time'] ?? '17:00');
+            $hours = max($checkInTime->diffInHours($checkOutTime), 1);
+            $total = ($facility->price_per_hour ?? 0) * $hours * $days;
+        }
+
+        return DB::transaction(function () use ($validated, $total, $days, $userId, $sessionId) {
+            // PESSIMISTIC LOCK: Lock the facility to prevent concurrent identical bookings
+            $facility = Facility::where('id', $validated['facility_id'])->lockForUpdate()->firstOrFail();
+            
+            // Enforce checkout date for gazebo/pool
+            if (in_array($facility->type, ['gazebo', 'pool'])) {
+                $validated['check_out_date'] = $validated['check_in_date'];
+            }
+
+            // Check availability inside the lock
+            if (! $facility->isAvailable($validated['check_in_date'], $validated['check_out_date'], $validated['check_in_time'] ?? null, $validated['check_out_time'] ?? null)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'check_in_date' => 'Fasilitas tidak tersedia untuk tanggal/jam yang dipilih.'
+                ]);
+            }
+
+            if ($facility->type === 'homestay' && $validated['check_in_date'] === $validated['check_out_date']) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'check_out_date' => 'Untuk penginapan, tanggal check-out harus berbeda hari.'
+                ]);
+            }
+
+            $discountAmount = 0;
+            if (! empty($validated['coupon_code'])) {
+                // Pessimistic lock on Coupon
+                $coupon = Coupon::where('code', $validated['coupon_code'])->lockForUpdate()->first();
+                if ($coupon && $coupon->isValid($total)) {
+                    $discountAmount = $coupon->calculateDiscount($total);
+                    $coupon->increment('used_count');
+                } else {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'coupon_code' => 'Kupon tidak valid atau syarat belum terpenuhi.'
+                    ]);
+                }
+            }
+
+            $finalTotal = max(0, $total - $discountAmount);
+
+            return Reservation::create([
+                ...$validated,
+                'user_id' => $userId,
+                'session_id' => $sessionId,
+                'unique_code' => strtoupper(Str::random(8)),
+                'total_amount' => $finalTotal,
+                'discount_amount' => $discountAmount,
+                'status' => 'pending',
+                'payment_status' => 'unpaid',
+            ]);
+        });
+    }
+}

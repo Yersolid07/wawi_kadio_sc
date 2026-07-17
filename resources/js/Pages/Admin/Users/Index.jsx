@@ -20,8 +20,8 @@ export default function Index({ users, roles, filters }) {
         );
     }, 300);
 
-    const deleteUser = (id) => {
-        if (confirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
+    const deleteUser = async (id) => {
+        if (await window.customConfirm('Apakah Anda yakin ingin menghapus pengguna ini?')) {
             router.delete(route('admin.users.destroy', id));
         }
     };

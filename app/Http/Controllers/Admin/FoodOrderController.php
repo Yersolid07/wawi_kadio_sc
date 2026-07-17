@@ -43,7 +43,9 @@ class FoodOrderController extends Controller
             'payment_status' => $validated['payment_status'] ?? $order->payment_status,
         ]);
 
-        $order->user->notify(new FoodOrderStatusUpdated($order, $validated['status']));
+        if ($order->user) {
+            $order->user->notify(new FoodOrderStatusUpdated($order, $validated['status']));
+        }
 
         return back()->with('success', "Status order diperbarui ke {$validated['status']}.");
     }

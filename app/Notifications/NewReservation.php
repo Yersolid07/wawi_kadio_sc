@@ -24,10 +24,12 @@ class NewReservation extends Notification
 
     public function toArray(object $notifiable): array
     {
+        $name = $this->reservation->user ? $this->reservation->user->name : ($this->reservation->customer_name ?? 'Tamu');
+
         return [
             'type' => 'new_reservation',
             'title' => 'Reservasi Baru',
-            'message' => 'Reservasi baru dibuat oleh '.$this->reservation->user->name.' untuk '.$this->reservation->facility->name,
+            'message' => 'Reservasi baru dibuat oleh '.$name.' untuk '.$this->reservation->facility->name,
             'url' => route('admin.reservations.show', $this->reservation->id),
             'id' => $this->reservation->id,
         ];

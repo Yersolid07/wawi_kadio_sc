@@ -33,7 +33,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        // Always redirect to dashboard to prevent 403s when switching roles
+        // (e.g. Admin logs out, Customer logs in -> intended URL was /admin/... which causes 403)
+        $request->session()->forget('url.intended');
+
+        return redirect(route('dashboard', absolute: false));
     }
 
     /**

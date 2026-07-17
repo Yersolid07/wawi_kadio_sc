@@ -24,7 +24,7 @@ class NewFoodOrder extends Notification
 
     public function toArray(object $notifiable): array
     {
-        $name = $this->order->user ? $this->order->user->name : ($this->order->guest_name ?? 'Tamu');
+        $name = $this->order->user ? $this->order->user->name : ($this->order->customer_name ?? 'Tamu');
 
         return [
             'type' => 'new_food_order',

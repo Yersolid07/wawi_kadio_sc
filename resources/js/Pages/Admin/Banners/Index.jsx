@@ -78,8 +78,8 @@ export default function BannerIndex({ auth, banners }) {
         router.patch(route('admin.banners.toggle-status', id), {}, { preserveScroll: true });
     };
 
-    const deleteBanner = (id) => {
-        if (confirm('Yakin ingin menghapus banner ini?')) {
+    const deleteBanner = async (id) => {
+        if (await window.customConfirm('Yakin ingin menghapus banner ini?')) {
             router.delete(route('admin.banners.destroy', id), { preserveScroll: true });
         }
     };

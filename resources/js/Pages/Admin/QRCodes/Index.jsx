@@ -29,8 +29,8 @@ export default function Index({ facilities, qrcodes }) {
         });
     };
 
-    const handleDelete = (qrcodeId) => {
-        if (confirm('Yakin ingin menghapus QR Code ini?')) {
+    const handleDelete = async (qrcodeId) => {
+        if (await window.customConfirm('Yakin ingin menghapus QR Code ini?')) {
             router.delete(route('admin.qrcodes.destroy', qrcodeId));
         }
     };

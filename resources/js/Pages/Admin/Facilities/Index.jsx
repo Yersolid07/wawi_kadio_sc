@@ -102,8 +102,8 @@ export default function FacilitiesIndex({ facilities, filters }) {
         router.patch(route('admin.facilities.toggle-status', facility.id));
     };
 
-    const handleDelete = (facility) => {
-        if (confirm(`Hapus fasilitas "${facility.name}"?`)) {
+    const handleDelete = async (facility) => {
+        if (await window.customConfirm(`Hapus fasilitas "${facility.name}"?`)) {
             router.delete(route('admin.facilities.destroy', facility.id));
         }
     };

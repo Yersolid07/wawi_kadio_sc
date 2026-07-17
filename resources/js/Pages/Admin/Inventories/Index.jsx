@@ -69,8 +69,8 @@ export default function Index({ inventories }) {
         });
     };
 
-    const handleDelete = (id) => {
-        if(confirm('Hapus bahan baku ini?')) {
+    const handleDelete = async (id) => {
+        if(await window.customConfirm('Hapus bahan baku ini?')) {
             router.delete(route('admin.inventories.destroy', id));
         }
     };

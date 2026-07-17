@@ -22,8 +22,8 @@ export default function Index({ coupons, filters }) {
         }
     }, [debouncedSearch, status]);
 
-    const destroy = (id) => {
-        if (confirm('Yakin ingin menghapus kupon ini?')) {
+    const destroy = async (id) => {
+        if (await window.customConfirm('Yakin ingin menghapus kupon ini?')) {
             router.delete(route('admin.coupons.destroy', id));
         }
     };

@@ -46,12 +46,21 @@ Route::get('/katalog', [MenuItemController::class, 'index'])->name('catalog.publ
 // Payment gateway webhooks (no auth)
 Route::post('/webhook/tripay', [AdminPaymentController::class, 'tripayWebhook'])->name('webhook.tripay');
 
-// Guest & Customer Food Orders (Publicly accessible but handled smartly)
 Route::prefix('pesanan')->name('customer.orders.')->group(function () {
     Route::get('/baru', [CustomerFoodOrderController::class, 'create'])->name('create');
-    Route::post('/', [CustomerFoodOrderController::class, 'store'])->name('store');
+    Route::post('/', [CustomerFoodOrderController::class, 'store'])->middleware('throttle:3,1')->name('store');
     Route::get('/{order}/track', [CustomerFoodOrderController::class, 'show'])->name('show');
     Route::get('/{order}/print', [InvoiceController::class, 'foodOrder'])->name('print');
+});
+
+// Guest & Customer Reservations (Publicly accessible but handled smartly)
+Route::prefix('reservasi')->name('customer.reservations.')->group(function () {
+    Route::get('/baru', [CustomerReservationController::class, 'create'])->name('create');
+    Route::post('/', [CustomerReservationController::class, 'store'])->middleware('throttle:5,1')->name('store');
+    Route::post('/cek-kupon', [CustomerReservationController::class, 'checkCoupon'])->name('check-coupon');
+    Route::get('/{reservation}', [CustomerReservationController::class, 'show'])->name('show');
+    Route::get('/{reservation}/kupon', [CustomerReservationController::class, 'coupon'])->name('coupon');
+    Route::get('/{reservation}/print', [InvoiceController::class, 'reservation'])->name('print');
 });
 
 /*
@@ -82,12 +91,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     */
     Route::prefix('reservasi')->name('customer.reservations.')->middleware('role:customer|admin|manager|staff')->group(function () {
         Route::get('/', [CustomerReservationController::class, 'index'])->name('index');
-        Route::get('/baru', [CustomerReservationController::class, 'create'])->name('create');
-        Route::post('/', [CustomerReservationController::class, 'store'])->name('store');
-        Route::get('/{reservation}', [CustomerReservationController::class, 'show'])->name('show');
-        Route::get('/{reservation}/kupon', [CustomerReservationController::class, 'coupon'])->name('coupon');
         Route::patch('/{reservation}/cancel', [CustomerReservationController::class, 'cancel'])->name('cancel');
-        Route::get('/{reservation}/print', [InvoiceController::class, 'reservation'])->name('print');
     });
 
     Route::prefix('pesanan')->name('customer.orders.')->middleware('role:customer|admin|manager|staff')->group(function () {
@@ -95,13 +99,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::prefix('ulasan')->name('customer.reviews.')->middleware('role:customer|admin|manager|staff')->group(function () {
-        Route::post('/', [CustomerReviewController::class, 'store'])->name('store');
+        Route::post('/', [CustomerReviewController::class, 'store'])->middleware('throttle:5,1')->name('store');
         Route::put('/{review}', [CustomerReviewController::class, 'update'])->name('update');
     });
 
     Route::prefix('pembayaran')->name('customer.payments.')->middleware('role:customer|admin|manager|staff')->group(function () {
         Route::get('/', [CustomerPaymentController::class, 'index'])->name('index');
-        Route::post('/', [CustomerPaymentController::class, 'store'])->name('store');
+        Route::post('/', [CustomerPaymentController::class, 'store'])->middleware('throttle:5,1')->name('store');
         Route::get('/{payment}', [CustomerPaymentController::class, 'show'])->name('show');
     });
 
@@ -122,9 +126,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/pos/print/{order}', [POSController::class, 'print'])->name('pos.print');
 
         Route::get('/food-orders', [StaffFoodOrderController::class, 'index'])->name('food-orders.index');
+        Route::delete('/food-orders/{order}', [StaffFoodOrderController::class, 'destroy'])->name('food-orders.destroy');
         Route::get('/kds', [StaffFoodOrderController::class, 'kds'])->name('kds');
         Route::patch('/food-orders/{order}/status', [StaffFoodOrderController::class, 'updateStatus'])->name('food-orders.status');
         Route::patch('/food-orders/{order}/timer', [StaffFoodOrderController::class, 'updateTimer'])->name('food-orders.timer');
+
+        // Daily Stock
+        Route::get('/daily-stock', [\App\Http\Controllers\Staff\DailyStockController::class, 'index'])->name('daily-stock.index');
+        Route::post('/daily-stock', [\App\Http\Controllers\Staff\DailyStockController::class, 'update'])->name('daily-stock.update');
+
+        // POS Closing
+        Route::get('/pos-closing', [\App\Http\Controllers\Staff\PosClosingController::class, 'index'])->name('pos-closing.index');
+        Route::post('/pos-closing', [\App\Http\Controllers\Staff\PosClosingController::class, 'store'])->name('pos-closing.store');
     });
 
     /*

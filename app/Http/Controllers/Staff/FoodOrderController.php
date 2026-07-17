@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\FoodOrder;
 use App\Notifications\FoodOrderStatusUpdated;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\MenuItem;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -63,5 +65,21 @@ class FoodOrderController extends Controller
         ]);
 
         return back()->with('success', 'Waktu estimasi diperbarui.');
+    }
+
+    public function destroy(FoodOrder $order)
+    {
+        DB::transaction(function () use ($order) {
+            // Restore stock for items that were deducted
+            foreach ($order->items as $item) {
+                if ($item->menuItem && $item->menuItem->daily_stock !== null) {
+                    $item->menuItem->increment('current_stock', $item->quantity);
+                }
+            }
+            
+            $order->delete();
+        });
+
+        return back()->with('success', 'Pesanan aktif berhasil dihapus dan stok telah dikembalikan.');
     }
 }

@@ -18,14 +18,14 @@ class ReservationController extends Controller
         return Inertia::render('Staff/Reservations/Index', [
             'checkIns' => Reservation::with(['user', 'facility'])
                 ->where('check_in_date', $today)
-                ->whereIn('status', ['confirmed'])
+                ->whereIn('status', ['confirmed', 'pending'])
                 ->get(),
             'checkOuts' => Reservation::with(['user', 'facility'])
                 ->where('check_out_date', $today)
-                ->whereIn('status', ['confirmed'])
+                ->whereIn('status', ['confirmed', 'checked_in'])
                 ->get(),
             'pending' => Reservation::with(['user', 'facility'])
-                ->where('status', 'pending')
+                ->whereIn('status', ['pending'])
                 ->latest()
                 ->limit(20)
                 ->get(),
@@ -38,9 +38,21 @@ class ReservationController extends Controller
             'status' => 'required|in:confirmed,completed,cancelled,checked_in',
         ]);
 
+        if ($validated['status'] === 'checked_in' && $reservation->payment_status !== 'paid') {
+            if ($reservation->payment && $reservation->payment->payment_method === 'cash') {
+                $reservation->update(['payment_status' => 'paid']);
+                $reservation->payment->markAsSuccess();
+            } else {
+                return back()->withErrors(['error' => 'Reservasi belum lunas dan bukan pembayaran cash!']);
+            }
+        }
+
         $reservation->update(['status' => $validated['status']]);
 
-        $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));
+        // Only notify registered users (guests have no user account)
+        if ($reservation->user) {
+            $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));
+        }
 
         return back()->with('success', 'Status berhasil diubah.');
     }
@@ -58,13 +70,15 @@ class ReservationController extends Controller
             'unique_code.exists' => 'Kode reservasi tidak valid atau tidak ditemukan.',
         ]);
 
-        $reservation = Reservation::with(['user', 'facility'])
+        $reservation = Reservation::with(['user', 'facility', 'payment'])
             ->where('unique_code', $request->unique_code)
             ->firstOrFail();
 
         // Verify status and payment
         if ($reservation->payment_status !== 'paid') {
-            return back()->withErrors(['unique_code' => 'Reservasi ini belum lunas. Status pembayaran: '.$reservation->payment_status]);
+            if (!($reservation->payment && $reservation->payment->payment_method === 'cash')) {
+                return back()->withErrors(['unique_code' => 'Reservasi ini belum lunas. Metode: '.($reservation->payment ? $reservation->payment->payment_method : 'Belum ada').' ('.$reservation->payment_status.')']);
+            }
         }
 
         if (in_array($reservation->status, ['completed', 'cancelled'])) {

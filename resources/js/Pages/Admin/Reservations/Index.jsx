@@ -109,8 +109,8 @@ export default function AdminReservationsIndex({ reservations, filters, faciliti
         router.get(route('admin.reservations.index'), { search, status, facility_id: facilityId }, { preserveState: true });
     };
 
-    const handleStatusChange = (reservation, newStatus) => {
-        if (confirm(`Ubah status reservasi menjadi "${newStatus}"?`)) {
+    const handleStatusChange = async (reservation, newStatus) => {
+        if (await window.customConfirm(`Ubah status reservasi menjadi "${newStatus}"?`)) {
             router.patch(route('admin.reservations.status', reservation.id), { status: newStatus });
         }
     };

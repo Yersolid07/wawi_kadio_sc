@@ -47,10 +47,15 @@ class MenuItemController extends Controller
             'promo_start' => 'nullable|date',
             'promo_end' => 'nullable|date|after_or_equal:promo_start',
             'promo_name' => 'nullable|string|max:255',
+            'daily_stock' => 'nullable|integer|min:0',
         ]);
 
         if ($request->hasFile('image')) {
             $validated['image_url'] = $request->file('image')->store('menu', 'public');
+        }
+
+        if (isset($validated['daily_stock'])) {
+            $validated['current_stock'] = $validated['daily_stock'];
         }
 
         MenuItem::create($validated);
@@ -78,6 +83,7 @@ class MenuItemController extends Controller
             'promo_start' => 'nullable|date',
             'promo_end' => 'nullable|date|after_or_equal:promo_start',
             'promo_name' => 'nullable|string|max:255',
+            'daily_stock' => 'nullable|integer|min:0',
         ]);
 
         if ($request->hasFile('image')) {
@@ -85,6 +91,12 @@ class MenuItemController extends Controller
                 Storage::disk('public')->delete($menuItem->image_url);
             }
             $validated['image_url'] = $request->file('image')->store('menu', 'public');
+        }
+
+        // If daily stock changed, adjust current stock relatively or reset it?
+        // Let's reset it if admin changes daily_stock to a new valid number.
+        if (array_key_exists('daily_stock', $validated) && $validated['daily_stock'] !== $menuItem->daily_stock) {
+            $validated['current_stock'] = $validated['daily_stock'];
         }
 
         $menuItem->update($validated);

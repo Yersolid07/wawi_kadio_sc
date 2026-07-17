@@ -26,3 +26,10 @@ Schedule::call(function () {
         }
     }
 })->dailyAt('09:00');
+
+// Reset Menu Items Current Stock to Daily Stock at Midnight
+Schedule::call(function () {
+    \Illuminate\Support\Facades\DB::table('menu_items')
+        ->whereNotNull('daily_stock')
+        ->update(['current_stock' => \Illuminate\Support\Facades\DB::raw('daily_stock')]);
+})->dailyAt('00:00');

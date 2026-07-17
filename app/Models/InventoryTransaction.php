@@ -14,6 +14,7 @@ class InventoryTransaction extends Model
         'inventory_id',
         'type', // in, out, adjustment
         'quantity',
+        'cost',
         'stock_after',
         'notes',
         'user_id',

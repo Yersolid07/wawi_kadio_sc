@@ -18,8 +18,8 @@ export default function Index({ items, filters }) {
         );
     }, 300);
 
-    const deleteItem = (id) => {
-        if (confirm('Apakah Anda yakin ingin menghapus menu ini?')) {
+    const deleteItem = async (id) => {
+        if (await window.customConfirm('Apakah Anda yakin ingin menghapus menu ini?')) {
             router.delete(route('admin.menu-items.destroy', id));
         }
     };

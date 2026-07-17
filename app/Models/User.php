@@ -52,9 +52,15 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute(): string
     {
-        return $this->avatar
-            ? asset('storage/'.$this->avatar)
-            : 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&background=16a34a&color=fff';
+        if (!$this->avatar) {
+            return 'https://ui-avatars.com/api/?name='.urlencode($this->name).'&background=16a34a&color=fff';
+        }
+
+        if (str_starts_with($this->avatar, 'http')) {
+            return $this->avatar;
+        }
+
+        return asset('storage/'.$this->avatar);
     }
 
     public function isAdmin(): bool

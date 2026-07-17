@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Leaf, Coffee } from 'lucide-react';
+import ToastListener from '@/Components/ToastListener';
 
 // Shared full-screen auth layout with nature photography split
 export default function GuestLayout({ children, title, subtitle }) {
@@ -21,6 +22,7 @@ export default function GuestLayout({ children, title, subtitle }) {
             className="min-h-screen flex font-sans bg-cover bg-center relative"
             style={{ backgroundImage: `url(${photo})` }}
         >
+            <ToastListener />
             <div className="absolute inset-0 bg-emerald-900/40 backdrop-blur-sm" />
             
             {/* ── LEFT: Info Panel ── */}

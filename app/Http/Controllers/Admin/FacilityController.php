@@ -119,10 +119,6 @@ class FacilityController extends Controller implements HasMiddleware
             return back()->with('error', 'Fasilitas tidak dapat dihapus karena masih ada reservasi aktif.');
         }
 
-        if ($facility->image_url && ! str_starts_with($facility->image_url, 'http')) {
-            Storage::disk('public')->delete($facility->image_url);
-        }
-
         $facility->delete();
 
         return redirect()->route('admin.facilities.index')

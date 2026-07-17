@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -87,29 +88,38 @@ class PaymentController extends Controller
      */
     public function tripayWebhook(Request $request)
     {
-        $signature = hash_hmac('sha256', $request->getContent(), config('services.tripay.private_key'));
+        $tripay = app(\App\Services\TripayService::class);
 
-        if ($signature !== $request->header('X-Callback-Signature')) {
+        if (! $tripay->verifyWebhookSignature($request->getContent(), $request->header('X-Callback-Signature', ''))) {
             return response()->json(['message' => 'Invalid signature'], 401);
         }
 
         $data = $request->json()->all();
 
-        $payment = Payment::where('transaction_id', $data['merchant_ref'])->first();
-
-        if (! $payment) {
+        $paymentExists = Payment::where('payment_reference', $data['merchant_ref'])->exists();
+        if (! $paymentExists) {
             return response()->json(['message' => 'Payment not found'], 404);
         }
 
-        if ($data['status'] === 'PAID') {
-            $payment->update([
-                'gateway_response' => $data,
-                'transaction_id' => $data['reference'],
-            ]);
-            $payment->markAsSuccess($data['reference']);
-        } elseif (in_array($data['status'], ['EXPIRED', 'FAILED'])) {
-            $payment->update(['payment_status' => 'failed', 'gateway_response' => $data]);
-        }
+        DB::transaction(function () use ($data) {
+            $payment = Payment::where('payment_reference', $data['merchant_ref'])
+                ->lockForUpdate()
+                ->first();
+
+            if ($payment->payment_status === 'success') {
+                return; // Idempotency
+            }
+
+            if (($data['status'] ?? '') === 'PAID') {
+                $payment->update([
+                    'gateway_response' => $data,
+                    'transaction_id'   => $data['reference'],
+                ]);
+                $payment->markAsSuccess($data['reference']);
+            } elseif (in_array($data['status'] ?? '', ['EXPIRED', 'FAILED'])) {
+                $payment->markAsFailed($data);
+            }
+        });
 
         return response()->json(['success' => true]);
     }

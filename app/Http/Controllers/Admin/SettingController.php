@@ -41,12 +41,44 @@ class SettingController extends Controller implements HasMiddleware
                 $path = $request->file($key)->store('settings', 'public');
                 Setting::set($key, '/storage/'.$path, 'image');
             } else {
-                if ($value !== null) {
-                    Setting::set($key, $value);
+                Setting::set($key, $value ?? '');
+                
+                // If the key is primary_color, also generate shades
+                if ($key === 'primary_color' && $value) {
+                    $shades = $this->generateTailwindShades($value);
+                    Setting::set('theme_colors', json_encode($shades));
                 }
             }
         }
 
         return redirect()->back()->with('success', 'Pengaturan berhasil diperbarui!');
+    }
+
+    private function generateTailwindShades($hex)
+    {
+        return [
+            '50' => $this->mixColors($hex, '#ffffff', 0.9),
+            '100' => $this->mixColors($hex, '#ffffff', 0.8),
+            '200' => $this->mixColors($hex, '#ffffff', 0.6),
+            '300' => $this->mixColors($hex, '#ffffff', 0.4),
+            '400' => $this->mixColors($hex, '#ffffff', 0.2),
+            '500' => $hex,
+            '600' => $this->mixColors($hex, '#000000', 0.2),
+            '700' => $this->mixColors($hex, '#000000', 0.4),
+            '800' => $this->mixColors($hex, '#000000', 0.6),
+            '900' => $this->mixColors($hex, '#000000', 0.8),
+        ];
+    }
+
+    private function mixColors($color1, $color2, $weight)
+    {
+        $c1 = sscanf($color1, "#%02x%02x%02x");
+        $c2 = sscanf($color2, "#%02x%02x%02x");
+        
+        $r = round($c1[0] * (1 - $weight) + $c2[0] * $weight);
+        $g = round($c1[1] * (1 - $weight) + $c2[1] * $weight);
+        $b = round($c1[2] * (1 - $weight) + $c2[2] * $weight);
+        
+        return sprintf("#%02x%02x%02x", $r, $g, $b);
     }
 }

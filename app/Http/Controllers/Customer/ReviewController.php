@@ -34,13 +34,21 @@ class ReviewController extends Controller
             return back()->with('error', 'Anda sudah memberikan ulasan untuk reservasi ini.');
         }
 
-        Review::create([
-            'user_id' => auth()->id(),
-            'reservation_id' => $validated['reservation_id'],
-            'rating' => $validated['rating'],
-            'comment' => $validated['comment'],
-            'is_public' => true,
-        ]);
+        try {
+            Review::create([
+                'user_id' => auth()->id(),
+                'reservation_id' => $validated['reservation_id'],
+                'rating' => $validated['rating'],
+                'comment' => $validated['comment'],
+                'is_public' => true,
+            ]);
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Error code 23000 is for integrity constraint violation (e.g. duplicate unique key)
+            if ($e->getCode() == '23000') {
+                return back()->with('error', 'Anda sudah memberikan ulasan untuk reservasi ini.');
+            }
+            throw $e;
+        }
 
         return back()->with('success', 'Ulasan berhasil dikirim. Terima kasih!');
     }

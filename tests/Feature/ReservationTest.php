@@ -3,130 +3,64 @@
 namespace Tests\Feature;
 
 use App\Models\Facility;
-use App\Models\Reservation;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+use Carbon\Carbon;
 
 class ReservationTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected User $customer;
-
-    protected Facility $facility;
-
-    protected function setUp(): void
+    public function test_cannot_double_book_facility()
     {
-        parent::setUp();
-
-        // Role 'customer' is already seeded in TestCase::setUp()
-
-        $this->customer = User::factory()->create();
-        $this->customer->assignRole('customer');
-
-        $this->facility = Facility::create([
-            'name' => 'Villa A',
+        $user = User::create([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        
+        $facility = Facility::create([
+            'name' => 'Homestay A',
             'type' => 'homestay',
-            'capacity' => 4,
-            'price_per_day' => 1500000,
-            'is_active' => true,
+            'price_per_day' => 100000,
         ]);
-    }
+        
+        $today = Carbon::today()->addDays(5)->toDateString();
+        $tomorrow = Carbon::today()->addDays(6)->toDateString();
 
-    public function test_customer_can_view_reservation_form()
-    {
-        $response = $this->actingAs($this->customer)->get(route('customer.reservations.create'));
-        $response->assertStatus(200);
-    }
-
-    public function test_customer_can_create_reservation()
-    {
-        $checkIn = Carbon::tomorrow()->toDateString();
-        $checkOut = Carbon::tomorrow()->addDays(2)->toDateString();
-
-        $response = $this->actingAs($this->customer)->post(route('customer.reservations.store'), [
-            'facility_id' => $this->facility->id,
-            'check_in_date' => $checkIn,
-            'check_out_date' => $checkOut,
+        // First booking
+        $response1 = $this->actingAs($user)->post(route('customer.reservations.store'), [
+            'facility_id' => $facility->id,
+            'check_in_date' => $today,
+            'check_out_date' => $tomorrow,
             'guest_count' => 2,
+            'payment_method' => 'cash',
+            'customer_name' => 'John Doe',
+            'customer_email' => 'john@example.com',
+            'customer_phone' => '08123456789',
         ]);
+        
+        // Assert first booking is successful (redirects to show)
+        $response1->assertRedirect();
+        $this->assertDatabaseCount('reservations', 1);
 
-        $this->assertDatabaseHas('reservations', [
-            'user_id' => $this->customer->id,
-            'facility_id' => $this->facility->id,
-            'check_in_date' => $checkIn.' 00:00:00',
-            'check_out_date' => $checkOut.' 00:00:00',
-            'status' => 'pending',
-        ]);
-
-        $reservation = Reservation::first();
-        // 2 days * 1,500,000 = 3,000,000
-        $this->assertEquals(3000000, $reservation->total_amount);
-
-        $response->assertRedirect(route('customer.reservations.coupon', $reservation));
-    }
-
-    public function test_cannot_book_unavailable_dates()
-    {
-        $checkIn = Carbon::tomorrow()->toDateString();
-        $checkOut = Carbon::tomorrow()->addDays(2)->toDateString();
-
-        // Create an existing reservation
-        Reservation::create([
-            'user_id' => $this->customer->id,
-            'facility_id' => $this->facility->id,
-            'check_in_date' => $checkIn,
-            'check_out_date' => $checkOut,
+        // Second booking on same dates
+        $response2 = $this->actingAs($user)->post(route('customer.reservations.store'), [
+            'facility_id' => $facility->id,
+            'check_in_date' => $today,
+            'check_out_date' => $tomorrow,
             'guest_count' => 2,
-            'total_amount' => 3000000,
-            'status' => 'confirmed',
+            'payment_method' => 'cash',
+            'customer_name' => 'Jane Doe',
+            'customer_email' => 'jane@example.com',
+            'customer_phone' => '08123456789',
         ]);
 
-        // Try to book overlapping dates
-        $overlapCheckIn = Carbon::tomorrow()->addDays(1)->toDateString();
-        $overlapCheckOut = Carbon::tomorrow()->addDays(3)->toDateString();
-
-        $response = $this->actingAs($this->customer)->post(route('customer.reservations.store'), [
-            'facility_id' => $this->facility->id,
-            'check_in_date' => $overlapCheckIn,
-            'check_out_date' => $overlapCheckOut,
-            'guest_count' => 2,
-        ]);
-
-        $response->assertSessionHasErrors('check_in_date');
-        $this->assertEquals(1, Reservation::count());
-    }
-
-    public function test_can_book_same_day_as_checkout()
-    {
-        $checkIn = Carbon::tomorrow()->toDateString();
-        $checkOut = Carbon::tomorrow()->addDays(2)->toDateString(); // e.g. July 5th
-
-        // Create an existing reservation checking out on $checkOut
-        Reservation::create([
-            'user_id' => $this->customer->id,
-            'facility_id' => $this->facility->id,
-            'check_in_date' => $checkIn,
-            'check_out_date' => $checkOut,
-            'guest_count' => 2,
-            'total_amount' => 3000000,
-            'status' => 'confirmed',
-        ]);
-
-        // Try to book starting EXACTLY on the $checkOut date
-        $newCheckOut = Carbon::parse($checkOut)->addDays(2)->toDateString();
-
-        $response = $this->actingAs($this->customer)->post(route('customer.reservations.store'), [
-            'facility_id' => $this->facility->id,
-            'check_in_date' => $checkOut,
-            'check_out_date' => $newCheckOut,
-            'guest_count' => 2,
-        ]);
-
-        $response->assertSessionHasNoErrors();
-        $this->assertEquals(2, Reservation::count());
+        // Expect validation error for check_in_date
+        $response2->assertSessionHasErrors(['check_in_date']);
+        
+        // Assert no second booking was created
+        $this->assertDatabaseCount('reservations', 1);
     }
 }

@@ -5,42 +5,62 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\FoodOrder;
 use App\Models\Reservation;
-use Illuminate\Support\Facades\Gate;
+use App\Models\Setting;
 use Inertia\Inertia;
 
 class InvoiceController extends Controller
 {
+    /**
+     * Load company info from Settings CMS instead of hardcoding.
+     */
+    private function companyInfo(): array
+    {
+        return [
+            'name'    => Setting::get('site_name', 'Wawi Kadio Resort'),
+            'address' => Setting::get('site_address', 'Desa Tonsewer, Kec. Tompaso Barat, Minahasa'),
+            'phone'   => Setting::get('site_phone', '-'),
+            'email'   => Setting::get('site_email', '-'),
+        ];
+    }
+
     public function reservation(Reservation $reservation)
     {
-        Gate::authorize('view', $reservation);
+        if ($reservation->user_id) {
+            if ($reservation->user_id !== auth()->id() && (! auth()->check() || ! auth()->user()->hasAnyRole(['admin', 'manager', 'staff']))) {
+                abort(403);
+            }
+        } else {
+            // Guest reservation: Must match session or be staff
+            if ($reservation->session_id !== session()->getId() && (! auth()->check() || ! auth()->user()->hasAnyRole(['admin', 'manager', 'staff']))) {
+                abort(403);
+            }
+        }
+
         $reservation->load(['facility', 'user', 'payment']);
 
         return Inertia::render('Customer/Reservations/Print', [
             'reservation' => $reservation,
-            'company' => [
-                'name' => 'Wawi Kadio Resort',
-                'address' => 'Desa Tonsewer, Kec. Tompaso Barat, Minahasa',
-                'phone' => '+62 812-3456-7890',
-                'email' => 'hello@wawikadio.com',
-            ],
+            'company'     => $this->companyInfo(),
         ]);
     }
 
     public function foodOrder(FoodOrder $order)
     {
-        if ($order->user_id !== auth()->id()) {
-            abort(403);
+        if ($order->user_id) {
+            if ($order->user_id !== auth()->id() && (! auth()->check() || ! auth()->user()->hasAnyRole(['admin', 'manager', 'staff']))) {
+                abort(403);
+            }
+        } else {
+            if ($order->session_id !== session()->getId() && (! auth()->check() || ! auth()->user()->hasAnyRole(['admin', 'manager', 'staff']))) {
+                abort(403);
+            }
         }
+
         $order->load(['user', 'items.menuItem', 'reservation.facility', 'payment']);
 
         return Inertia::render('Customer/FoodOrders/Print', [
-            'order' => $order,
-            'company' => [
-                'name' => 'Wawi Kadio Resto',
-                'address' => 'Desa Tonsewer, Kec. Tompaso Barat, Minahasa',
-                'phone' => '+62 812-3456-7890',
-                'email' => 'hello@wawikadio.com',
-            ],
+            'order'   => $order,
+            'company' => $this->companyInfo(),
         ]);
     }
 }

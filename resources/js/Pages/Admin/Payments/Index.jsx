@@ -17,8 +17,8 @@ export default function Index({ payments, filters, stats }) {
         );
     }, 300);
 
-    const verifyPayment = (id, action) => {
-        if (confirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} pembayaran ini?`)) {
+    const verifyPayment = async (id, action) => {
+        if (await window.customConfirm(`Apakah Anda yakin ingin ${action === 'approve' ? 'menyetujui' : 'menolak'} pembayaran ini?`)) {
             router.patch(route('admin.payments.verify', id), { action }, { preserveScroll: true });
         }
     };

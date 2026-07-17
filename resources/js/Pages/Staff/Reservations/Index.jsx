@@ -5,8 +5,8 @@ import PrimaryButton from '@/Components/PrimaryButton';
 
 export default function Index({ checkIns, checkOuts, pending }) {
     
-    const updateStatus = (id, status) => {
-        if (confirm(`Tandai reservasi ini sebagai ${status.toUpperCase()}?`)) {
+    const updateStatus = async (id, status) => {
+        if (await window.customConfirm(`Tandai reservasi ini sebagai ${status.toUpperCase()}?`)) {
             router.patch(route('staff.reservations.status', id), { status }, { preserveScroll: true });
         }
     };

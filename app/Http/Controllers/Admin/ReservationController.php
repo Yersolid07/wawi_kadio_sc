@@ -65,7 +65,9 @@ class ReservationController extends Controller
 
         $reservation->update(['status' => $validated['status']]);
 
-        $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));
+        if ($reservation->user) {
+            $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));
+        }
 
         return back()->with('success', "Status reservasi diubah ke {$validated['status']}.");
     }

@@ -20,8 +20,8 @@ export default function Index({ reviews, filters, stats }) {
         router.patch(route('admin.reviews.toggle', id), {}, { preserveScroll: true });
     };
 
-    const deleteReview = (id) => {
-        if (confirm('Apakah Anda yakin ingin menghapus ulasan ini secara permanen?')) {
+    const deleteReview = async (id) => {
+        if (await window.customConfirm('Apakah Anda yakin ingin menghapus ulasan ini secara permanen?')) {
             router.delete(route('admin.reviews.destroy', id), { preserveScroll: true });
         }
     };

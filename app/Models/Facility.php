@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Facility extends Model
 {
-    use HasUuids;
+    use HasUuids, HasFactory;
 
     protected $fillable = [
         'name',
@@ -67,15 +68,36 @@ class Facility extends Model
     /**
      * Check if facility is available for the given date range.
      */
-    public function isAvailable(string $checkIn, string $checkOut, ?string $excludeReservationId = null): bool
+    public function isAvailable(string $checkIn, string $checkOut, ?string $checkInTime = null, ?string $checkOutTime = null, ?string $excludeReservationId = null): bool
     {
         $query = $this->reservations()
             ->whereNotIn('status', ['cancelled'])
-            ->where(function ($q) use ($checkIn, $checkOut) {
-                // To check overlap: (StartA < EndB) AND (EndA > StartB)
-                $q->whereDate('check_in_date', '<', $checkOut)
-                    ->whereDate('check_out_date', '>', $checkIn);
+            ->where(function ($q) use ($checkIn, $checkOut, $checkInTime, $checkOutTime) {
+                if ($checkInTime && strlen($checkInTime) === 5) $checkInTime .= ':00';
+                if ($checkOutTime && strlen($checkOutTime) === 5) $checkOutTime .= ':00';
+
+                if ($checkInTime && $checkOutTime) {
+                    $q->whereDate('check_in_date', '<=', $checkOut)
+                      ->whereDate('check_out_date', '>=', $checkIn)
+                      ->where(function($timeQ) use ($checkInTime, $checkOutTime) {
+                          $timeQ->where('check_in_time', '<', $checkOutTime)
+                                ->where('check_out_time', '>', $checkInTime)
+                                ->orWhereNull('check_in_time');
+                      });
+                } else {
+                    $q->whereDate('check_in_date', '<', $checkOut)
+                      ->whereDate('check_out_date', '>', $checkIn);
+                      
+                    if ($checkIn === $checkOut) {
+                        $q->orWhere(function($sq) use ($checkIn) {
+                            $sq->whereDate('check_in_date', $checkIn)
+                               ->whereDate('check_out_date', $checkIn);
+                        });
+                    }
+                }
             });
+
+        // dump($query->toSql(), $query->getBindings());
 
         if ($excludeReservationId) {
             $query->where('id', '!=', $excludeReservationId);

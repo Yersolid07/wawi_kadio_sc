@@ -15,6 +15,8 @@ class MenuItem extends Model
         'category',
         'price',
         'image_url',
+        'daily_stock',
+        'current_stock',
         'is_available',
         'discount_type',
         'discount_value',

@@ -20,8 +20,8 @@ export default function Show({ reservation, canReview, canCancel }) {
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
     const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-    const handleCancel = () => {
-        if (confirm('Apakah Anda yakin ingin membatalkan reservasi ini? Tindakan ini tidak dapat diurungkan.')) {
+    const handleCancel = async () => {
+        if (await window.customConfirm('Apakah Anda yakin ingin membatalkan reservasi ini? Tindakan ini tidak dapat diurungkan.')) {
             router.patch(route('customer.reservations.cancel', reservation.id));
         }
     };

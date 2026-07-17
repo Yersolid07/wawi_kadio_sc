@@ -1,9 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Search, ShoppingCart, Plus, Minus, X, CreditCard, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, X, CreditCard, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize, Trash2 } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
+import { useConfirm } from '@/Contexts/ConfirmContext';
 
 export default function POSIndex({ menuItems, activeOrders = [], user }) {
+    const confirm = useConfirm();
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('Semua');
     const [cart, setCart] = useState([]);
@@ -165,6 +167,19 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
         });
     };
 
+    const handleDeleteOrder = async (order) => {
+        if (await confirm('Apakah Anda yakin ingin menghapus pesanan aktif ini secara permanen? Sisa stok dari menu yang dipesan akan dikembalikan otomatis.')) {
+            router.delete(route('staff.food-orders.destroy', order.id), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    if (selectedOrderId === order.id) {
+                        clearActiveOrder();
+                    }
+                }
+            });
+        }
+    };
+
     const quickCashOptions = [50000, 100000, 150000, 200000];
 
     const toggleFullScreen = () => {
@@ -231,23 +246,30 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                         </div>
                         <div className="flex gap-3">
                             {activeOrders.map(order => (
-                                <button
+                                <div
                                     key={order.id}
-                                    onClick={() => loadActiveOrder(order)}
-                                    className={`px-4 py-3 rounded-2xl border-2 text-left flex flex-col min-w-[160px] transition-all ${
+                                    className={`relative px-4 py-3 rounded-2xl border-2 text-left flex flex-col min-w-[160px] transition-all cursor-pointer ${
                                         selectedOrderId === order.id 
                                             ? 'border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-500/20' 
                                             : 'border-stone-200 bg-white hover:border-emerald-300'
                                     }`}
+                                    onClick={() => loadActiveOrder(order)}
                                 >
-                                    <span className="font-black text-slate-900 truncate w-full">
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order); }}
+                                        className="absolute -top-2 -right-2 w-6 h-6 bg-rose-100 hover:bg-rose-500 text-rose-500 hover:text-white rounded-full flex items-center justify-center transition-colors shadow-sm"
+                                        title="Hapus Pesanan"
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                    <span className="font-black text-slate-900 truncate w-full pr-4">
                                         {order.order_type === 'dine_in' ? `Meja ${order.table_number}` : (order.reservation ? order.reservation.facility.name : 'Takeaway')}
                                     </span>
                                     <span className="text-xs font-bold text-stone-500 truncate w-full mb-1">
                                         {order.guest_name || order.user?.name || 'Tamu'}
                                     </span>
                                     <span className="text-sm font-black text-emerald-600">Rp {formatPrice(order.total_amount)}</span>
-                                </button>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -275,12 +297,18 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                 {/* Product Grid */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-stone-50">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                        {filteredItems.map(item => (
-                            <div 
-                                key={item.id} 
-                                onClick={() => addToCart(item)}
-                                className="bg-white rounded-2xl border border-stone-200 overflow-hidden cursor-pointer hover:border-emerald-500 hover:shadow-lg transition-all group flex flex-col h-full active:scale-95"
-                            >
+                        {filteredItems.map(item => {
+                            const isOutOfStock = item.daily_stock !== null && item.current_stock <= 0;
+                            return (
+                                <div 
+                                    key={item.id} 
+                                    onClick={() => !isOutOfStock && addToCart(item)}
+                                    className={`bg-white rounded-2xl border border-stone-200 overflow-hidden flex flex-col h-full transition-all group ${
+                                        isOutOfStock 
+                                            ? 'opacity-50 cursor-not-allowed grayscale' 
+                                            : 'cursor-pointer hover:border-emerald-500 hover:shadow-lg active:scale-95'
+                                    }`}
+                                >
                                 <div className="h-28 bg-stone-100 relative overflow-hidden">
                                     {item.image_url ? (
                                         <img src={`/storage/${item.image_url}`} alt={item.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -289,7 +317,12 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                                             <UtensilsCrossed size={32} />
                                         </div>
                                     )}
-                                    <div className="absolute top-2 right-2">
+                                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
+                                        {isOutOfStock && (
+                                            <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
+                                                HABIS
+                                            </span>
+                                        )}
                                         <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
                                             {item.category}
                                         </span>
@@ -307,7 +340,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                                     )}
                                 </div>
                             </div>
-                        ))}
+                        )})}
                     </div>
                     {filteredItems.length === 0 && (
                         <div className="text-center py-20 text-stone-400">

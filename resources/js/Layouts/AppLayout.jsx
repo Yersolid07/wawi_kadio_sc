@@ -5,33 +5,57 @@ import {
     CreditCard, Star, Users, FileText, Menu, X, ChevronDown,
     Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart, Image as ImageIcon
 } from 'lucide-react';
+import ToastListener from '@/Components/ToastListener';
 
-const navItems = [
-    { label: 'Dashboard', href: 'dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'customer'] },
-    // Admin/Manager
-    { label: 'Fasilitas', href: 'admin.facilities.index', icon: Hotel, roles: ['admin', 'manager'] },
-    { label: 'Semua Reservasi', href: 'admin.reservations.index', icon: CalendarDays, roles: ['admin', 'manager'] },
-    { label: 'Menu Café', href: 'admin.menu-items.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
-    { label: 'Food Orders', href: 'admin.food-orders.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
-    { label: 'Kasir POS', href: 'staff.pos.index', icon: ShoppingCart, roles: ['admin', 'manager', 'staff'] },
-    { label: 'Pembayaran', href: 'admin.payments.index', icon: CreditCard, roles: ['admin', 'manager'] },
-    { label: 'Ulasan Tamu', href: 'admin.reviews.index', icon: Star, roles: ['admin', 'manager'] },
-    { label: 'Kupon & Diskon', href: 'admin.coupons.index', icon: Package, roles: ['admin', 'manager'] },
-    { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin', 'manager'] },
-    { label: 'Laporan', href: 'admin.reports.index', icon: FileText, roles: ['admin', 'manager'] },
-    { label: 'Inventori Stok', href: 'admin.inventories.index', icon: Package, roles: ['admin'] },
-    { label: 'CMS Banner', href: 'admin.banners.index', icon: ImageIcon, roles: ['admin', 'manager'] },
-    { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin'] },
-    { label: 'QR Codes', href: 'admin.qrcodes.index', icon: QrCode, roles: ['admin'] },
-    { label: 'Pengguna', href: 'admin.users.index', icon: Users, roles: ['admin'] },
-    // Staff / Kitchen
-    { label: 'Monitor Dapur', href: 'staff.kds', icon: UtensilsCrossed, roles: ['admin', 'manager', 'staff'] },
-    { label: 'Check-in/out', href: 'staff.reservations.index', icon: CalendarDays, roles: ['staff'] },
-    { label: 'Orders Aktif', href: 'staff.food-orders.index', icon: UtensilsCrossed, roles: ['staff'] },
-    // Customer
-    { label: 'Reservasi Saya', href: 'customer.reservations.index', icon: CalendarDays, roles: ['customer'] },
-    { label: 'Pesanan Saya', href: 'customer.orders.index', icon: UtensilsCrossed, roles: ['customer'] },
-];
+const navGroups = [
+    {
+        title: 'Utama',
+        items: [
+            { label: 'Dashboard', href: 'dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'customer'] },
+            { label: 'Kasir POS', href: 'staff.pos.index', icon: ShoppingCart, roles: ['admin', 'manager', 'staff'] },
+            { label: 'Monitor Dapur', href: 'staff.kds', icon: UtensilsCrossed, roles: ['admin', 'manager', 'staff'] },
+        ]
+    },
+    {
+        title: 'Operasional',
+        items: [
+            { label: 'Semua Reservasi', href: 'admin.reservations.index', icon: CalendarDays, roles: ['admin', 'manager'] },
+            { label: 'Check-in/out', href: 'staff.reservations.index', icon: CalendarDays, roles: ['staff'] },
+            { label: 'Semua Pesanan', href: 'admin.food-orders.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
+            { label: 'Orders Aktif', href: 'staff.food-orders.index', icon: UtensilsCrossed, roles: ['staff'] },
+            { label: 'Pembayaran', href: 'admin.payments.index', icon: CreditCard, roles: ['admin', 'manager'] },
+        ]
+    },
+    {
+        title: 'Stok & Keuangan',
+        items: [
+            { label: 'Laporan', href: 'admin.reports.index', icon: FileText, roles: ['admin', 'manager'] },
+            { label: 'Inventori & Pengeluaran', href: 'admin.inventories.index', icon: Package, roles: ['admin', 'manager'] },
+            { label: 'Stok Harian Cafe', href: 'staff.daily-stock.index', icon: Package, roles: ['admin', 'manager', 'staff'] },
+            { label: 'Tutup Kasir', href: 'staff.pos-closing.index', icon: CreditCard, roles: ['admin', 'manager', 'staff'] },
+        ]
+    },
+    {
+        title: 'Master Data & Sistem',
+        items: [
+            { label: 'Fasilitas', href: 'admin.facilities.index', icon: Hotel, roles: ['admin', 'manager'] },
+            { label: 'Menu Café & Layanan', href: 'admin.menu-items.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
+            { label: 'Kupon & Diskon', href: 'admin.coupons.index', icon: Package, roles: ['admin', 'manager'] },
+            { label: 'Ulasan Tamu', href: 'admin.reviews.index', icon: Star, roles: ['admin', 'manager'] },
+            { label: 'CMS Banner', href: 'admin.banners.index', icon: ImageIcon, roles: ['admin', 'manager'] },
+            { label: 'QR Codes', href: 'admin.qrcodes.index', icon: QrCode, roles: ['admin'] },
+            { label: 'Pengguna', href: 'admin.users.index', icon: Users, roles: ['admin'] },
+            { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin'] },
+        ]
+    },
+    {
+        title: 'Area Pelanggan',
+        items: [
+            { label: 'Reservasi Saya', href: 'customer.reservations.index', icon: CalendarDays, roles: ['customer'] },
+            { label: 'Pesanan Saya', href: 'customer.orders.index', icon: UtensilsCrossed, roles: ['customer'] },
+        ]
+    }
+];;
 
 export default function AppLayout({ children, title }) {
     const { auth, cms_settings } = usePage().props;
@@ -39,12 +63,12 @@ export default function AppLayout({ children, title }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
-    
+
     // Polling for notifications every 30 seconds
     useEffect(() => {
         const interval = setInterval(() => {
             router.reload({ only: ['auth'], preserveState: true, preserveScroll: true });
-        }, 30000);
+        }, 10000);
         return () => clearInterval(interval);
     }, []);
 
@@ -56,9 +80,7 @@ export default function AppLayout({ children, title }) {
         });
     };
 
-    const visibleNav = navItems.filter(item =>
-        item.roles.some(role => userRoles.includes(role))
-    );
+    // Removed visibleNav mapping here, will map inside render
 
     const isActive = (href) => {
         try {
@@ -69,7 +91,8 @@ export default function AppLayout({ children, title }) {
     };
 
     return (
-        <div className="min-h-screen bg-stone-50 text-slate-900 font-sans flex">
+        <div className="h-screen overflow-hidden bg-stone-50 text-slate-900 font-sans flex">
+            <ToastListener />
             {/* Mobile sidebar backdrop */}
             {sidebarOpen && (
                 <div
@@ -108,24 +131,35 @@ export default function AppLayout({ children, title }) {
                     </div>
 
                     {/* Navigation */}
-                    <nav className="flex-1 overflow-y-auto px-5 py-4 space-y-1.5">
-                        {visibleNav.map((item) => {
-                            const Icon = item.icon;
-                            const active = isActive(item.href);
+                    <nav className="flex-1 overflow-y-auto px-5 py-4 space-y-6">
+                        {navGroups.map((group, gIdx) => {
+                            const visibleItems = group.items.filter(item => item.roles.some(role => userRoles.includes(role)));
+                            if (visibleItems.length === 0) return null;
+
                             return (
-                                <Link
-                                    key={item.href}
-                                    href={route(item.href)}
-                                    className={`
-                                        flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-bold transition-all
-                                        ${active
-                                            ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20'
-                                            : 'text-slate-500 hover:bg-emerald-50 hover:text-emerald-600'}
-                                    `}
-                                >
-                                    <Icon size={18} className={active ? 'text-white' : 'text-slate-400'} />
-                                    {item.label}
-                                </Link>
+                                <div key={gIdx} className="space-y-1.5">
+                                    <h4 className="px-3 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                                        {group.title}
+                                    </h4>
+                                    {visibleItems.map((item) => {
+                                        const Icon = item.icon;
+                                        const active = isActive(item.href);
+                                        return (
+                                            <Link
+                                                key={item.href}
+                                                href={route(item.href)}
+                                                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold transition-all duration-200 ${
+                                                    active 
+                                                    ? 'bg-slate-900 text-white shadow-md shadow-slate-900/10' 
+                                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                                                }`}
+                                            >
+                                                <Icon size={20} strokeWidth={active ? 2.5 : 2} className={active ? 'text-emerald-400' : 'text-slate-400'} />
+                                                <span>{item.label}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
                             );
                         })}
                     </nav>
@@ -169,7 +203,7 @@ export default function AppLayout({ children, title }) {
                         <div className="flex items-center gap-2">
                             {/* Notifications */}
                             <div className="relative">
-                                <button 
+                                <button
                                     onClick={() => setNotifOpen(!notifOpen)}
                                     className="relative p-2 rounded-xl text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
                                 >
@@ -178,15 +212,15 @@ export default function AppLayout({ children, title }) {
                                         <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
                                     )}
                                 </button>
-                                
+
                                 {notifOpen && (
                                     <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden flex flex-col max-h-[400px]">
                                         <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                                             <h3 className="font-bold text-slate-800">Notifikasi</h3>
                                             {auth?.user?.unreadCount > 0 && (
-                                                <Link 
-                                                    href={route('notifications.read-all')} 
-                                                    method="post" 
+                                                <Link
+                                                    href={route('notifications.read-all')}
+                                                    method="post"
                                                     as="button"
                                                     className="text-xs font-bold text-emerald-600 hover:text-emerald-700"
                                                     onClick={() => setNotifOpen(false)}
@@ -205,8 +239,8 @@ export default function AppLayout({ children, title }) {
                                                         <div className="flex-1">
                                                             <p className="text-sm font-bold text-slate-800">{notif.data.title}</p>
                                                             <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{notif.data.message}</p>
-                                                            <Link 
-                                                                href={notif.data.url} 
+                                                            <Link
+                                                                href={notif.data.url}
                                                                 className="text-xs font-bold text-emerald-600 mt-2 inline-block hover:underline"
                                                                 onClick={(e) => {
                                                                     e.preventDefault();
