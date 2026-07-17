@@ -50,8 +50,8 @@ export default function Create({ menuItems, reservationId, activeReservations = 
         notes: '',
         reservation_id: initialReservationId,
         items: [],
-        guest_name: '',
-        guest_phone: '',
+        customer_name: '',
+        customer_phone: '',
         payment_method: initialOrderType !== 'room_service' ? 'tripay' : '',
     });
 
@@ -221,29 +221,29 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                 <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl space-y-4 mb-4">
                                     <div className="text-sm font-bold text-orange-800">Data Pemesan (Guest)</div>
                                     <div>
-                                        <InputLabel htmlFor="guest_name" value="Nama Lengkap" />
+                                        <InputLabel htmlFor="customer_name" value="Nama Lengkap" />
                                         <TextInput
-                                            id="guest_name"
+                                            id="customer_name"
                                             className="mt-1 block w-full bg-white"
-                                            value={data.guest_name}
-                                            onChange={(e) => setData('guest_name', e.target.value)}
+                                            value={data.customer_name}
+                                            onChange={(e) => setData('customer_name', e.target.value)}
                                             required={!isAuthenticated}
                                             placeholder="Contoh: Budi Santoso"
                                         />
-                                        <InputError message={errors.guest_name} className="mt-2" />
+                                        <InputError message={errors.customer_name} className="mt-2" />
                                     </div>
                                     <div>
-                                        <InputLabel htmlFor="guest_phone" value="Nomor HP/WhatsApp" />
+                                        <InputLabel htmlFor="customer_phone" value="Nomor HP/WhatsApp" />
                                         <TextInput
-                                            id="guest_phone"
+                                            id="customer_phone"
                                             type="tel"
                                             className="mt-1 block w-full bg-white"
-                                            value={data.guest_phone}
-                                            onChange={(e) => setData('guest_phone', e.target.value)}
+                                            value={data.customer_phone}
+                                            onChange={(e) => setData('customer_phone', e.target.value)}
                                             required={!isAuthenticated}
                                             placeholder="Contoh: 08123456789"
                                         />
-                                        <InputError message={errors.guest_phone} className="mt-2" />
+                                        <InputError message={errors.customer_phone} className="mt-2" />
                                     </div>
                                 </div>
                             )}
