@@ -1,13 +1,12 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { useConfirm } from '@/Contexts/ConfirmContext';
-import { Calculator, Save, AlertTriangle, CheckCircle, Wallet } from 'lucide-react';
+import { Save, AlertTriangle, CheckCircle, Wallet } from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 
-export default function PosClosing({ initialCash, todaySales, expectedCash, previousClosing }) {
+export default function PosClosing({ initialCash, todaySales, expectedCash, previousClosing, today }) {
     const { data, setData, post, processing, errors } = useForm({
         closing_balance: expectedCash || 0,
         cash_100k: 0,

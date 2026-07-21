@@ -18,7 +18,7 @@ class PosClosingController extends Controller
         // Find expected cash for today. 
         // We calculate all successful cash payments made today
         $cashPayments = Payment::where('payment_method', 'cash')
-            ->where('payment_status', 'paid')
+            ->where('payment_status', 'success')
             ->whereDate('created_at', $today)
             ->sum('amount');
 

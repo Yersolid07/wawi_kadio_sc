@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Inventory;
 use App\Models\InventoryTransaction;
 use App\Models\FinancialTransaction;
+use App\Http\Requests\SaveInventoryRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -21,33 +22,18 @@ class InventoryController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(SaveInventoryRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'unit' => 'required|string|max:50',
-            'current_stock' => 'required|numeric|min:0',
-            'minimum_stock' => 'required|numeric|min:0',
-            'price_per_unit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         Inventory::create($validated);
 
         return redirect()->back()->with('success', 'Bahan baku berhasil ditambahkan');
     }
 
-    public function update(Request $request, Inventory $inventory)
+    public function update(SaveInventoryRequest $request, Inventory $inventory)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'category' => 'nullable|string|max:255',
-            'unit' => 'required|string|max:50',
-            'minimum_stock' => 'required|numeric|min:0',
-            'price_per_unit' => 'nullable|numeric|min:0',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         $inventory->update($validated);
 

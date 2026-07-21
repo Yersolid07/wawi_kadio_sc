@@ -1,10 +1,10 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Search, ShoppingCart, Plus, Minus, X, CreditCard, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize, Trash2 } from 'lucide-react';
+import { Search, ShoppingCart, Plus, Minus, X, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize, Trash2, QrCode, Smartphone, CreditCard, Building, Wallet } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
 import { useConfirm } from '@/Contexts/ConfirmContext';
 
-export default function POSIndex({ menuItems, activeOrders = [], user }) {
+export default function POSIndex({ menuItems, activeOrders = [], user, paymentChannels = [] }) {
     const confirm = useConfirm();
     const [search, setSearch] = useState('');
     const [activeCategory, setActiveCategory] = useState('Semua');
@@ -20,6 +20,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
     // Payment State
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paymentMethod, setPaymentMethod] = useState('cash');
+    const [paymentChannel, setPaymentChannel] = useState('');
     const [amountPaid, setAmountPaid] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     
@@ -64,7 +65,14 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
         setCart(prev => prev.map(item => {
             if (item.id === id && item.is_existing === isExisting) {
                 const newQty = item.quantity + delta;
-                return newQty > 0 ? { ...item, quantity: newQty } : item;
+                
+                // Respect stock limit
+                const maxQty = (item.daily_stock !== null && item.current_stock > 0)
+                    ? item.current_stock
+                    : Infinity;
+                const clampedQty = Math.min(newQty, maxQty);
+
+                return clampedQty > 0 ? { ...item, quantity: clampedQty } : item;
             }
             return item;
         }));
@@ -133,12 +141,13 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
         setIsProcessing(true);
 
         const payload = {
-            order_id: selectedOrderId, // Pass if editing an active order
+            order_id: selectedOrderId,
             order_type: orderType,
             table_number: tableNumber,
             guest_name: guestName,
             notes: notes,
             payment_method: paymentMethod,
+            payment_channel: paymentChannel,
             amount_paid: paymentMethod === 'cash' ? (parseFloat(amountPaid.replace(/\D/g, '')) || 0) : totalAmount,
             items: cart.map(item => ({
                 menu_item_id: item.id,
@@ -180,7 +189,56 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
         }
     };
 
-    const quickCashOptions = [50000, 100000, 150000, 200000];
+    const quickCashOptions = [50000, 100000, 150000, 200000, 500000];
+
+    // All supported POS payment methods — includes static Tailwind classes to avoid JIT purging
+    const POS_PAYMENT_METHODS = [
+        { id: 'cash',     label: 'Tunai',         sublabel: 'Cash',              Icon: Banknote,   activeClass: 'border-emerald-500 bg-emerald-50 text-emerald-700' },
+        { id: 'qris',     label: 'QRIS',          sublabel: 'Scan QR',           Icon: QrCode,     activeClass: 'border-violet-500 bg-violet-50 text-violet-700' },
+        { id: 'transfer', label: 'Transfer',      sublabel: 'ATM/m-Banking',     Icon: Building,   activeClass: 'border-sky-500 bg-sky-50 text-sky-700' },
+        { id: 'edc',      label: 'EDC / Debit',   sublabel: 'Gesek Kartu',       Icon: CreditCard, activeClass: 'border-amber-500 bg-amber-50 text-amber-700' },
+        { id: 'ewallet',  label: 'E-Wallet',      sublabel: 'OVO/Dana/GoPay',    Icon: Wallet,     activeClass: 'border-rose-500 bg-rose-50 text-rose-700' },
+    ];
+
+    // Non-cash instruction panels — fully static classes
+    const NON_CASH_PANELS = {
+        qris: {
+            wrap:  'bg-violet-50 border-2 border-violet-200',
+            icon:  'text-violet-600',
+            title: 'text-violet-900',
+            body:  'text-violet-700',
+            foot:  'bg-violet-100',
+            footText: 'text-violet-800',
+            text: 'Minta pelanggan scan QRIS statis di kasir atau tampilkan QR Code di mesin. Pastikan notifikasi pembayaran telah diterima sebelum memproses.',
+        },
+        transfer: {
+            wrap:  'bg-sky-50 border-2 border-sky-200',
+            icon:  'text-sky-600',
+            title: 'text-sky-900',
+            body:  'text-sky-700',
+            foot:  'bg-sky-100',
+            footText: 'text-sky-800',
+            text: 'Minta pelanggan transfer ke rekening resmi. Konfirmasi bukti transfer / screenshot mutasi sebelum memproses pesanan.',
+        },
+        edc: {
+            wrap:  'bg-amber-50 border-2 border-amber-200',
+            icon:  'text-amber-600',
+            title: 'text-amber-900',
+            body:  'text-amber-700',
+            foot:  'bg-amber-100',
+            footText: 'text-amber-800',
+            text: 'Gesekkan / tap kartu debit/kredit pelanggan di mesin EDC. Pastikan struk EDC menampilkan status APPROVED sebelum memproses.',
+        },
+        ewallet: {
+            wrap:  'bg-rose-50 border-2 border-rose-200',
+            icon:  'text-rose-600',
+            title: 'text-rose-900',
+            body:  'text-rose-700',
+            foot:  'bg-rose-100',
+            footText: 'text-rose-800',
+            text: 'Pastikan pelanggan menunjukkan bukti transfer dari OVO / Dana / GoPay / dll dan saldo telah masuk ke rekening sebelum memproses.',
+        },
+    };
 
     const toggleFullScreen = () => {
         if (!document.fullscreenElement) {
@@ -506,106 +564,175 @@ export default function POSIndex({ menuItems, activeOrders = [], user }) {
                 </div>
             </div>
 
-            {/* Payment Modal */}
+            {/* ─── Payment Modal ─── */}
             {showPaymentModal && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
-                        <div className="p-6 bg-slate-900 text-white flex justify-between items-center">
-                            <h3 className="text-xl font-black">Proses Pembayaran</h3>
-                            <button onClick={() => setShowPaymentModal(false)} className="text-slate-400 hover:text-white transition-colors">
-                                <X size={24} />
+                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[95vh]">
+
+                        {/* Header */}
+                        <div className="p-5 bg-slate-900 text-white flex justify-between items-center shrink-0">
+                            <div>
+                                <h3 className="text-xl font-black">Proses Pembayaran</h3>
+                                <p className="text-slate-400 text-xs mt-0.5">{guestName || 'Walk-in'} · {orderType === 'dine_in' ? `Meja ${tableNumber}` : 'Takeaway'}</p>
+                            </div>
+                            <button onClick={() => setShowPaymentModal(false)} className="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-xl transition-colors">
+                                <X size={22} />
                             </button>
                         </div>
-                        
-                        <div className="p-6 md:p-8 space-y-6">
-                            <div className="text-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                <p className="text-emerald-700 font-bold uppercase text-sm mb-1">Total Tagihan</p>
-                                <p className="text-4xl font-black text-emerald-600">Rp {formatPrice(totalAmount)}</p>
-                            </div>
 
-                            <div>
-                                <p className="font-bold text-slate-900 mb-3">Pilih Metode Pembayaran:</p>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <button 
-                                        onClick={() => { setPaymentMethod('cash'); setAmountPaid(''); }}
-                                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
-                                            paymentMethod === 'cash' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-stone-200 hover:border-stone-300 text-stone-500'
-                                        }`}
-                                    >
-                                        <Banknote size={32} className="mb-2" />
-                                        <span className="font-bold">Tunai (Cash)</span>
-                                    </button>
-                                    <button 
-                                        onClick={() => setPaymentMethod('qris')}
-                                        className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
-                                            paymentMethod === 'qris' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-stone-200 hover:border-stone-300 text-stone-500'
-                                        }`}
-                                    >
-                                        <CreditCard size={32} className="mb-2" />
-                                        <span className="font-bold">QRIS / Transfer</span>
-                                    </button>
+                        <div className="overflow-y-auto flex-1">
+                            <div className="p-6 space-y-5">
+
+                                {/* Total */}
+                                <div className="text-center py-5 bg-emerald-50 rounded-2xl border border-emerald-100">
+                                    <p className="text-emerald-700 font-bold uppercase text-xs tracking-widest mb-1">Total Tagihan</p>
+                                    <p className="text-5xl font-black text-emerald-600 tracking-tight">Rp {formatPrice(totalAmount)}</p>
                                 </div>
-                            </div>
 
-                            {paymentMethod === 'cash' && (
-                                <div className="space-y-4 animate-in fade-in slide-in-from-top-4">
-                                    <div>
-                                        <label className="font-bold text-slate-900 block mb-2">Jumlah Uang Diterima:</label>
-                                        <div className="relative">
-                                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-stone-400">Rp</span>
-                                            <input 
-                                                type="text" 
-                                                value={amountPaid}
-                                                onChange={(e) => {
-                                                    const val = e.target.value.replace(/\D/g, '');
-                                                    setAmountPaid(val ? formatPrice(val) : '');
-                                                }}
-                                                className="w-full pl-12 pr-4 py-4 text-2xl font-black rounded-2xl border-stone-300 focus:border-emerald-500 focus:ring-emerald-500"
-                                                placeholder="0"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        <button onClick={() => setAmountPaid(formatPrice(totalAmount))} className="p-2 bg-stone-100 hover:bg-stone-200 rounded-xl font-bold text-stone-700 text-sm">Uang Pas</button>
-                                        {quickCashOptions.map(opt => (
-                                            opt >= totalAmount && (
-                                                <button key={opt} onClick={() => setAmountPaid(formatPrice(opt))} className="p-2 bg-stone-100 hover:bg-stone-200 rounded-xl font-bold text-stone-700 text-sm">
-                                                    {opt / 1000}k
-                                                </button>
-                                            )
+                                {/* Payment Method Grid */}
+                                <div>
+                                    <p className="font-black text-slate-900 mb-3 text-sm uppercase tracking-wider">Metode Pembayaran</p>
+                                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                                        {POS_PAYMENT_METHODS.map(({ id, label, sublabel, Icon, activeClass }) => (
+                                            <button
+                                                key={id}
+                                                onClick={() => { setPaymentMethod(id); if (id !== 'cash') setAmountPaid(''); }}
+                                                className={`flex flex-col items-center justify-center py-4 px-2 rounded-2xl border-2 transition-all gap-1.5 ${
+                                                    paymentMethod === id
+                                                        ? `${activeClass} shadow-md`
+                                                        : 'border-stone-200 text-stone-500 hover:border-stone-300 hover:bg-stone-50'
+                                                }`}
+                                            >
+                                                <Icon size={22} />
+                                                <span className="font-black text-xs leading-tight text-center">{label}</span>
+                                                <span className="text-[9px] text-center leading-tight opacity-70 hidden sm:block">{sublabel}</span>
+                                            </button>
                                         ))}
                                     </div>
+                                </div>
 
-                                    {amountPaid && (parseFloat(amountPaid.replace(/\D/g, '')) >= totalAmount) && (
-                                        <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
-                                            <span className="font-bold text-orange-800 uppercase text-sm">Kembalian:</span>
-                                            <span className="font-black text-2xl text-orange-600">
-                                                Rp {formatPrice(parseFloat(amountPaid.replace(/\D/g, '')) - totalAmount)}
-                                            </span>
+                                {/* Cash Section */}
+                                {paymentMethod === 'cash' && (
+                                    <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                        <div>
+                                            <label className="font-bold text-slate-900 block mb-2 text-sm">Jumlah Uang Diterima:</label>
+                                            <div className="relative">
+                                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-stone-400">Rp</span>
+                                                <input
+                                                    type="text"
+                                                    value={amountPaid}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/\D/g, '');
+                                                        setAmountPaid(val ? formatPrice(val) : '');
+                                                    }}
+                                                    className="w-full pl-12 pr-4 py-4 text-2xl font-black rounded-2xl border-stone-300 focus:border-emerald-500 focus:ring-emerald-500"
+                                                    placeholder="0"
+                                                    autoFocus
+                                                />
+                                            </div>
                                         </div>
-                                    )}
-                                </div>
-                            )}
 
-                            {paymentMethod === 'qris' && (
-                                <div className="text-center p-6 bg-blue-50 rounded-2xl border border-blue-100 animate-in fade-in slide-in-from-top-4">
-                                    <div className="w-16 h-16 bg-blue-100 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                                        <Receipt size={32} />
+                                        {/* Quick Cash Buttons */}
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => setAmountPaid(formatPrice(totalAmount))}
+                                                className="px-3 py-2 bg-stone-800 text-white rounded-xl font-bold text-sm"
+                                            >
+                                                Uang Pas
+                                            </button>
+                                            {quickCashOptions.filter(opt => opt >= totalAmount).map(opt => (
+                                                <button
+                                                    key={opt}
+                                                    onClick={() => setAmountPaid(formatPrice(opt))}
+                                                    className="px-3 py-2 bg-stone-100 hover:bg-stone-200 rounded-xl font-bold text-stone-700 text-sm"
+                                                >
+                                                    {opt >= 1000000 ? `${opt / 1000000}jt` : `${opt / 1000}k`}
+                                                </button>
+                                            ))}
+                                        </div>
+
+                                        {/* Change Display */}
+                                        {amountPaid && parseFloat(amountPaid.replace(/\D/g, '')) >= totalAmount && (
+                                            <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex justify-between items-center">
+                                                <span className="font-bold text-orange-800 uppercase text-sm">Kembalian:</span>
+                                                <span className="font-black text-2xl text-orange-600">
+                                                    Rp {formatPrice(parseFloat(amountPaid.replace(/\D/g, '')) - totalAmount)}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
-                                    <p className="font-bold text-blue-900 mb-1">Pembayaran Non-Tunai</p>
-                                    <p className="text-sm text-blue-700">Pastikan pelanggan memindai QRIS Statis atau EDC Kasir dan dana telah masuk sebelum menyelesaikan pesanan.</p>
-                                </div>
-                            )}
+                                )}
 
+                                {/* Non-Cash Section */}
+                                {paymentMethod !== 'cash' && NON_CASH_PANELS[paymentMethod] && (() => {
+                                    const method = POS_PAYMENT_METHODS.find(m => m.id === paymentMethod);
+                                    const panel = NON_CASH_PANELS[paymentMethod];
+                                    return (
+                                        <div className={`p-5 rounded-2xl animate-in fade-in slide-in-from-top-2 ${panel.wrap}`}>
+                                            <div className="flex items-center gap-3 mb-3">
+                                                {method && <method.Icon size={22} className={panel.icon} />}
+                                                <p className={`font-black ${panel.title}`}>{method?.label}</p>
+                                            </div>
+                                            <p className={`text-sm leading-relaxed ${panel.body}`}>
+                                                {panel.text}
+                                            </p>
+
+                                            {/* Tripay Payment Channel Selection for Transfer & E-Wallet */}
+                                            {(paymentMethod === 'transfer' || paymentMethod === 'ewallet') && (
+                                                <div className="mt-4">
+                                                    <label className={`block text-xs font-bold uppercase tracking-wider mb-2 ${panel.title}`}>
+                                                        Pilih {paymentMethod === 'transfer' ? 'Bank' : 'E-Wallet'}:
+                                                    </label>
+                                                    <select
+                                                        value={paymentChannel}
+                                                        onChange={(e) => setPaymentChannel(e.target.value)}
+                                                        className={`w-full rounded-xl border-2 bg-white/60 focus:ring-0 text-sm font-bold p-3 transition-colors ${
+                                                            paymentMethod === 'transfer'
+                                                                ? 'border-sky-200 focus:border-sky-500 text-sky-900'
+                                                                : 'border-rose-200 focus:border-rose-500 text-rose-900'
+                                                        }`}
+                                                    >
+                                                        <option value="" disabled>-- Silakan Pilih --</option>
+                                                        {paymentChannels
+                                                            .filter(c => paymentMethod === 'transfer' ? c.group === 'Virtual Account' : c.group === 'E-Wallet' && c.code !== 'QRIS' && c.code !== 'QRIS2')
+                                                            .map(c => (
+                                                                <option key={c.code} value={c.code}>{c.name}</option>
+                                                            ))
+                                                        }
+                                                    </select>
+                                                </div>
+                                            )}
+
+                                            <div className={`mt-4 p-3 rounded-xl flex items-center gap-2 ${panel.foot}`}>
+                                                <span className="text-lg">✓</span>
+                                                <p className={`text-xs font-bold ${panel.footText}`}>
+                                                    {(paymentMethod === 'qris' || paymentMethod === 'transfer' || paymentMethod === 'ewallet')
+                                                        ? 'Sistem akan membuka halaman Tripay setelah Anda klik "Selesaikan Pesanan".'
+                                                        : 'Konfirmasi dulu sebelum klik "Selesaikan Pesanan".'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+
+                            </div>
+                        </div>
+
+                        {/* Footer Action */}
+                        <div className="p-5 border-t border-stone-100 shrink-0">
                             <button
                                 onClick={handleCheckout}
-                                disabled={isProcessing || (paymentMethod === 'cash' && (!amountPaid || parseFloat(amountPaid.replace(/\D/g, '')) < totalAmount))}
+                                disabled={
+                                    isProcessing ||
+                                    (paymentMethod === 'cash' && (!amountPaid || parseFloat(amountPaid.replace(/\D/g, '')) < totalAmount)) ||
+                                    ((paymentMethod === 'transfer' || paymentMethod === 'ewallet') && !paymentChannel)
+                                }
                                 className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-stone-300 disabled:cursor-not-allowed text-white rounded-2xl font-black text-lg transition-all shadow-lg flex items-center justify-center gap-2"
                             >
                                 {isProcessing ? (
-                                    <><Loader2 className="animate-spin" /> MENGDIPROSES...</>
+                                    <><Loader2 className="animate-spin" /> MEMPROSES...</>
                                 ) : (
-                                    <>SELESAIKAN PESANAN & CETAK STRUK</>
+                                    <>SELESAIKAN PESANAN &amp; CETAK STRUK</>
                                 )}
                             </button>
                         </div>

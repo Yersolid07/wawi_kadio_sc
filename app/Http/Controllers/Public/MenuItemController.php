@@ -22,7 +22,10 @@ class MenuItemController extends Controller
                 ->orWhere('description', 'like', '%'.$request->search.'%');
         }
 
-        $menuItems = $query->orderBy('category')->orderBy('name')->get();
+        $menuItems = $query->orderBy('category')->orderBy('name')->get()->map(function ($item) {
+            $item->is_out_of_stock = ($item->daily_stock !== null && $item->current_stock <= 0);
+            return $item;
+        });
 
         return Inertia::render('Public/Katalog', [
             'menuItems' => $menuItems,

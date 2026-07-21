@@ -14,7 +14,7 @@ export default function GuestLayout({ children, title, subtitle }) {
     ];
     const defaultPhoto = photos[Math.floor(Math.random() * photos.length)];
     const photo = cms_settings?.auth_image || defaultPhoto;
-    const logoUrl = cms_settings?.primary_logo;
+    const logoUrl = cms_settings?.primary_logo || '/images/logo.png';
     const siteName = cms_settings?.site_name || 'Wawi Kadio';
 
     return (

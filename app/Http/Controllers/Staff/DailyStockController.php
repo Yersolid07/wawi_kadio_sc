@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Staff;
 use App\Http\Controllers\Controller;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class DailyStockController extends Controller
@@ -30,11 +31,13 @@ class DailyStockController extends Controller
             'stocks.*.current_stock' => 'required|integer|min:0',
         ]);
 
-        foreach ($validated['stocks'] as $stockData) {
-            MenuItem::where('id', $stockData['id'])->update([
-                'current_stock' => $stockData['current_stock']
-            ]);
-        }
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['stocks'] as $stockData) {
+                MenuItem::where('id', $stockData['id'])->update([
+                    'current_stock' => $stockData['current_stock'],
+                ]);
+            }
+        });
 
         return back()->with('success', 'Stok harian berhasil diperbarui.');
     }

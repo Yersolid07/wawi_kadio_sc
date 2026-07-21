@@ -22,6 +22,7 @@ export default function Form({ item = null }) {
         promo_name: item?.promo_name || '',
         promo_start: item?.promo_start ? item.promo_start.substring(0, 16) : '',
         promo_end: item?.promo_end ? item.promo_end.substring(0, 16) : '',
+        daily_stock: item?.daily_stock ?? '',
         image: null,
         _method: item ? 'PUT' : 'POST', // For file uploads in Laravel PUT requests
     });
@@ -144,6 +145,19 @@ export default function Form({ item = null }) {
                                             min="0"
                                         />
                                         <InputError message={errors.price} className="mt-2" />
+                                    </div>
+
+                                    <div className="col-span-2">
+                                        <InputLabel htmlFor="daily_stock" value="Stok Harian Default (Kosongkan jika stok tak terbatas)" />
+                                        <TextInput
+                                            id="daily_stock"
+                                            type="number"
+                                            className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
+                                            value={data.daily_stock}
+                                            onChange={(e) => setData('daily_stock', e.target.value)}
+                                            min="0"
+                                        />
+                                        <InputError message={errors.daily_stock} className="mt-2" />
                                     </div>
                                 </div>
 

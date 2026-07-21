@@ -18,13 +18,17 @@ class ReservationPolicy
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Reservation $reservation): bool
+    public function view(?User $user, Reservation $reservation): bool
     {
-        if ($user->hasPermissionTo('view all reservations')) {
+        if ($user && $user->hasPermissionTo('view all reservations')) {
             return true;
         }
 
-        return $user->hasPermissionTo('view own reservations') && $user->id === $reservation->user_id;
+        if ($user && $user->hasPermissionTo('view own reservations')) {
+            return $user->id === $reservation->user_id;
+        }
+        
+        return $reservation->user_id === null && $reservation->session_id === session()->getId();
     }
 
     /**

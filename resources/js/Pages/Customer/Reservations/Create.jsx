@@ -1,11 +1,13 @@
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Building2, Calendar, Clock, Users, ArrowRight, Wallet, CheckCircle2, Tag } from 'lucide-react';
+import { Building2, Calendar, Clock, Users, ArrowRight, Wallet, CheckCircle2, Tag, CreditCard, Banknote } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import InputError from '@/Components/InputError';
 import { motion } from 'framer-motion';
 
-export default function Create({ facilities, selectedFacilityId, initialCheckIn, initialCheckOut, initialCheckInTime, initialCheckOutTime }) {
+export default function Create({ facilities, selectedFacilityId, initialCheckIn, initialCheckOut, initialCheckInTime, initialCheckOutTime, paymentChannels = [] }) {
+    const { auth } = usePage().props;
+
     const { data, setData, post, processing, errors } = useForm({
         facility_id: selectedFacilityId || (facilities.length > 0 ? facilities[0].id : ''),
         check_in_date: initialCheckIn || '',
@@ -15,6 +17,11 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
         guest_count: 1,
         special_requests: '',
         coupon_code: '',
+        payment_method: '',
+        payment_channel: '',
+        customer_name: '',
+        customer_email: '',
+        customer_phone: '',
     });
 
     const [selectedFacility, setSelectedFacility] = useState(null);
@@ -172,6 +179,125 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                                         className="w-full bg-stone-50 border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500"
                                         placeholder="Tuliskan permintaan khusus Anda..."
                                     ></textarea>
+                                </div>
+
+                                {!auth.user && (
+                                    <div className="bg-orange-50 border border-orange-200 p-4 rounded-xl space-y-4 pt-4 mt-4">
+                                        <div className="text-sm font-bold text-orange-800">Data Pemesan (Guest)</div>
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">Nama Lengkap</label>
+                                                <input
+                                                    type="text"
+                                                    value={data.customer_name}
+                                                    onChange={e => setData('customer_name', e.target.value)}
+                                                    required
+                                                    className="w-full bg-white border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500"
+                                                    placeholder="Contoh: Budi Santoso"
+                                                />
+                                                <InputError message={errors.customer_name} className="mt-2" />
+                                            </div>
+                                            <div>
+                                                <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">Email</label>
+                                                <input
+                                                    type="email"
+                                                    value={data.customer_email}
+                                                    onChange={e => setData('customer_email', e.target.value)}
+                                                    required
+                                                    className="w-full bg-white border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500"
+                                                    placeholder="contoh@email.com"
+                                                />
+                                                <InputError message={errors.customer_email} className="mt-2" />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">Nomor HP/WhatsApp</label>
+                                            <input
+                                                type="tel"
+                                                value={data.customer_phone}
+                                                onChange={e => setData('customer_phone', e.target.value)}
+                                                required
+                                                className="w-full bg-white border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500"
+                                                placeholder="Contoh: 08123456789"
+                                            />
+                                            <InputError message={errors.customer_phone} className="mt-2" />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="pt-4 mt-4 border-t border-stone-100">
+                                    <label className="text-sm font-semibold text-slate-700 mb-2 block">Metode Pembayaran</label>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 mt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('payment_method', 'tripay')}
+                                            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                                                data.payment_method === 'tripay'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-stone-200 bg-white text-slate-500 hover:border-emerald-200'
+                                            }`}
+                                        >
+                                            <CreditCard size={24} />
+                                            <span className="font-bold text-sm">Bayar Online</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setData('payment_method', 'cash'); setData('payment_channel', ''); }}
+                                            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
+                                                data.payment_method === 'cash'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-stone-200 bg-white text-slate-500 hover:border-emerald-200'
+                                            }`}
+                                        >
+                                            <Banknote size={24} />
+                                            <span className="font-bold text-sm">Bayar di Kasir</span>
+                                        </button>
+                                    </div>
+
+                                    {data.payment_method === 'tripay' && (
+                                        paymentChannels && paymentChannels.length > 0 ? (
+                                            <div className="mt-4 p-4 bg-stone-50 rounded-xl border border-stone-200">
+                                                <p className="text-sm font-bold text-slate-700 mb-3">Pilih Metode Pembayaran Online</p>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                    {paymentChannels.map((channel) => (
+                                                        <label 
+                                                            key={channel.code}
+                                                            className={`flex flex-col items-center justify-center p-2 rounded-lg border cursor-pointer transition-all ${
+                                                                data.payment_channel === channel.code 
+                                                                ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' 
+                                                                : 'border-stone-200 bg-white hover:border-emerald-200'
+                                                            }`}
+                                                        >
+                                                            <input 
+                                                                type="radio" 
+                                                                name="payment_channel" 
+                                                                className="sr-only"
+                                                                value={channel.code}
+                                                                checked={data.payment_channel === channel.code}
+                                                                onChange={(e) => setData('payment_channel', e.target.value)}
+                                                            />
+                                                            <div className="h-10 flex items-center justify-center">
+                                                                {channel.icon_url ? (
+                                                                    <img src={channel.icon_url} alt={channel.name} className="max-h-full max-w-full object-contain" />
+                                                                ) : (
+                                                                    <span className="text-xs font-bold text-slate-400">{channel.code}</span>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                <InputError message={errors.payment_channel} className="mt-2" />
+                                            </div>
+                                        ) : (
+                                            <div className="mt-4 p-4 bg-rose-50 text-rose-700 rounded-xl text-sm flex gap-2">
+                                                <AlertCircle size={16} className="shrink-0" />
+                                                <span>Pembayaran online sedang tidak tersedia saat ini. Silakan pilih Bayar di Kasir.</span>
+                                            </div>
+                                        )
+                                    )}
+
+                                    <InputError message={errors.payment_method} className="mt-2" />
                                 </div>
 
                                 <div className="pt-6">

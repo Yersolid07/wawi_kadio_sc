@@ -99,6 +99,12 @@ class UserController extends Controller
             'role' => 'required|exists:roles,name',
         ]);
 
+        if (auth()->user()->hasRole('manager')) {
+            if ($user->hasRole('admin') || $validated['role'] === 'admin') {
+                abort(403, 'Manager tidak diizinkan mengubah role Admin.');
+            }
+        }
+
         // Prevent changing own admin role
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat mengubah role Anda sendiri.');

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Banner;
 use App\Models\Facility;
+use App\Models\FoodOrder;
 use App\Models\MenuItem;
 use App\Models\Review;
 use App\Models\Setting;
@@ -44,12 +45,30 @@ class HomeController extends Controller
             ->orderBy('sort_order')
             ->get();
 
+        // ── Guest Order Tracking ──────────────────────────────────────────────
+        // If a non-authenticated guest has an active order from this session,
+        // pass the summary so Welcome.jsx can show a "resume tracking" banner.
+        $guestActiveOrder = null;
+        if (!auth()->check() && session()->has('guest_order_id')) {
+            $guestActiveOrder = FoodOrder::where('id', session('guest_order_id'))
+                ->where('session_id', session()->getId())
+                ->whereNotIn('status', ['delivered', 'cancelled'])
+                ->select(['id', 'status', 'payment_status', 'total_amount'])
+                ->first();
+
+            // Clean up stale session key if order is gone or complete
+            if (!$guestActiveOrder) {
+                session()->forget('guest_order_id');
+            }
+        }
+
         return Inertia::render('Welcome', [
-            'facilities' => $facilities,
-            'menuItems' => $menuItems,
-            'reviews' => $reviews,
-            'siteSettings' => $settings,
-            'banners' => $banners,
+            'facilities'       => $facilities,
+            'menuItems'        => $menuItems,
+            'reviews'          => $reviews,
+            'siteSettings'     => $settings,
+            'banners'          => $banners,
+            'guestActiveOrder' => $guestActiveOrder,
         ]);
     }
 }

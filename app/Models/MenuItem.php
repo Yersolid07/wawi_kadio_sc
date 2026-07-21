@@ -62,9 +62,23 @@ class MenuItem extends Model
             : asset('images/menu-placeholder.jpg');
     }
 
+    /**
+     * Scope for items that are available to order.
+     * - Must be marked as available (is_available = true)
+     * - If daily stock tracking is enabled (daily_stock IS NOT NULL), current_stock must be > 0
+     */
     public function scopeAvailable($query)
     {
-        return $query->where('is_available', true);
+        return $query->where('is_available', true)
+            ->where(function ($q) {
+                // Items with no daily stock tracking are always available
+                $q->whereNull('daily_stock')
+                  // Items with daily stock tracking must have stock remaining
+                  ->orWhere(function ($q2) {
+                      $q2->whereNotNull('daily_stock')
+                         ->where('current_stock', '>', 0);
+                  });
+            });
     }
 
     public function scopeByCategory($query, string $category)

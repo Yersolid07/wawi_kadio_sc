@@ -38,6 +38,8 @@ class ReservationController extends Controller
             'status' => 'required|in:confirmed,completed,cancelled,checked_in',
         ]);
 
+        $reservation->load('payment', 'user');
+
         if ($validated['status'] === 'checked_in' && $reservation->payment_status !== 'paid') {
             if ($reservation->payment && $reservation->payment->payment_method === 'cash') {
                 $reservation->update(['payment_status' => 'paid']);

@@ -109,15 +109,11 @@ export default function AppLayout({ children, title }) {
                 <div className="flex h-full flex-col bg-white border-r border-stone-200">
                     {/* Logo */}
                     <div className="flex items-center gap-3 px-8 py-8">
-                        {cms_settings?.primary_logo ? (
+                        {cms_settings?.primary_logo || true ? (
                             <div className="w-12 h-12 rounded-xl flex items-center justify-center">
-                                <img src={cms_settings.primary_logo} alt="Logo" className="max-w-full max-h-full object-contain" />
+                                <img src={cms_settings?.primary_logo || '/images/logo.png'} alt="Logo" className="max-w-full max-h-full object-contain" />
                             </div>
-                        ) : (
-                            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                                <span className="text-white font-black text-lg">W</span>
-                            </div>
-                        )}
+                        ) : null}
                         <div>
                             <p className="text-slate-900 font-extrabold text-base leading-tight tracking-wide">{cms_settings?.site_name || 'Wawi Kadio'}</p>
                             <p className="text-slate-500 text-[10px] uppercase tracking-widest font-bold mt-0.5">{cms_settings?.site_description || 'Retreat & Nature'}</p>

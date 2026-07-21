@@ -171,8 +171,8 @@ export default function Show({ order, isGuest }) {
                                     <div key={item.id} className="flex justify-between items-start">
                                         <div className="flex gap-4">
                                             <div className="w-16 h-16 rounded-xl bg-stone-100 overflow-hidden shrink-0">
-                                                {item.menuItem?.image_url ? (
-                                                    <img src={`/storage/${item.menuItem.image_url}`} alt={item.menuItem.name} className="w-full h-full object-cover" />
+                                                {item.menu_item?.image_url ? (
+                                                    <img src={`/storage/${item.menu_item.image_url}`} alt={item.menu_item.name} className="w-full h-full object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-stone-300 bg-stone-50">
                                                         <ChefHat size={20} />
@@ -180,7 +180,7 @@ export default function Show({ order, isGuest }) {
                                                 )}
                                             </div>
                                             <div>
-                                                <h4 className="font-bold text-slate-900">{item.menuItem?.name}</h4>
+                                                <h4 className="font-bold text-slate-900">{item.menu_item?.name}</h4>
                                                 <p className="text-sm text-slate-500">{item.quantity} x Rp {formatPrice(item.price)}</p>
                                                 {item.notes && (
                                                     <p className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded mt-1 inline-block">
@@ -234,12 +234,12 @@ export default function Show({ order, isGuest }) {
                                     <div className="space-y-3">
                                         <div className="flex justify-between items-center py-2 border-b border-slate-700">
                                             <span className="text-sm text-slate-400">Nama Pemesan</span>
-                                            <span className="font-bold text-white">{order.guest_name}</span>
+                                            <span className="font-bold text-white">{order.customer_name}</span>
                                         </div>
                                         <div className="flex justify-between items-center py-2 border-b border-slate-700">
                                             <span className="text-sm text-slate-400">Nomor Kontak</span>
                                             <span className="font-bold text-white flex items-center gap-1">
-                                                <Phone size={14} className="text-slate-400" /> {order.guest_phone}
+                                                <Phone size={14} className="text-slate-400" /> {order.customer_phone}
                                             </span>
                                         </div>
                                     </div>

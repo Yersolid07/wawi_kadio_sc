@@ -36,8 +36,17 @@ class ReservationController extends Controller
     {
         $facilities = Facility::active()->get();
 
+        $paymentChannels = \Illuminate\Support\Facades\Cache::remember('tripay_channels', 86400, function () {
+            try {
+                return app(\App\Services\TripayService::class)->getPaymentChannels();
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
+
         return Inertia::render('Customer/Reservations/Create', [
             'facilities' => $facilities,
+            'paymentChannels' => $paymentChannels,
             'selectedFacilityId' => $request->facility_id,
             'initialCheckIn' => $request->check_in,
             'initialCheckOut' => $request->check_out,
@@ -46,22 +55,9 @@ class ReservationController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\StoreReservationRequest $request)
     {
-        $validated = $request->validate([
-            'facility_id' => 'required|exists:facilities,id',
-            'check_in_date' => 'required|date|after_or_equal:today',
-            'check_out_date' => 'required|date|after_or_equal:check_in_date',
-            'check_in_time' => 'nullable|date_format:H:i',
-            'check_out_time' => 'nullable|date_format:H:i|after:check_in_time',
-            'guest_count' => 'required|integer|min:1',
-            'special_requests' => 'nullable|string|max:1000',
-            'coupon_code' => 'nullable|string|exists:coupons,code',
-            'payment_method' => 'required|in:tripay,cash',
-            'customer_name' => 'required|string|max:255',
-            'customer_email' => 'required|email|max:255',
-            'customer_phone' => 'required|string|max:20',
-        ]);
+        $validated = $request->validated();
 
         try {
             $reservation = app(\App\Services\ReservationService::class)
@@ -78,8 +74,9 @@ class ReservationController extends Controller
 
         // Create Payment via PaymentService (handles Tripay integration if method=tripay)
         $paymentResult = app(\App\Services\PaymentService::class)
-            ->createForReservation($reservation, $validated['payment_method']);
+            ->createForReservation($reservation, $validated['payment_method'], $validated['payment_channel'] ?? null);
         $checkoutUrl = $paymentResult['checkout_url'];
+        $tripayError = $paymentResult['error'] ?? null;
 
         // Notify Admins and Staff
         $adminsAndStaff = \App\Models\User::role(['admin', 'staff', 'manager'])->get();
@@ -94,6 +91,12 @@ class ReservationController extends Controller
             return Inertia::location($checkoutUrl);
         }
 
+        if ($validated['payment_method'] === 'tripay') {
+            $msg = 'Gagal memproses pembayaran online' . ($tripayError ? ': ' . $tripayError : '') . '. Silakan bayar di kasir.';
+            return redirect()->route('customer.reservations.show', $reservation)
+                ->with('error', $msg);
+        }
+
         if ($validated['payment_method'] === 'cash') {
             return redirect()->route('customer.reservations.show', $reservation)
                 ->with('success', 'Reservasi berhasil. Silakan bayar di kasir Wawi Kadio saat kedatangan.');
@@ -105,18 +108,19 @@ class ReservationController extends Controller
 
     public function coupon(Reservation $reservation): Response
     {
-        $this->authorizeAccess($reservation);
+        $this->authorize('view', $reservation);
 
         $reservation->load('facility');
 
         return Inertia::render('Customer/Reservations/Coupon', [
             'reservation' => $reservation,
+            'qrCode' => QRCode::where('type', 'whatsapp')->first(),
         ]);
     }
 
     public function show(Reservation $reservation): Response
     {
-        $this->authorizeAccess($reservation);
+        $this->authorize('view', $reservation);
 
         $reservation->load(['facility', 'payment', 'foodOrders.items.menuItem', 'review']);
 
@@ -124,12 +128,13 @@ class ReservationController extends Controller
             'reservation' => $reservation,
             'canReview' => $reservation->canBeReviewed(),
             'canCancel' => $reservation->canBeCancelled(),
+            'isGuest' => ! $reservation->user_id,
         ]);
     }
 
     public function cancel(Reservation $reservation)
     {
-        $this->authorizeAccess($reservation);
+        $this->authorize('update', $reservation);
 
         if (! auth()->check()) {
             // Guests cannot cancel online — they must contact staff
@@ -208,22 +213,4 @@ class ReservationController extends Controller
         ]);
     }
 
-    private function authorizeAccess(Reservation $reservation)
-    {
-        if (auth()->check()) {
-            $user = auth()->user();
-            if ($user->hasAnyRole(['admin', 'manager', 'staff'])) {
-                return true;
-            }
-            if ($reservation->user_id === $user->id) {
-                return true;
-            }
-            abort(403, 'Anda tidak berhak mengakses reservasi ini.');
-        } else {
-            if ($reservation->user_id === null && $reservation->session_id === session()->getId()) {
-                return true;
-            }
-            abort(403, 'Sesi Anda tidak cocok dengan reservasi ini.');
-        }
-    }
 }

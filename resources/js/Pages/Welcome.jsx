@@ -1,5 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
-import { Coffee, Star, ArrowRight, HeartPulse, ChevronDown, Utensils, Building2, Leaf, Waves, Sun, Wind, CheckCircle2 } from 'lucide-react';
+import { Coffee, Star, ArrowRight, HeartPulse, ChevronDown, Utensils, Building2, Leaf, Waves, Sun, Wind, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Autoplay, Pagination, EffectFade } from 'swiper/modules';
@@ -22,7 +22,7 @@ const FADE_UP = {
 };
 const STAGGER = { visible: { transition: { staggerChildren: 0.1 } } };
 
-export default function Welcome({ auth, facilities = [], menuItems = [], reviews = [], siteSettings = {}, banners = [] }) {
+export default function Welcome({ auth, facilities = [], menuItems = [], reviews = [], siteSettings = {}, banners = [], guestActiveOrder = null }) {
     
     // Helper to get setting or fallback
     const getSetting = (key, fallback = '') => {
@@ -529,6 +529,45 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                         </div>
                     </div>
                 </footer>
+            {/* ═══ GUEST ORDER TRACKING BANNER ═══
+                 Floats at the bottom of the page when a guest has an active order
+                 so they can always find their way back to the tracking page.
+            */}
+            {guestActiveOrder && !auth.user && (
+                <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-2rem)] max-w-md"
+                >
+                    <Link
+                        href={route('customer.orders.show', guestActiveOrder.id)}
+                        className="flex items-center gap-3 bg-slate-900/95 backdrop-blur-md text-white px-5 py-4 rounded-2xl shadow-2xl border border-white/10 hover:bg-slate-800 transition-all group"
+                    >
+                        <div className="relative shrink-0">
+                            <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                                <ShoppingBag size={20} className="text-emerald-400" />
+                            </div>
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="font-bold text-sm text-white leading-tight">Pesanan Aktif</p>
+                            <p className="text-xs text-slate-400 truncate">
+                                {guestActiveOrder.payment_status === 'unpaid'
+                                    ? '⏳ Menunggu pembayaran di kasir'
+                                    : guestActiveOrder.status === 'pending'
+                                    ? '✅ Diterima — Menunggu dapur'
+                                    : guestActiveOrder.status === 'preparing'
+                                    ? '👨‍🍳 Sedang dimasak'
+                                    : '📦 Siap — Menunggu pengantaran'}
+                            </p>
+                        </div>
+                        <ArrowRight size={18} className="text-slate-400 group-hover:text-emerald-400 group-hover:translate-x-0.5 transition-all shrink-0" />
+                    </Link>
+                </motion.div>
+            )}
+
             </div>
         </>
     );

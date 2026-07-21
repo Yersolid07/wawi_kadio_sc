@@ -38,6 +38,9 @@ class SettingController extends Controller implements HasMiddleware
 
         foreach ($data as $key => $value) {
             if ($request->hasFile($key)) {
+                $request->validate([
+                    $key => 'image|mimes:jpeg,png,jpg,gif,svg,webp|max:5120'
+                ]);
                 $path = $request->file($key)->store('settings', 'public');
                 Setting::set($key, '/storage/'.$path, 'image');
             } else {

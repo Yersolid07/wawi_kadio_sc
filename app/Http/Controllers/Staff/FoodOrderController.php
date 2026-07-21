@@ -18,6 +18,7 @@ class FoodOrderController extends Controller
         return Inertia::render('Staff/FoodOrders/Index', [
             'activeOrders' => FoodOrder::with(['user', 'items.menuItem', 'reservation'])
                 ->active()
+                ->where('payment_status', 'paid') // Only show paid orders — unpaid ones wait in POS
                 ->latest()
                 ->get(),
         ]);
@@ -27,6 +28,7 @@ class FoodOrderController extends Controller
     {
         $orders = FoodOrder::with(['items.menuItem', 'reservation.facility'])
             ->whereIn('status', ['pending', 'preparing', 'ready'])
+            ->where('payment_status', 'paid') // Gate: unpaid orders must be validated at POS first
             ->latest()
             ->get();
 
@@ -42,13 +44,25 @@ class FoodOrderController extends Controller
             'payment_status' => 'nullable|in:unpaid,paid',
         ]);
 
-        $order->update([
-            'status' => $validated['status'],
-            'payment_status' => $validated['payment_status'] ?? $order->payment_status,
-        ]);
+        DB::transaction(function () use ($order, $validated) {
+            // If cancelling, restore daily stock for items that were deducted
+            if ($validated['status'] === 'cancelled' && $order->status !== 'cancelled') {
+                $order->load('items.menuItem');
+                foreach ($order->items as $item) {
+                    if ($item->menuItem && $item->menuItem->daily_stock !== null) {
+                        $item->menuItem->increment('current_stock', $item->quantity);
+                    }
+                }
+            }
+
+            $order->update([
+                'status'         => $validated['status'],
+                'payment_status' => $validated['payment_status'] ?? $order->payment_status,
+            ]);
+        });
 
         if ($order->user) {
-            $order->user->notify(new FoodOrderStatusUpdated($order, $validated['status']));
+            $order->fresh()->user?->notify(new FoodOrderStatusUpdated($order, $validated['status']));
         }
 
         return back()->with('success', 'Status order diperbarui.');
@@ -69,6 +83,10 @@ class FoodOrderController extends Controller
 
     public function destroy(FoodOrder $order)
     {
+        if ($order->status !== 'pending') {
+            abort(403, 'Hanya pesanan pending yang dapat dihapus.');
+        }
+
         DB::transaction(function () use ($order) {
             // Restore stock for items that were deducted
             foreach ($order->items as $item) {

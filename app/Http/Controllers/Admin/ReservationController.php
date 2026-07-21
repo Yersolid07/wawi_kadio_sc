@@ -63,7 +63,25 @@ class ReservationController extends Controller
             return back()->with('error', 'Hanya reservasi confirmed yang dapat di-complete.');
         }
 
-        $reservation->update(['status' => $validated['status']]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($reservation, $validated) {
+            $reservation->update(['status' => $validated['status']]);
+
+            if ($validated['status'] === 'cancelled') {
+                $reservation->load('foodOrders.items');
+                foreach ($reservation->foodOrders as $foodOrder) {
+                    if ($foodOrder->status !== 'cancelled') {
+                        $foodOrder->update(['status' => 'cancelled']);
+                        foreach ($foodOrder->items as $item) {
+                            if ($item->menu_item_id) {
+                                \App\Models\MenuItem::where('id', $item->menu_item_id)
+                                    ->whereNotNull('daily_stock')
+                                    ->increment('current_stock', $item->quantity);
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         if ($reservation->user) {
             $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));

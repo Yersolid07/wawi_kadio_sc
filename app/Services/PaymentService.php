@@ -25,7 +25,7 @@ class PaymentService
      *
      * @return array{payment: Payment, checkout_url: string|null}
      */
-    public function createForReservation(Reservation $reservation, string $paymentMethod): array
+    public function createForReservation(Reservation $reservation, string $paymentMethod, ?string $paymentChannel = null): array
     {
         $paymentData = [
             'reservation_id' => $reservation->id,
@@ -35,8 +35,17 @@ class PaymentService
         ];
 
         $checkoutUrl = null;
+        $errorMessage = null;
 
-        if ($paymentMethod === 'tripay' && $reservation->total_amount > 0) {
+        if ($reservation->total_amount <= 0) {
+            $paymentData['payment_status'] = 'success';
+            $paymentData['payment_method'] = 'free'; // or whatever makes sense
+            $payment = Payment::create($paymentData);
+            $payment->markAsSuccess('FREE-RES-'.$reservation->id);
+            return ['payment' => $payment, 'checkout_url' => null, 'error' => null];
+        }
+
+        if ($paymentMethod === 'tripay') {
             try {
                 $merchantRef = $this->tripay->makeMerchantRef('RES', $reservation->id);
 
@@ -54,7 +63,8 @@ class PaymentService
                         'price'    => (int) $reservation->total_amount,
                         'quantity' => 1,
                     ]],
-                    route('customer.reservations.show', $reservation->id)
+                    route('customer.reservations.show', $reservation->id),
+                    $paymentChannel ?? 'QRIS'
                 );
 
                 $paymentData['transaction_id']     = $result['reference'];
@@ -66,21 +76,22 @@ class PaymentService
                     'reservation_id' => $reservation->id,
                     'error'          => $e->getMessage(),
                 ]);
+                $errorMessage = $e->getMessage();
                 // Fall through — payment record still saved as pending without tripay ref
             }
         }
 
         $payment = Payment::create($paymentData);
 
-        return ['payment' => $payment, 'checkout_url' => $checkoutUrl];
+        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'error' => $errorMessage];
     }
 
     /**
      * Create a payment for a food order.
      *
-     * @return array{payment: Payment, checkout_url: string|null}
+     * @return array{payment: Payment, checkout_url: string|null, error: string|null}
      */
-    public function createForFoodOrder(FoodOrder $order, string $paymentMethod, array $customerInfo = []): array
+    public function createForFoodOrder(FoodOrder $order, string $paymentMethod, array $customerInfo = [], ?string $paymentChannel = null, ?string $returnUrl = null): array
     {
         $paymentData = [
             'food_order_id'  => $order->id,
@@ -90,8 +101,17 @@ class PaymentService
         ];
 
         $checkoutUrl = null;
+        $errorMessage = null;
 
-        if ($paymentMethod === 'tripay' && $order->total_amount > 0) {
+        if ($order->total_amount <= 0) {
+            $paymentData['payment_status'] = 'success';
+            $paymentData['payment_method'] = 'free';
+            $payment = Payment::create($paymentData);
+            $payment->markAsSuccess('FREE-FOD-'.$order->id);
+            return ['payment' => $payment, 'checkout_url' => null, 'error' => null];
+        }
+
+        if ($paymentMethod === 'tripay') {
             try {
                 $merchantRef = $this->tripay->makeMerchantRef('FOD', $order->id);
 
@@ -107,7 +127,8 @@ class PaymentService
                     (int) $order->total_amount,
                     $customerInfo,
                     $tripayItems,
-                    route('customer.orders.show', $order->id)
+                    $returnUrl ?? route('customer.orders.show', $order->id),
+                    $paymentChannel ?? 'QRIS'
                 );
 
                 $paymentData['transaction_id']    = $result['reference'];
@@ -119,12 +140,13 @@ class PaymentService
                     'order_id' => $order->id,
                     'error'    => $e->getMessage(),
                 ]);
+                $errorMessage = $e->getMessage();
             }
         }
 
         $payment = Payment::create($paymentData);
 
-        return ['payment' => $payment, 'checkout_url' => $checkoutUrl];
+        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'error' => $errorMessage];
     }
 
     /**

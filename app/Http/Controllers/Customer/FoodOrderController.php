@@ -37,54 +37,41 @@ class FoodOrderController extends Controller
                 ->get();
         }
 
+        $paymentChannels = \Illuminate\Support\Facades\Cache::remember('tripay_channels', 86400, function () {
+            try {
+                return app(\App\Services\TripayService::class)->getPaymentChannels();
+            } catch (\Exception $e) {
+                return [];
+            }
+        });
+
+        // Fetch ALL available (is_available=true) menu items including exhausted ones
+        // so we can show "Habis" badge on the frontend
+        $allMenuItems = MenuItem::where('is_available', true)
+            ->orderBy('category')
+            ->orderBy('name')
+            ->get()
+            ->map(function ($item) {
+                // Mark item as out of stock if it uses daily stock tracking and stock is depleted
+                $item->is_out_of_stock = ($item->daily_stock !== null && $item->current_stock <= 0);
+                return $item;
+            })
+            ->groupBy('category');
+
         return Inertia::render('Customer/FoodOrders/Create', [
-            'menuItems' => MenuItem::where('is_available', true)
-                ->orderBy('category')
-                ->orderBy('name')
-                ->get()
-                ->groupBy('category'),
-            'reservationId' => $request->reservation_id,
+            'menuItems'         => $allMenuItems,
+            'reservationId'     => $request->reservation_id,
             'activeReservations' => $activeReservations,
-            'qrCodes' => QRCode::all(),
-            'isAuthenticated' => auth()->check(),
-            'user' => auth()->user(),
+            'qrCodes'           => QRCode::all(),
+            'isAuthenticated'   => auth()->check(),
+            'user'              => auth()->user(),
+            'paymentChannels'   => $paymentChannels,
         ]);
     }
 
-    public function store(Request $request)
+    public function store(\App\Http\Requests\StoreFoodOrderRequest $request)
     {
-        $rules = [
-            'order_type' => 'required|in:dine_in,takeaway,room_service',
-            'table_number' => 'required_if:order_type,dine_in|nullable|string|max:20',
-            'reservation_id' => 'required_if:order_type,room_service|nullable|exists:reservations,id',
-            'notes' => 'nullable|string',
-            'items' => 'required|array|min:1',
-            'items.*.menu_item_id' => 'required|exists:menu_items,id',
-            'items.*.quantity' => 'required|integer|min:1|max:100',
-            'payment_method' => 'required_unless:order_type,room_service|in:tripay,cash',
-        ];
-
-        if (! auth()->check()) {
-            $rules['customer_name'] = 'required|string|max:255';
-            $rules['customer_phone'] = 'required|string|max:50';
-        }
-
-        $validated = $request->validate($rules);
-
-        // Security check for room_service
-        if ($validated['order_type'] === 'room_service') {
-            if (empty($validated['reservation_id'])) {
-                return back()->withErrors(['reservation_id' => 'Reservasi harus dipilih untuk layanan kamar.']);
-            }
-            if (!auth()->check()) {
-                abort(403, 'Anda harus login untuk memesan layanan kamar.');
-            }
-            
-            $reservation = Reservation::findOrFail($validated['reservation_id']);
-            if ($reservation->user_id !== auth()->id()) {
-                abort(403, 'Anda tidak berhak memesan untuk reservasi ini.');
-            }
-        }
+        $validated = $request->validated();
 
         try {
             $order = app(\App\Services\OrderService::class)
@@ -95,6 +82,12 @@ class FoodOrderController extends Controller
                 );
         } catch (\Exception $e) {
             return back()->withErrors(['items' => $e->getMessage()]);
+        }
+
+        // For guest users: persist order ID in session so the home page can
+        // show a "resume tracking" link if they navigate away.
+        if (!auth()->check()) {
+            session(['guest_order_id' => $order->id]);
         }
 
         // Handle Payment for non room_service
@@ -114,8 +107,9 @@ class FoodOrderController extends Controller
 
             $paymentMethod = $validated['payment_method'] ?? 'cash';
             $result = app(\App\Services\PaymentService::class)
-                ->createForFoodOrder($order, $paymentMethod, $customerInfo);
+                ->createForFoodOrder($order, $paymentMethod, $customerInfo, $validated['payment_channel'] ?? null);
             $checkoutUrl = $result['checkout_url'];
+            $tripayError = $result['error'] ?? null;
         }
 
         // Admin & Kitchen will be notified once payment is confirmed (via Tripay Webhook or POS checkout)
@@ -125,8 +119,8 @@ class FoodOrderController extends Controller
         }
         
         if ($validated['order_type'] !== 'room_service' && ($validated['payment_method'] ?? '') === 'tripay') {
-            return redirect()->route('customer.orders.show', $order->id)
-                ->with('error', 'Gagal memproses pembayaran online. Silakan bayar di kasir.');
+            $msg = 'Gagal memproses pembayaran online' . ($tripayError ? ': ' . $tripayError : '') . '. Silakan bayar di kasir.';
+            return redirect()->route('customer.orders.show', $order->id)->with('error', $msg);
         }
 
         return redirect()->route('customer.orders.show', $order->id)
@@ -135,30 +129,25 @@ class FoodOrderController extends Controller
 
     public function show(FoodOrder $order)
     {
-        $this->authorizeAccess($order);
+        // Manual auth check supporting both authenticated users and guests
+        $user = auth()->user();
+
+        if ($user) {
+            // Staff/admin can view any order
+            if (!$user->hasAnyRole(['admin', 'manager', 'staff']) && $order->user_id !== $user->id) {
+                abort(403, 'Anda tidak berhak melihat pesanan ini.');
+            }
+        } else {
+            // Guest: must match session_id and order must be a guest order
+            if ($order->user_id !== null || $order->session_id !== session()->getId()) {
+                abort(403, 'Sesi Anda tidak cocok dengan pesanan ini.');
+            }
+        }
 
         return Inertia::render('Customer/FoodOrders/Show', [
-            'order' => $order->load(['items.menuItem', 'reservation.facility', 'payment']),
-            'isGuest' => ! $order->user_id,
+            'order'   => $order->load(['items.menuItem', 'reservation.facility', 'payment', 'user']),
+            'isGuest' => !$order->user_id,
         ]);
     }
 
-    private function authorizeAccess(FoodOrder $order)
-    {
-        if (auth()->check()) {
-            $user = auth()->user();
-            if ($user->hasAnyRole(['admin', 'manager', 'staff'])) {
-                return true;
-            }
-            if ($order->user_id === $user->id) {
-                return true;
-            }
-            abort(403, 'Anda tidak berhak mengakses pesanan ini.');
-        } else {
-            if ($order->user_id === null && $order->session_id === session()->getId()) {
-                return true;
-            }
-            abort(403, 'Sesi Anda tidak cocok dengan pesanan ini.');
-        }
-    }
 }

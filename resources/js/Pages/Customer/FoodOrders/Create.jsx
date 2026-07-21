@@ -7,7 +7,7 @@ import InputError from '@/Components/InputError';
 import TextInput from '@/Components/TextInput';
 import { useState, useMemo, useEffect } from 'react';
 
-export default function Create({ menuItems, reservationId, activeReservations = [], qrCodes = [], isAuthenticated, user }) {
+export default function Create({ menuItems, reservationId, activeReservations = [], qrCodes = [], isAuthenticated, user, paymentChannels = [] }) {
     // Check URL parameters for QR Code ordering
     const params = new URLSearchParams(window.location.search);
     const locationType = params.get('location_type');
@@ -17,7 +17,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
     // Load cart from localStorage or start empty
     const [cart, setCart] = useState(() => {
         try {
-            const saved = localStorage.getItem('wawi_cart');
+            const saved = sessionStorage.getItem('wawi_cart');
             return saved ? JSON.parse(saved) : {};
         } catch (e) {
             return {};
@@ -52,12 +52,13 @@ export default function Create({ menuItems, reservationId, activeReservations = 
         items: [],
         customer_name: '',
         customer_phone: '',
-        payment_method: initialOrderType !== 'room_service' ? 'tripay' : '',
+        payment_method: '',
+        payment_channel: '',
     });
 
     // Save cart to localStorage whenever it changes
     useEffect(() => {
-        localStorage.setItem('wawi_cart', JSON.stringify(cart));
+        sessionStorage.setItem('wawi_cart', JSON.stringify(cart));
         
         // Sync with form data
         const itemsArray = Object.values(cart).map(cartItem => ({
@@ -70,17 +71,26 @@ export default function Create({ menuItems, reservationId, activeReservations = 
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
 
     const updateCart = (item, delta) => {
+        // Prevent adding out-of-stock items
+        if (delta > 0 && item.is_out_of_stock) return;
+
         setCart(prev => {
             const newCart = { ...prev };
             const currentQty = newCart[item.id]?.quantity || 0;
             const newQty = Math.max(0, currentQty + delta);
-            
-            if (newQty === 0) {
+
+            // Respect stock limit
+            const maxQty = (item.daily_stock !== null && item.current_stock > 0)
+                ? item.current_stock
+                : Infinity;
+            const clampedQty = Math.min(newQty, maxQty);
+
+            if (clampedQty === 0) {
                 delete newCart[item.id];
             } else {
-                newCart[item.id] = { ...item, quantity: newQty };
+                newCart[item.id] = { ...item, quantity: clampedQty };
             }
-            
+
             return newCart;
         });
     };
@@ -96,7 +106,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
         e.preventDefault();
         post(route('customer.orders.store'), {
             onSuccess: () => {
-                localStorage.removeItem('wawi_cart');
+                sessionStorage.removeItem('wawi_cart');
                 setCart({});
             }
         });
@@ -125,10 +135,25 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                 {category}
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {items.map(item => {
+                            {items.map(item => {
                                     const qty = cart[item.id]?.quantity || 0;
+                                    const isOutOfStock = item.is_out_of_stock;
+                                    const stockLeft = item.daily_stock !== null ? item.current_stock : null;
+                                    const isLowStock = stockLeft !== null && stockLeft > 0 && stockLeft <= 5;
                                     return (
-                                        <div key={item.id} className="bg-white rounded-2xl border border-stone-100 p-4 shadow-sm flex gap-4">
+                                        <div key={item.id} className={`bg-white rounded-2xl border border-stone-100 p-4 shadow-sm flex gap-4 relative ${
+                                            isOutOfStock ? 'opacity-60' : ''
+                                        }`}>
+                                            {isOutOfStock && (
+                                                <div className="absolute top-3 right-3 bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                                                    Habis
+                                                </div>
+                                            )}
+                                            {isLowStock && !isOutOfStock && (
+                                                <div className="absolute top-3 right-3 bg-amber-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-10">
+                                                    Sisa {stockLeft}
+                                                </div>
+                                            )}
                                             <div className="w-24 h-24 rounded-xl bg-stone-100 overflow-hidden shrink-0">
                                                 {item.image_url ? (
                                                     <img src={`/storage/${item.image_url}`} alt={item.name} className="w-full h-full object-cover" />
@@ -151,8 +176,12 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                                     )}
                                                 </div>
                                                 <div className="flex justify-end items-center mt-2">
-                                                    {qty === 0 ? (
-                                                        <button 
+                                                    {isOutOfStock ? (
+                                                        <span className="px-4 py-1.5 bg-stone-100 text-stone-400 rounded-lg text-sm font-medium cursor-not-allowed">
+                                                            Habis hari ini
+                                                        </span>
+                                                    ) : qty === 0 ? (
+                                                        <button
                                                             type="button"
                                                             onClick={() => updateCart(item, 1)}
                                                             className="px-4 py-1.5 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg text-sm font-bold transition-colors"
@@ -161,18 +190,19 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                                         </button>
                                                     ) : (
                                                         <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 border border-stone-200">
-                                                            <button 
-                                                                type="button" 
+                                                            <button
+                                                                type="button"
                                                                 onClick={() => updateCart(item, -1)}
                                                                 className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-rose-600 hover:bg-rose-50"
                                                             >
                                                                 <Minus size={14} />
                                                             </button>
                                                             <span className="font-bold w-4 text-center">{qty}</span>
-                                                            <button 
-                                                                type="button" 
+                                                            <button
+                                                                type="button"
                                                                 onClick={() => updateCart(item, 1)}
-                                                                className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-emerald-600 hover:bg-emerald-50"
+                                                                disabled={stockLeft !== null && qty >= stockLeft}
+                                                                className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-emerald-600 hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed"
                                                             >
                                                                 <Plus size={14} />
                                                             </button>
@@ -321,6 +351,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                             {data.order_type !== 'room_service' && (
                                 <div className="mt-2">
                                     <InputLabel value="Metode Pembayaran" />
+                                    
                                     <div className="grid grid-cols-2 gap-3 mt-2">
                                         <button
                                             type="button"
@@ -336,7 +367,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                         </button>
                                         <button
                                             type="button"
-                                            onClick={() => setData('payment_method', 'cash')}
+                                            onClick={() => { setData('payment_method', 'cash'); setData('payment_channel', ''); }}
                                             className={`p-3 rounded-xl border-2 flex flex-col items-center gap-2 transition-all ${
                                                 data.payment_method === 'cash'
                                                     ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
@@ -347,14 +378,57 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                             <span className="font-bold text-sm">Bayar di Kasir</span>
                                         </button>
                                     </div>
+
+                                    {data.payment_method === 'tripay' && (
+                                        paymentChannels && paymentChannels.length > 0 ? (
+                                            <div className="mt-4 p-4 bg-stone-50 rounded-xl border border-stone-200">
+                                                <p className="text-sm font-bold text-slate-700 mb-3">Pilih Metode Pembayaran Online</p>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                                    {paymentChannels.map((channel) => (
+                                                        <label 
+                                                            key={channel.code}
+                                                            className={`flex flex-col items-center justify-center p-2 rounded-lg border cursor-pointer transition-all ${
+                                                                data.payment_channel === channel.code 
+                                                                ? 'border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500' 
+                                                                : 'border-stone-200 bg-white hover:border-emerald-200'
+                                                            }`}
+                                                        >
+                                                            <input 
+                                                                type="radio" 
+                                                                name="payment_channel" 
+                                                                className="sr-only"
+                                                                value={channel.code}
+                                                                checked={data.payment_channel === channel.code}
+                                                                onChange={(e) => setData('payment_channel', e.target.value)}
+                                                            />
+                                                            <div className="h-10 flex items-center justify-center">
+                                                                {channel.icon_url ? (
+                                                                    <img src={channel.icon_url} alt={channel.name} className="max-h-full max-w-full object-contain" />
+                                                                ) : (
+                                                                    <span className="text-xs font-bold text-slate-400">{channel.code}</span>
+                                                                )}
+                                                            </div>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                                <InputError message={errors.payment_channel} className="mt-2" />
+                                            </div>
+                                        ) : (
+                                            <div className="mt-4 p-4 bg-rose-50 text-rose-700 rounded-xl text-sm flex gap-2">
+                                                <AlertCircle size={16} className="shrink-0" />
+                                                <span>Pembayaran online sedang tidak tersedia saat ini. Silakan pilih Bayar di Kasir.</span>
+                                            </div>
+                                        )
+                                    )}
+
                                     <InputError message={errors.payment_method} className="mt-2" />
                                 </div>
                             )}
                             
                             {errors.items && (
                                 <div className="p-3 bg-rose-50 text-rose-600 rounded-xl text-sm flex gap-2">
-                                    <AlertCircle size={16} className="shrink-0" />
-                                    <span>Silakan pilih minimal 1 menu untuk dipesan.</span>
+                                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                                    <span>{errors.items || 'Silakan pilih minimal 1 menu untuk dipesan.'}</span>
                                 </div>
                             )}
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Facility;
+use App\Http\Requests\SaveFacilityRequest;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -45,19 +46,9 @@ class FacilityController extends Controller implements HasMiddleware
         return Inertia::render('Admin/Facilities/Form');
     }
 
-    public function store(Request $request)
+    public function store(SaveFacilityRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:homestay,gazebo,pool,cafe',
-            'description' => 'nullable|string',
-            'capacity' => 'nullable|integer|min:1',
-            'price_per_day' => 'nullable|numeric|min:0',
-            'price_per_hour' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
-            'promo_name' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             $validated['image_url'] = $request->file('image')->store('facilities', 'public');
@@ -85,19 +76,9 @@ class FacilityController extends Controller implements HasMiddleware
         ]);
     }
 
-    public function update(Request $request, Facility $facility)
+    public function update(SaveFacilityRequest $request, Facility $facility)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|in:homestay,gazebo,pool,cafe',
-            'description' => 'nullable|string',
-            'capacity' => 'nullable|integer|min:1',
-            'price_per_day' => 'nullable|numeric|min:0',
-            'price_per_hour' => 'nullable|numeric|min:0',
-            'image' => 'nullable|image|max:2048',
-            'promo_name' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         if ($request->hasFile('image')) {
             // Delete old image

@@ -121,25 +121,42 @@ class Payment extends Model
             'gateway_response' => $gatewayResponse,
         ]);
 
-        if ($this->reservation) {
+        if ($this->reservation && $this->reservation->payment_status !== 'paid') {
             $this->reservation->update([
                 'payment_status' => 'failed',
                 'status' => 'cancelled'
             ]);
+
+            // Cancel associated food orders (room service) and restore stock
+            // Eager load to avoid N+1
+            $this->reservation->load('foodOrders.items.menuItem');
+            foreach ($this->reservation->foodOrders as $foodOrder) {
+                if ($foodOrder->status !== 'cancelled' && $foodOrder->payment_status !== 'paid') {
+                    $foodOrder->update([
+                        'payment_status' => 'failed',
+                        'status' => 'cancelled'
+                    ]);
+
+                    foreach ($foodOrder->items as $item) {
+                        if ($item->menuItem && $item->menuItem->daily_stock !== null) {
+                            $item->menuItem->increment('current_stock', $item->quantity);
+                        }
+                    }
+                }
+            }
         }
 
-        if ($this->foodOrder) {
+        if ($this->foodOrder && $this->foodOrder->payment_status !== 'paid') {
             $this->foodOrder->update([
                 'payment_status' => 'failed',
                 'status' => 'cancelled'
             ]);
 
-            // Restore menu items stock securely using atomic increment
+            // Restore menu items stock — eager load to avoid N+1
+            $this->foodOrder->load('items.menuItem');
             foreach ($this->foodOrder->items as $item) {
-                if ($item->menu_item_id) {
-                    MenuItem::where('id', $item->menu_item_id)
-                        ->whereNotNull('daily_stock')
-                        ->increment('current_stock', $item->quantity);
+                if ($item->menuItem && $item->menuItem->daily_stock !== null) {
+                    $item->menuItem->increment('current_stock', $item->quantity);
                 }
             }
         }
