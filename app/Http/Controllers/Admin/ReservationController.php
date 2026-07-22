@@ -67,10 +67,40 @@ class ReservationController extends Controller
             $reservation->update(['status' => $validated['status']]);
 
             if ($validated['status'] === 'cancelled') {
+                // If Reservation was paid, auto-refund in Ledger
+                if ($reservation->payment_status === 'paid') {
+                    $reservation->update(['payment_status' => 'refunded']);
+                    
+                    \App\Models\FinancialTransaction::create([
+                        'type'             => 'expense',
+                        'category'         => 'reservation',
+                        'amount'           => $reservation->total_amount ?? 0, // Using total_amount from table
+                        'description'      => "Refund Pembatalan Reservasi: {$reservation->id}",
+                        'reference_id'     => $reservation->id,
+                        'transaction_date' => now()->toDateString(),
+                        'user_id'          => auth()->id(),
+                    ]);
+                }
+
                 $reservation->load('foodOrders.items');
                 foreach ($reservation->foodOrders as $foodOrder) {
                     if ($foodOrder->status !== 'cancelled') {
                         $foodOrder->update(['status' => 'cancelled']);
+                        
+                        // If associated FoodOrder was paid, auto-refund in Ledger too
+                        if ($foodOrder->payment_status === 'paid') {
+                            $foodOrder->update(['payment_status' => 'refunded']);
+                            \App\Models\FinancialTransaction::create([
+                                'type'             => 'expense',
+                                'category'         => 'cafe',
+                                'amount'           => $foodOrder->total_amount ?? 0,
+                                'description'      => "Refund Pembatalan POS (via Reservasi): {$foodOrder->id}",
+                                'reference_id'     => $foodOrder->id,
+                                'transaction_date' => now()->toDateString(),
+                                'user_id'          => auth()->id(),
+                            ]);
+                        }
+
                         foreach ($foodOrder->items as $item) {
                             if ($item->menu_item_id) {
                                 \App\Models\MenuItem::where('id', $item->menu_item_id)

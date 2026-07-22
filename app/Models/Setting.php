@@ -6,9 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Setting extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = ['key', 'value', 'type', 'group'];
 
@@ -28,10 +39,12 @@ class Setting extends Model
     {
         static::saved(function ($setting) {
             Cache::forget('global_settings');
+            Cache::forget('cms_settings');
         });
 
         static::deleted(function ($setting) {
             Cache::forget('global_settings');
+            Cache::forget('cms_settings');
         });
     }
 

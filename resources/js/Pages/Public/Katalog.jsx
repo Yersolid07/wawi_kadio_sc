@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Coffee, Search, ArrowLeft, ArrowRight, Utensils, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
 import { useState, useEffect } from 'react';
 
 const formatPrice = (val) => {
@@ -191,6 +192,7 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                     </motion.div>
                 )}
             </main>
+            <FloatingWhatsApp />
         </div>
     );
 }

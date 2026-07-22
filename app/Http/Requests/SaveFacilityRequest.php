@@ -27,11 +27,19 @@ class SaveFacilityRequest extends FormRequest
             'type' => 'required|in:homestay,gazebo,pool,cafe',
             'description' => 'nullable|string',
             'capacity' => 'nullable|integer|min:1',
+            'bed_count' => 'nullable|integer|min:0',
+            'price_prefix' => 'nullable|string|max:100',
+            'price_unit' => 'nullable|string|max:100',
             'price_per_day' => 'nullable|numeric|min:0',
             'price_per_hour' => 'nullable|numeric|min:0',
             'image' => 'nullable|image|max:2048',
             'promo_name' => 'nullable|string|max:255',
             'is_active' => 'boolean',
+            'amenities' => 'nullable|array',
+            'amenities.*.icon' => 'nullable|string|max:100',
+            'amenities.*.label' => 'nullable|string|max:255',
+            'rules' => 'nullable|array',
+            'rules.*' => 'nullable|string|max:255',
         ];
     }
 }

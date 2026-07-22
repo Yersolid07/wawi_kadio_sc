@@ -7,9 +7,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
+
 class Facility extends Model
 {
-    use HasUuids, HasFactory;
+    use HasUuids, HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $fillable = [
         'name',
@@ -25,6 +36,11 @@ class Facility extends Model
         'promo_start',
         'promo_end',
         'promo_name',
+        'price_prefix',
+        'price_unit',
+        'bed_count',
+        'amenities',
+        'rules',
     ];
 
     protected $casts = [
@@ -35,6 +51,9 @@ class Facility extends Model
         'promo_end' => 'datetime',
         'price_per_hour' => 'decimal:2',
         'capacity' => 'integer',
+        'bed_count' => 'integer',
+        'amenities' => 'array',
+        'rules' => 'array',
     ];
 
     protected $appends = ['final_price'];

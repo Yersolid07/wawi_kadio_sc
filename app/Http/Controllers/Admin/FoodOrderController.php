@@ -38,10 +38,40 @@ class FoodOrderController extends Controller
             'payment_status' => 'nullable|in:unpaid,paid',
         ]);
 
-        $order->update([
-            'status' => $validated['status'],
-            'payment_status' => $validated['payment_status'] ?? $order->payment_status,
-        ]);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($order, $validated) {
+            $order->update([
+                'status' => $validated['status'],
+                'payment_status' => $validated['payment_status'] ?? $order->payment_status,
+            ]);
+
+            if ($validated['status'] === 'cancelled') {
+                // Restore stock if it was cancelled
+                $order->load('items.menuItem');
+                foreach ($order->items as $item) {
+                    if ($item->menuItem && $item->menuItem->daily_stock !== null) {
+                        $item->menuItem->increment('current_stock', $item->quantity);
+                    }
+                }
+
+                // If Paid, issue a refund transaction
+                if ($order->payment_status === 'paid' || $order->payment_status === 'refunded') {
+                    // Update to refunded if not already
+                    if ($order->payment_status !== 'refunded') {
+                        $order->update(['payment_status' => 'refunded']);
+                    }
+                    
+                    \App\Models\FinancialTransaction::create([
+                        'type'             => 'expense',
+                        'category'         => 'cafe',
+                        'amount'           => $order->total_amount ?? 0,
+                        'description'      => "Refund Pembatalan POS: {$order->id}",
+                        'reference_id'     => $order->id,
+                        'transaction_date' => now()->toDateString(),
+                        'user_id'          => auth()->id(),
+                    ]);
+                }
+            }
+        });
 
         if ($order->user) {
             $order->user->notify(new FoodOrderStatusUpdated($order, $validated['status']));

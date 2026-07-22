@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ReservationController as AdminReservationControll
 use App\Http\Controllers\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\Customer\FoodOrderController as CustomerFoodOrderController;
 use App\Http\Controllers\Customer\InvoiceController;
@@ -146,10 +147,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |------------------------------------------------------------------
     */
     Route::prefix('admin')->name('admin.')->middleware('role:admin|manager')->group(function () {
-        // QR Codes
-        Route::get('/qrcodes', [QRCodeController::class, 'index'])->name('qrcodes.index');
-        Route::post('/qrcodes/generate', [QRCodeController::class, 'generate'])->name('qrcodes.generate');
-        Route::delete('/qrcodes/{qrcode}', [QRCodeController::class, 'destroy'])->name('qrcodes.destroy');
 
         // Inventories
         Route::get('/inventories', [InventoryController::class, 'index'])->name('inventories.index');
@@ -194,25 +191,35 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('reviews/{review}/toggle-visibility', [AdminReviewController::class, 'toggleVisibility'])->name('reviews.toggle');
         Route::delete('reviews/{review}', [AdminReviewController::class, 'destroy'])->name('reviews.destroy');
 
-        // Users & Roles (admin only)
-        Route::middleware('role:admin')->group(function () {
-            Route::resource('users', AdminUserController::class)->except(['show']);
-            Route::patch('users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');
-        });
-
         // Reports
         Route::get('reports', [AdminReportController::class, 'index'])->name('reports.index');
         Route::get('reports/export-pdf', [AdminReportController::class, 'exportPdf'])->name('reports.pdf');
         Route::get('reports/export-excel', [AdminReportController::class, 'exportExcel'])->name('reports.excel');
-
-        // Settings
-        Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
-        Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
+        Route::post('reports/transaction', [AdminReportController::class, 'storeTransaction'])->name('reports.store-transaction');
 
         // Banners (CMS)
         Route::resource('banners', BannerController::class)->except(['create', 'show', 'edit']);
         Route::patch('banners/{banner}/toggle-status', [BannerController::class, 'toggleStatus'])->name('banners.toggle-status');
         Route::post('banners/reorder', [BannerController::class, 'reorder'])->name('banners.reorder');
+
+        // Admin-only Routes
+        Route::middleware('role:admin')->group(function () {
+            // Activity Logs
+            Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+
+            // Users & Roles
+            Route::resource('users', AdminUserController::class)->except(['show']);
+            Route::patch('users/{user}/role', [AdminUserController::class, 'updateRole'])->name('users.role');
+
+            // QR Codes
+            Route::get('/qrcodes', [QRCodeController::class, 'index'])->name('qrcodes.index');
+            Route::post('/qrcodes/generate', [QRCodeController::class, 'generate'])->name('qrcodes.generate');
+            Route::delete('/qrcodes/{qrcode}', [QRCodeController::class, 'destroy'])->name('qrcodes.destroy');
+
+            // Settings
+            Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
+            Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
+        });
     });
 });
 

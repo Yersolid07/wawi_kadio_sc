@@ -9,8 +9,9 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Maatwebsite\Excel\Concerns\WithTitle;
 
-class ReservationsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles
+class ReservationsExport implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     public function __construct(
         private string $dateFrom,
@@ -69,5 +70,10 @@ class ReservationsExport implements FromQuery, ShouldAutoSize, WithHeadings, Wit
             1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '16a34a']]],
         ];
+    }
+
+    public function title(): string
+    {
+        return 'Reservasi';
     }
 }

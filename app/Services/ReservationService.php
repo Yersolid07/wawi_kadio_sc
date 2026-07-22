@@ -22,31 +22,54 @@ class ReservationService
      */
     public function createReservation(array $validated, ?int $userId, ?string $sessionId): Reservation
     {
-        // Calculate total
         $checkIn = Carbon::parse($validated['check_in_date']);
         $checkOut = Carbon::parse($validated['check_out_date']);
-        $days = max($checkIn->diffInDays($checkOut), 1);
 
         $facility = Facility::findOrFail($validated['facility_id']);
 
-        if ($facility->type === 'homestay' || $facility->type === 'gazebo') {
-            $total = $facility->price_per_day * $days;
-        } else {
-            // For pool/others if billed per hour
-            $checkInTime = Carbon::parse($validated['check_in_time'] ?? '08:00');
-            $checkOutTime = Carbon::parse($validated['check_out_time'] ?? '17:00');
+        // Handle time, pricing calculation, and midnight crossover
+        if (!empty($validated['check_in_time']) && !empty($validated['check_out_time'])) {
+            $checkInTime = Carbon::parse($validated['check_in_time']);
+            $checkOutTime = Carbon::parse($validated['check_out_time']);
+            
+            // Midnight crossover
+            if ($checkOutTime->lt($checkInTime)) {
+                $checkOutTime->addDay();
+                if ($checkIn->isSameDay($checkOut) || in_array($facility->type, ['gazebo', 'pool'])) {
+                    $checkOut = $checkIn->copy()->addDay();
+                    $validated['check_out_date'] = $checkOut->toDateString();
+                }
+            } elseif (in_array($facility->type, ['gazebo', 'pool'])) {
+                // If not crossing midnight, enforce same day check-out for gazebo/pool
+                $checkOut = $checkIn->copy();
+                $validated['check_out_date'] = $checkOut->toDateString();
+            }
+            
+            $days = max($checkIn->diffInDays($checkOut), 1);
+            // If they just book for a few hours over midnight, it's 1 day billing cycle for the hour multiplier
+            if ($checkIn->diffInDays($checkOut) === 1 && $checkOutTime->diffInHours($checkInTime) < 24) {
+                $days = 1;
+            }
+
             $hours = max($checkInTime->diffInHours($checkOutTime), 1);
-            $total = ($facility->price_per_hour ?? 0) * $hours * $days;
+            
+            if ($facility->price_per_hour > 0) {
+                $total = $facility->price_per_hour * $hours * $days;
+            } else {
+                $total = ($facility->price_per_day ?? 0) * $days;
+            }
+        } else {
+            if (in_array($facility->type, ['gazebo', 'pool'])) {
+                $checkOut = $checkIn->copy();
+                $validated['check_out_date'] = $checkOut->toDateString();
+            }
+            $days = max($checkIn->diffInDays($checkOut), 1);
+            $total = ($facility->price_per_day ?? 0) * $days;
         }
 
-        return DB::transaction(function () use ($validated, $total, $days, $userId, $sessionId) {
+        return DB::transaction(function () use (&$validated, $total, $days, $userId, $sessionId) {
             // PESSIMISTIC LOCK: Lock the facility to prevent concurrent identical bookings
             $facility = Facility::where('id', $validated['facility_id'])->lockForUpdate()->firstOrFail();
-            
-            // Enforce checkout date for gazebo/pool
-            if (in_array($facility->type, ['gazebo', 'pool'])) {
-                $validated['check_out_date'] = $validated['check_in_date'];
-            }
 
             // Check availability inside the lock
             if (! $facility->isAvailable($validated['check_in_date'], $validated['check_out_date'], $validated['check_in_time'] ?? null, $validated['check_out_time'] ?? null)) {

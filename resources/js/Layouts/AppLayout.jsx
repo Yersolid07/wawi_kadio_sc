@@ -3,7 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import {
     LayoutDashboard, Hotel, CalendarDays, UtensilsCrossed,
     CreditCard, Star, Users, FileText, Menu, X, ChevronDown,
-    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart, Image as ImageIcon
+    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart, Image as ImageIcon, Activity
 } from 'lucide-react';
 import ToastListener from '@/Components/ToastListener';
 
@@ -20,9 +20,9 @@ const navGroups = [
         title: 'Operasional',
         items: [
             { label: 'Semua Reservasi', href: 'admin.reservations.index', icon: CalendarDays, roles: ['admin', 'manager'] },
-            { label: 'Check-in/out', href: 'staff.reservations.index', icon: CalendarDays, roles: ['staff'] },
+            { label: 'Check-in/out', href: 'staff.reservations.index', icon: CalendarDays, roles: ['admin', 'manager', 'staff'] },
             { label: 'Semua Pesanan', href: 'admin.food-orders.index', icon: UtensilsCrossed, roles: ['admin', 'manager'] },
-            { label: 'Orders Aktif', href: 'staff.food-orders.index', icon: UtensilsCrossed, roles: ['staff'] },
+            { label: 'Orders Aktif', href: 'staff.food-orders.index', icon: UtensilsCrossed, roles: ['admin', 'manager', 'staff'] },
             { label: 'Pembayaran', href: 'admin.payments.index', icon: CreditCard, roles: ['admin', 'manager'] },
         ]
     },
@@ -46,6 +46,7 @@ const navGroups = [
             { label: 'QR Codes', href: 'admin.qrcodes.index', icon: QrCode, roles: ['admin'] },
             { label: 'Pengguna', href: 'admin.users.index', icon: Users, roles: ['admin'] },
             { label: 'Pengaturan', href: 'admin.settings.index', icon: Settings, roles: ['admin'] },
+            { label: 'Audit Trail', href: 'admin.activity-logs.index', icon: Activity, roles: ['admin'] },
         ]
     },
     {
@@ -210,7 +211,7 @@ export default function AppLayout({ children, title }) {
                                 </button>
 
                                 {notifOpen && (
-                                    <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden flex flex-col max-h-[400px]">
+                                    <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 w-auto bg-white rounded-2xl shadow-xl border border-stone-100 z-50 overflow-hidden flex flex-col max-h-[400px]">
                                         <div className="p-4 border-b border-stone-100 flex justify-between items-center bg-stone-50">
                                             <h3 className="font-bold text-slate-800">Notifikasi</h3>
                                             {auth?.user?.unreadCount > 0 && (
@@ -283,7 +284,11 @@ export default function AppLayout({ children, title }) {
                                 </button>
 
                                 {userMenuOpen && (
-                                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 overflow-hidden">
+                                    <div className="fixed inset-x-4 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 sm:w-56 w-auto bg-white rounded-2xl shadow-xl border border-stone-100 py-2 z-50 overflow-hidden">
+                                        <div className="px-4 py-3 border-b border-stone-100 mb-2">
+                                            <p className="text-sm font-bold text-slate-800">{auth?.user?.name}</p>
+                                            <p className="text-xs text-slate-500">{auth?.user?.email}</p>
+                                        </div>
                                         <Link
                                             href={route('profile.edit')}
                                             className="flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"

@@ -6,8 +6,12 @@ use App\Models\InventoryTransaction;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class InventoryExport implements FromCollection, WithHeadings, WithMapping
+class InventoryExport implements FromCollection, WithHeadings, WithMapping, WithTitle, ShouldAutoSize, WithStyles
 {
     protected $periodFrom;
     protected $periodTo;
@@ -51,6 +55,19 @@ class InventoryExport implements FromCollection, WithHeadings, WithMapping
             $transaction->stock_after . ' ' . ($transaction->inventory->unit ?? ''),
             $transaction->total_cost ?? 0,
             $transaction->user->name ?? 'System',
+        ];
+    }
+
+    public function title(): string
+    {
+        return 'Inventori';
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '16a34a']]],
         ];
     }
 }

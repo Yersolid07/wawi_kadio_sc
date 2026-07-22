@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Leaf, Coffee } from 'lucide-react';
@@ -7,19 +8,15 @@ import ToastListener from '@/Components/ToastListener';
 export default function GuestLayout({ children, title, subtitle }) {
     const { cms_settings } = usePage().props;
 
-    const photos = [
-        '/storage/facilities/Wawi-Kadio-Photo-1983748777.jpeg',
-        '/storage/facilities/Wawi-Kadio-Photo--1253605224.jpeg',
-        '/storage/facilities/Wawi-Kadio-Photo--442654165.jpeg',
-    ];
-    const defaultPhoto = photos[Math.floor(Math.random() * photos.length)];
+    const defaultPhoto = '/storage/facilities/Wawi-Kadio-Photo-1983748777.jpeg';
     const photo = cms_settings?.auth_image || defaultPhoto;
+    
     const logoUrl = cms_settings?.primary_logo || '/images/logo.png';
     const siteName = cms_settings?.site_name || 'Wawi Kadio';
 
     return (
         <div 
-            className="min-h-screen flex font-sans bg-cover bg-center relative"
+            className="h-screen overflow-hidden flex font-sans bg-cover bg-center relative"
             style={{ backgroundImage: `url(${photo})` }}
         >
             <ToastListener />
@@ -74,8 +71,8 @@ export default function GuestLayout({ children, title, subtitle }) {
             </div>
 
             {/* ── RIGHT: Form Panel ── */}
-            <div className="flex-1 flex flex-col justify-center items-center px-6 py-12 lg:px-12 xl:px-16 overflow-y-auto z-10">
-                <div className="w-full max-w-md bg-white/70 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-white/50">
+            <div className="flex-1 flex flex-col justify-center items-center px-4 py-6 lg:px-12 xl:px-16 overflow-y-auto z-10">
+                <div className="w-full max-w-md bg-white/70 backdrop-blur-xl p-6 lg:p-8 rounded-3xl shadow-2xl border border-white/50">
                 {/* Mobile Logo */}
                 <Link href={route('home')} className="flex items-center gap-2 mb-10 lg:hidden">
                     {logoUrl ? (

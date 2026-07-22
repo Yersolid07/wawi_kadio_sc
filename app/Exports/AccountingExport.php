@@ -6,8 +6,12 @@ use App\Models\FinancialTransaction;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class AccountingExport implements FromCollection, WithHeadings, WithMapping
+class AccountingExport implements FromCollection, WithHeadings, WithMapping, WithTitle, ShouldAutoSize, WithStyles
 {
     protected $periodFrom;
     protected $periodTo;
@@ -48,6 +52,19 @@ class AccountingExport implements FromCollection, WithHeadings, WithMapping
             $transaction->description,
             $transaction->type === 'income' ? $transaction->amount : 0,
             $transaction->type === 'expense' ? $transaction->amount : 0,
+        ];
+    }
+
+    public function title(): string
+    {
+        return 'Keuangan';
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '16a34a']]],
         ];
     }
 }

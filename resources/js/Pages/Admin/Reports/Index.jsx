@@ -1,15 +1,38 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, router } from '@inertiajs/react';
-import { FileText, Download, TrendingUp, TrendingDown, CalendarDays, FileDown, FileSpreadsheet, DollarSign, ShoppingBag, Users } from 'lucide-react';
+import { Head, router, useForm } from '@inertiajs/react';
+import { FileText, Download, TrendingUp, TrendingDown, CalendarDays, FileDown, FileSpreadsheet, DollarSign, ShoppingBag, Users, X } from 'lucide-react';
 import { useState } from 'react';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
+import Modal from '@/Components/Modal';
+import SecondaryButton from '@/Components/SecondaryButton';
+import InputError from '@/Components/InputError';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
-export default function Index({ stats, chartData, filters }) {
+export default function Index({ stats, chartData, filters, bestSellingMenus, recentRestocks }) {
     const [periodFrom, setPeriodFrom] = useState(filters.period_from || '');
     const [periodTo, setPeriodTo] = useState(filters.period_to || '');
+
+    const [showManualTxModal, setShowManualTxModal] = useState(false);
+    
+    const { data: txData, setData: setTxData, post: postTx, processing: txProcessing, errors: txErrors, reset: txReset } = useForm({
+        type: 'expense',
+        amount: '',
+        description: '',
+        transaction_date: new Date().toISOString().split('T')[0]
+    });
+
+    const handleManualTxSubmit = (e) => {
+        e.preventDefault();
+        postTx(route('admin.reports.store-transaction'), {
+            onSuccess: () => {
+                setShowManualTxModal(false);
+                txReset();
+            }
+        });
+    };
+
 
     const handleFilter = (e) => {
         e.preventDefault();
@@ -40,16 +63,22 @@ export default function Index({ stats, chartData, filters }) {
                         <FileText className="text-emerald-500" /> Laporan Komprehensif
                     </h2>
                     
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                        <button
+                            onClick={() => setShowManualTxModal(true)}
+                            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl transition-colors font-semibold text-sm shadow-sm"
+                        >
+                            <DollarSign size={18} /> Catat OPEX / Manual
+                        </button>
                         <a 
-                            href={route('admin.reports.pdf', { period_from: periodFrom, period_to: periodTo })}
+                            href={route('admin.reports.pdf', { type: 'comprehensive', period_from: periodFrom, period_to: periodTo })}
                             target="_blank"
                             className="flex items-center gap-2 bg-white border border-stone-200 hover:bg-stone-50 px-4 py-2 rounded-xl transition-colors font-semibold text-sm shadow-sm"
                         >
-                            <FileDown size={18} className="text-red-500" /> Export PDF (Reservasi)
+                            <FileDown size={18} className="text-red-500" /> Export PDF
                         </a>
                         <a 
-                            href={route('admin.reports.excel', { period_from: periodFrom, period_to: periodTo })}
+                            href={route('admin.reports.excel', { type: 'comprehensive', period_from: periodFrom, period_to: periodTo })}
                             className="flex items-center gap-2 bg-white border border-stone-200 hover:bg-stone-50 px-4 py-2 rounded-xl transition-colors font-semibold text-sm shadow-sm"
                         >
                             <FileSpreadsheet size={18} className="text-emerald-500" /> Export Excel
@@ -205,6 +234,166 @@ export default function Index({ stats, chartData, filters }) {
                 </div>
 
             </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-12">
+                <div className="bg-white rounded-3xl border border-stone-100 p-6 shadow-sm">
+                    <h3 className="font-bold text-lg text-slate-900 mb-6 flex items-center gap-2">
+                        <ShoppingBag className="text-indigo-500" size={20} /> Top Menu Terlaris (Berdasarkan Porsi)
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left text-slate-600">
+                            <thead className="text-xs text-slate-500 uppercase bg-slate-50 rounded-lg">
+                                <tr>
+                                    <th className="px-4 py-3 rounded-l-lg">Menu</th>
+                                    <th className="px-4 py-3 text-center">Terjual</th>
+                                    <th className="px-4 py-3 text-right rounded-r-lg">Pendapatan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {bestSellingMenus?.map((item, index) => (
+                                    <tr key={index} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                                        <td className="px-4 py-3 font-medium text-slate-900 flex items-center gap-2">
+                                            <span className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-bold">{index + 1}</span>
+                                            {item.menu_item?.name || 'Item Dihapus'}
+                                        </td>
+                                        <td className="px-4 py-3 text-center font-bold text-indigo-600">{item.total_qty}</td>
+                                        <td className="px-4 py-3 text-right">Rp {formatPrice(item.total_revenue)}</td>
+                                    </tr>
+                                ))}
+                                {(!bestSellingMenus || bestSellingMenus.length === 0) && (
+                                    <tr>
+                                        <td colSpan="3" className="px-4 py-8 text-center text-slate-400">Belum ada data penjualan menu pada periode ini.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-3xl border border-stone-100 p-6 shadow-sm">
+                    <h3 className="font-bold text-lg text-slate-900 mb-6 flex items-center gap-2">
+                        <FileText className="text-emerald-500" size={20} /> Riwayat Restock (Stok Masuk)
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm text-left text-slate-600">
+                            <thead className="text-xs text-slate-500 uppercase bg-slate-50 rounded-lg">
+                                <tr>
+                                    <th className="px-4 py-3 rounded-l-lg">Bahan Baku</th>
+                                    <th className="px-4 py-3">Jumlah Masuk</th>
+                                    <th className="px-4 py-3 text-right rounded-r-lg">Pengeluaran Riil</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {recentRestocks?.map((restock, index) => (
+                                    <tr key={index} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                                        <td className="px-4 py-3 font-medium text-slate-900">
+                                            <div>{restock.inventory?.name || 'Bahan Dihapus'}</div>
+                                            <div className="text-xs text-slate-400 font-normal">{formatDate(restock.created_at)}</div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                            <span className="bg-emerald-100 text-emerald-800 text-xs px-2 py-1 rounded-full font-semibold">
+                                                +{parseFloat(restock.quantity)} {restock.inventory?.unit}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-right font-medium text-slate-900">
+                                            {parseFloat(restock.cost) > 0 ? `Rp ${formatPrice(restock.cost)}` : '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {(!recentRestocks || recentRestocks.length === 0) && (
+                                    <tr>
+                                        <td colSpan="3" className="px-4 py-8 text-center text-slate-400">Belum ada riwayat restock bahan baku pada periode ini.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <Modal show={showManualTxModal} onClose={() => setShowManualTxModal(false)}>
+                <form onSubmit={handleManualTxSubmit} className="p-6 bg-white dark:bg-slate-900 rounded-2xl">
+                    <div className="flex justify-between items-center mb-6 border-b border-slate-100 dark:border-slate-800 pb-4">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                            <DollarSign className="text-indigo-500" />
+                            Catat Transaksi Manual / OPEX
+                        </h2>
+                        <button type="button" onClick={() => setShowManualTxModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                            <X size={20} />
+                        </button>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <InputLabel htmlFor="type" value="Jenis Transaksi" />
+                            <select
+                                id="type"
+                                className="mt-1 block w-full rounded-xl border-stone-200 focus:border-indigo-500 shadow-sm"
+                                value={txData.type}
+                                onChange={(e) => setTxData('type', e.target.value)}
+                                required
+                            >
+                                <option value="expense">Pengeluaran (Expense / OPEX)</option>
+                                <option value="income">Pemasukan (Income)</option>
+                            </select>
+                            <InputError message={txErrors.type} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="amount" value="Jumlah (Rp)" />
+                            <TextInput
+                                id="amount"
+                                type="number"
+                                className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-indigo-500 rounded-xl shadow-sm"
+                                value={txData.amount}
+                                onChange={(e) => setTxData('amount', e.target.value)}
+                                required
+                                min="1"
+                            />
+                            <InputError message={txErrors.amount} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="description" value="Keterangan (Gaji, Listrik, Wifi, dll)" />
+                            <TextInput
+                                id="description"
+                                type="text"
+                                className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-indigo-500 rounded-xl shadow-sm"
+                                value={txData.description}
+                                onChange={(e) => setTxData('description', e.target.value)}
+                                required
+                                placeholder="Cth: Tagihan Listrik Bulan Ini"
+                            />
+                            <InputError message={txErrors.description} className="mt-2" />
+                        </div>
+
+                        <div>
+                            <InputLabel htmlFor="transaction_date" value="Tanggal Transaksi" />
+                            <TextInput
+                                id="transaction_date"
+                                type="date"
+                                className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-indigo-500 rounded-xl shadow-sm"
+                                value={txData.transaction_date}
+                                onChange={(e) => setTxData('transaction_date', e.target.value)}
+                                required
+                            />
+                            <InputError message={txErrors.transaction_date} className="mt-2" />
+                        </div>
+                    </div>
+
+                    <div className="mt-8 flex justify-end gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                        <SecondaryButton onClick={() => setShowManualTxModal(false)} type="button">
+                            Batal
+                        </SecondaryButton>
+                        <PrimaryButton 
+                            className="bg-indigo-600 hover:bg-indigo-700" 
+                            disabled={txProcessing}
+                        >
+                            {txProcessing ? 'Menyimpan...' : 'Simpan Transaksi'}
+                        </PrimaryButton>
+                    </div>
+                </form>
+            </Modal>
         </AppLayout>
     );
 }

@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { ArrowLeft, Upload, X } from 'lucide-react';
+import { ArrowLeft, Upload, X, Plus, Trash2 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { Link } from '@inertiajs/react';
 
@@ -16,9 +16,14 @@ export default function FacilityForm({ facility }) {
         capacity: facility?.capacity || '',
         price_per_day: facility?.price_per_day || '',
         price_per_hour: facility?.price_per_hour || '',
+        price_prefix: facility?.price_prefix || 'Mulai dari',
+        price_unit: facility?.price_unit || '/malam',
+        bed_count: facility?.bed_count || '',
         image: null,
         promo_name: facility?.promo_name || '',
         is_active: facility?.is_active ?? true,
+        amenities: facility?.amenities || [],
+        rules: facility?.rules || [],
         _method: isEdit ? 'PUT' : 'POST',
     });
 
@@ -39,6 +44,36 @@ export default function FacilityForm({ facility }) {
         } else {
             post(route('admin.facilities.store'), { forceFormData: true });
         }
+    };
+
+    const addAmenity = () => {
+        setData('amenities', [...data.amenities, { icon: 'CheckCircle2', label: '' }]);
+    };
+
+    const updateAmenity = (index, field, value) => {
+        const newAmenities = [...data.amenities];
+        newAmenities[index][field] = value;
+        setData('amenities', newAmenities);
+    };
+
+    const removeAmenity = (index) => {
+        const newAmenities = data.amenities.filter((_, i) => i !== index);
+        setData('amenities', newAmenities);
+    };
+
+    const addRule = () => {
+        setData('rules', [...data.rules, '']);
+    };
+
+    const updateRule = (index, value) => {
+        const newRules = [...data.rules];
+        newRules[index] = value;
+        setData('rules', newRules);
+    };
+
+    const removeRule = (index) => {
+        const newRules = data.rules.filter((_, i) => i !== index);
+        setData('rules', newRules);
     };
 
     const typeOptions = [
@@ -170,7 +205,7 @@ export default function FacilityForm({ facility }) {
                             </div>
 
                             {/* Capacity + Pricing */}
-                            <div className="grid grid-cols-3 gap-3">
+                            <div className="grid grid-cols-4 gap-3">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kapasitas</label>
                                     <input
@@ -179,6 +214,17 @@ export default function FacilityForm({ facility }) {
                                         onChange={e => setData('capacity', e.target.value)}
                                         min="1"
                                         placeholder="orang"
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Jumlah Bed (Kasur)</label>
+                                    <input
+                                        type="number"
+                                        value={data.bed_count}
+                                        onChange={e => setData('bed_count', e.target.value)}
+                                        min="0"
+                                        placeholder="Kosongkan jika tidak ada"
                                         className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                                     />
                                 </div>
@@ -203,6 +249,105 @@ export default function FacilityForm({ facility }) {
                                         placeholder="0"
                                         className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                                     />
+                                </div>
+                            </div>
+
+                            {/* Display Config */}
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Awalan Teks Harga (Prefix)</label>
+                                    <input
+                                        type="text"
+                                        value={data.price_prefix}
+                                        onChange={e => setData('price_prefix', e.target.value)}
+                                        placeholder="Mulai dari"
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Satuan Waktu Harga (Unit)</label>
+                                    <input
+                                        type="text"
+                                        value={data.price_unit}
+                                        onChange={e => setData('price_unit', e.target.value)}
+                                        placeholder="/malam"
+                                        className="w-full px-3 py-2.5 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Dynamic Amenities */}
+                            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Fasilitas Utama (Amenities)
+                                    </label>
+                                    <button type="button" onClick={addAmenity} className="text-xs flex items-center gap-1 text-green-600 hover:text-green-700">
+                                        <Plus size={14} /> Tambah Fasilitas
+                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    {data.amenities.map((amenity, index) => (
+                                        <div key={index} className="flex gap-2 items-start">
+                                            <select
+                                                value={amenity.icon}
+                                                onChange={e => updateAmenity(index, 'icon', e.target.value)}
+                                                className="w-1/3 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                                            >
+                                                <option value="CheckCircle2">✅ Centang</option>
+                                                <option value="Bed">🛏️ Kasur</option>
+                                                <option value="Users">👥 Orang</option>
+                                                <option value="Wifi">📶 Wi-Fi</option>
+                                                <option value="Maximize">🔲 Luas</option>
+                                                <option value="Calendar">📅 Kalender</option>
+                                                <option value="Coffee">☕ F&B</option>
+                                                <option value="Tv">📺 TV</option>
+                                                <option value="AirVent">❄️ AC/Kipas</option>
+                                                <option value="Bath">🛁 K. Mandi</option>
+                                                <option value="Car">🚗 Parkir</option>
+                                            </select>
+                                            <input
+                                                type="text"
+                                                value={amenity.label}
+                                                onChange={e => updateAmenity(index, 'label', e.target.value)}
+                                                placeholder="Label (ex: 2 Kasur Besar)"
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                                            />
+                                            <button type="button" onClick={() => removeAmenity(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {data.amenities.length === 0 && <p className="text-sm text-gray-400 italic">Belum ada fasilitas utama ditambahkan.</p>}
+                                </div>
+                            </div>
+
+                            {/* Dynamic Rules / Perks */}
+                            <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Aturan / Info Ekstra (Checkmarks)
+                                    </label>
+                                    <button type="button" onClick={addRule} className="text-xs flex items-center gap-1 text-green-600 hover:text-green-700">
+                                        <Plus size={14} /> Tambah Info
+                                    </button>
+                                </div>
+                                <div className="space-y-2">
+                                    {data.rules.map((rule, index) => (
+                                        <div key={index} className="flex gap-2 items-start">
+                                            <input
+                                                type="text"
+                                                value={rule}
+                                                onChange={e => updateRule(index, e.target.value)}
+                                                placeholder="ex: Batal gratis 24 jam sebelum check-in"
+                                                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                                            />
+                                            <button type="button" onClick={() => removeRule(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                    {data.rules.length === 0 && <p className="text-sm text-gray-400 italic">Belum ada info ekstra ditambahkan.</p>}
                                 </div>
                             </div>
 

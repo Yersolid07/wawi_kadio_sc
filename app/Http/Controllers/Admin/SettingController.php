@@ -46,8 +46,8 @@ class SettingController extends Controller implements HasMiddleware
             } else {
                 Setting::set($key, $value ?? '');
                 
-                // If the key is primary_color, also generate shades
-                if ($key === 'primary_color' && $value) {
+                // If the key is theme_color, also generate shades
+                if ($key === 'theme_color' && $value) {
                     $shades = $this->generateTailwindShades($value);
                     Setting::set('theme_colors', json_encode($shades));
                 }

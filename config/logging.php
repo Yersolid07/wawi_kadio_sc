@@ -127,6 +127,20 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'telegram' => [
+            'driver' => 'monolog',
+            'level' => 'error', // Only send error and critical logs
+            'handler' => \Monolog\Handler\TelegramBotHandler::class,
+            'handler_with' => [
+                'apiKey' => env('TELEGRAM_BOT_TOKEN'),
+                'channel' => env('TELEGRAM_CHAT_ID'),
+            ],
+            'formatter' => \Monolog\Formatter\LineFormatter::class,
+            'formatter_with' => [
+                'format' => "🚨 *Wawi Kadio Error Alert* 🚨\n\n*Level:* %level_name%\n*Message:* %message%\n*Context:* %context%\n*Extra:* %extra%\n",
+            ],
+        ],
+
     ],
 
 ];

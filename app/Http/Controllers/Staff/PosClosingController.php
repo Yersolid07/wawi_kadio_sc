@@ -53,7 +53,7 @@ class PosClosingController extends Controller
             ($validated['cash_1k'] * 1000) +
             $validated['coins'];
 
-        PosClosing::create([
+        $closing = PosClosing::create([
             'user_id' => auth()->id(),
             'date' => Carbon::today(),
             'opening_balance' => 0,
@@ -71,6 +71,19 @@ class PosClosingController extends Controller
             'total_cash_calculated' => $actualCash,
             'note' => $validated['note'],
         ]);
+
+        $diff = $actualCash - $validated['closing_balance'];
+        if (abs($diff) > 0) {
+            \App\Models\FinancialTransaction::create([
+                'type' => $diff > 0 ? 'income' : 'expense',
+                'category' => 'other',
+                'amount' => abs($diff),
+                'description' => ($diff > 0 ? 'Selisih Lebih (Overage) Kasir' : 'Selisih Kurang (Shortage) Kasir') . ' - ' . Carbon::today()->format('d M Y'),
+                'reference_id' => $closing->id,
+                'transaction_date' => Carbon::today(),
+                'user_id' => auth()->id(),
+            ]);
+        }
 
         return redirect()->route('dashboard')->with('success', 'Laporan tutup kasir harian berhasil disimpan.');
     }

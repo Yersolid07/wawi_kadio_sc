@@ -262,8 +262,12 @@ export default function Show({ order, isGuest }) {
                                 <p className="text-3xl font-black text-white">Rp {formatPrice(order.total_amount)}</p>
                                 {order.reservation_id ? (
                                     <p className="text-xs text-slate-400 mt-2">Biaya akan ditambahkan ke total tagihan reservasi Anda.</p>
-                                ) : (
+                                ) : order.payment_status === 'paid' ? (
+                                    <p className="text-xs text-emerald-400 mt-2 font-medium">Pembayaran Lunas.</p>
+                                ) : (!order.payment || order.payment.payment_method === 'cash') ? (
                                     <p className="text-xs text-amber-400 mt-2 font-medium">Silakan lakukan pembayaran di kasir.</p>
+                                ) : (
+                                    <p className="text-xs text-blue-400 mt-2 font-medium">Silakan selesaikan pembayaran online Anda.</p>
                                 )}
                             </div>
                         </div>

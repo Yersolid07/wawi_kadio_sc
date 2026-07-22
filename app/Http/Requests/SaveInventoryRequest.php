@@ -27,6 +27,7 @@ class SaveInventoryRequest extends FormRequest
             'category' => 'nullable|string|max:255',
             'unit' => 'required|string|max:50',
             'current_stock' => $this->isMethod('post') ? 'required|numeric|min:0' : 'nullable',
+            'initial_total_cost' => $this->isMethod('post') ? 'nullable|numeric|min:0' : 'nullable',
             'minimum_stock' => 'required|numeric|min:0',
             'price_per_unit' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',

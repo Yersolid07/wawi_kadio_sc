@@ -59,6 +59,23 @@ class FoodOrderController extends Controller
                 'status'         => $validated['status'],
                 'payment_status' => $validated['payment_status'] ?? $order->payment_status,
             ]);
+
+            // If Paid and Cancelled, issue a refund transaction
+            if ($validated['status'] === 'cancelled' && ($order->payment_status === 'paid' || $order->payment_status === 'refunded')) {
+                if ($order->payment_status !== 'refunded') {
+                    $order->update(['payment_status' => 'refunded']);
+                }
+                
+                \App\Models\FinancialTransaction::create([
+                    'type'             => 'expense',
+                    'category'         => 'cafe',
+                    'amount'           => $order->total_amount ?? 0,
+                    'description'      => "Refund Pembatalan POS: {$order->id}",
+                    'reference_id'     => $order->id,
+                    'transaction_date' => now()->toDateString(),
+                    'user_id'          => auth()->id(),
+                ]);
+            }
         });
 
         if ($order->user) {

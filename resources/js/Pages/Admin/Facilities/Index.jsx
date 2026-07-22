@@ -50,7 +50,7 @@ function FacilityCard({ facility, onToggle, onDelete }) {
                 <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
                     {facility.capacity && <span>👥 {facility.capacity} orang</span>}
                     {facility.price_per_day && (
-                        <span>💰 Rp {Number(facility.price_per_day).toLocaleString('id-ID')}/hari</span>
+                        <span>💰 Rp {Number(facility.price_per_day).toLocaleString('id-ID')}{facility.price_unit || '/malam'}</span>
                     )}
                     {facility.price_per_hour && (
                         <span>⏱️ Rp {Number(facility.price_per_hour).toLocaleString('id-ID')}/jam</span>

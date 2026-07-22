@@ -27,7 +27,7 @@ class StoreReservationRequest extends FormRequest
             'check_in_date' => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after_or_equal:check_in_date',
             'check_in_time' => 'nullable|date_format:H:i',
-            'check_out_time' => 'nullable|date_format:H:i|after:check_in_time',
+            'check_out_time' => 'nullable|date_format:H:i',
             'guest_count' => 'required|integer|min:1',
             'special_requests' => 'nullable|string|max:1000',
             'coupon_code' => 'nullable|string|exists:coupons,code',

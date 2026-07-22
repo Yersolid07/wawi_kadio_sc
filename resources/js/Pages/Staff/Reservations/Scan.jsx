@@ -111,9 +111,9 @@ export default function Scan({ auth }) {
                                     <div className="flex-1 space-y-6">
                                         <div>
                                             <p className="text-sm font-semibold text-slate-400 mb-1 flex items-center gap-2"><User size={16}/> Informasi Pemesan</p>
-                                            <p className="text-lg font-bold text-slate-900">{reservation.user?.name}</p>
-                                            <p className="text-slate-600">{reservation.user?.email}</p>
-                                            <p className="text-slate-600 font-mono mt-1">{reservation.user?.phone}</p>
+                                            <p className="text-lg font-bold text-slate-900">{reservation.user?.name || reservation.customer_name}</p>
+                                            <p className="text-slate-600">{reservation.user?.email || reservation.customer_email}</p>
+                                            <p className="text-slate-600 font-mono mt-1">{reservation.user?.phone || reservation.customer_phone}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-400 mb-1 flex items-center gap-2"><MapPin size={16}/> Fasilitas / Tempat</p>
@@ -134,8 +134,12 @@ export default function Scan({ auth }) {
                                         </div>
                                         <div>
                                             <p className="text-sm font-semibold text-slate-400 mb-1">Total Biaya & Pembayaran</p>
-                                            <p className="font-black text-slate-900 text-xl">Rp {parseFloat(reservation.total_price).toLocaleString('id-ID')}</p>
-                                            <p className="text-emerald-600 font-semibold mt-1">LUNAS (Paid)</p>
+                                            <p className="font-black text-slate-900 text-xl">Rp {parseFloat(reservation.total_amount).toLocaleString('id-ID')}</p>
+                                            {reservation.payment_status === 'paid' ? (
+                                                <p className="text-emerald-600 font-semibold mt-1">LUNAS (Paid)</p>
+                                            ) : (
+                                                <p className="text-orange-500 font-semibold mt-1">BELUM LUNAS (Unpaid)</p>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -146,7 +150,7 @@ export default function Scan({ auth }) {
                                         onClick={() => updateStatus(reservation.id, 'checked_in')}
                                         className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-lg shadow-emerald-600/20 flex items-center justify-center gap-2"
                                     >
-                                        Tandai Pelanggan Tiba (Check-in) <ChevronRight size={18} />
+                                        {reservation.payment_status === 'paid' ? 'Tandai Pelanggan Tiba (Check-in)' : 'Terima Pembayaran Cash & Check-in'} <ChevronRight size={18} />
                                     </button>
                                 </div>
                             </div>

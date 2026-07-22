@@ -174,21 +174,7 @@ export default function Login({ status, canResetPassword }) {
                 </p>
             </div>
 
-            {/* Divider + Social Proof */}
-            <div className="mt-8 pt-8 border-t border-slate-100">
-                <div className="flex items-center justify-center gap-6 text-center">
-                    {[
-                        { val: '500+', lbl: 'Tamu' },
-                        { val: '5.0★', lbl: 'Rating' },
-                        { val: '100%', lbl: 'Aman' },
-                    ].map(({ val, lbl }) => (
-                        <div key={lbl}>
-                            <p className="text-lg font-extrabold text-slate-900">{val}</p>
-                            <p className="text-xs text-slate-400 font-medium">{lbl}</p>
-                        </div>
-                    ))}
-                </div>
-            </div>
+
         </GuestLayout>
     );
 }

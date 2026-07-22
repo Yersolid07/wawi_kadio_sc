@@ -4,57 +4,83 @@
     <meta charset="utf-8">
     <title>Laporan Inventori - Wawi Kadio</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'DejaVu Sans', sans-serif; font-size: 11px; color: #1f2937; }
-        .header { background: #15803d; color: white; padding: 20px; margin-bottom: 20px; }
-        .header h1 { font-size: 20px; font-weight: bold; }
-        .header p { font-size: 11px; opacity: 0.85; margin-top: 4px; }
+        @page { margin: 30px 40px; }
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; color: #1f2937; }
+        .header { background: #15803d; color: white; padding: 20px; margin-bottom: 20px; border-radius: 4px; }
+        .header h1 { font-size: 20px; font-weight: bold; margin: 0; }
+        .header p { font-size: 11px; opacity: 0.85; margin-top: 4px; margin-bottom: 0; }
         .meta { display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 10px; color: #6b7280; }
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #15803d; color: white; padding: 8px; text-align: left; font-size: 10px; }
-        td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; font-size: 10px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th { background: #15803d; color: white; padding: 10px; text-align: left; font-size: 10px; }
+        td { padding: 8px 10px; border-bottom: 1px solid #e5e7eb; font-size: 10px; }
         tr:nth-child(even) td { background: #f9fafb; }
-        .footer { margin-top: 20px; text-align: center; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 12px; }
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 9px; font-weight: bold; display: inline-block; }
+        .badge-in { background: #dcfce7; color: #166534; }
+        .badge-out { background: #fee2e2; color: #991b1b; }
+        .badge-adj { background: #fef3c7; color: #92400e; }
+        .footer { margin-top: 30px; text-align: center; font-size: 9px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 12px; }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>Laporan Transaksi Inventori — Wawi Kadio Resort</h1>
-        <p>Periode: {{ $periodFrom }} s/d {{ $periodTo }} | Dicetak: {{ now()->format('d/m/Y H:i') }}</p>
+        <p>Periode: {{ $period_from }} s/d {{ $period_to }} | Dicetak: {{ now()->format('d/m/Y H:i') }}</p>
     </div>
 
     <div class="meta">
-        <span>Total Transaksi: <strong>{{ $transactions->count() }}</strong></span>
-        <span>Total Nilai Transaksi: <strong>Rp {{ number_format($totalCost, 0, ',', '.') }}</strong></span>
-        <span>Desa Tonsewer, Kabupaten Minahasa, Sulawesi Utara</span>
+        <span>Transaksi Masuk: <strong>{{ $totalIn }}</strong> | Transaksi Keluar: <strong>{{ $totalOut }}</strong> | Penyesuaian: <strong>{{ $totalAdj }}</strong></span>
+        <span>Total Pengeluaran Restock: <strong>Rp {{ number_format($totalCost, 0, ',', '.') }}</strong></span>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Tanggal</th>
-                <th>Nama Bahan Baku</th>
-                <th>Tipe</th>
-                <th>Jumlah</th>
-                <th>Stok Akhir</th>
-                <th>Total Biaya/Rugi (Rp)</th>
-                <th>Oleh</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($transactions as $trx)
-            <tr>
-                <td>{{ $trx->created_at->format('d/m/Y H:i') }}</td>
-                <td>{{ $trx->inventory->name ?? 'Unknown' }}</td>
-                <td>{{ strtoupper($trx->type) }}</td>
-                <td>{{ $trx->quantity }} {{ $trx->inventory->unit ?? '' }}</td>
-                <td>{{ $trx->stock_after }} {{ $trx->inventory->unit ?? '' }}</td>
-                <td style="text-align:right">{{ number_format($trx->total_cost, 0, ',', '.') }}</td>
-                <td>{{ $trx->user->name ?? '-' }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    @forelse($txsByDate as $date => $dayTxs)
+        <h3 style="color: #15803d; border-bottom: 2px solid #15803d; padding-bottom: 4px; margin-top: 20px; font-size: 14px;">
+            {{ $date }}
+            <span style="float: right; font-size: 11px; font-weight: normal; color: #4b5563;">
+                {{ $dayTxs->count() }} transaksi | Restock: Rp {{ number_format($dayTxs->where('type', 'in')->sum('total_cost'), 0, ',', '.') }}
+            </span>
+        </h3>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 15%">Waktu</th>
+                    <th style="width: 25%">Bahan Baku</th>
+                    <th style="width: 10%">Tipe</th>
+                    <th style="width: 15%">Jumlah</th>
+                    <th style="width: 15%">Sisa Stok</th>
+                    <th style="width: 20%; text-align: right">Biaya (Rp)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($dayTxs as $trx)
+                <tr>
+                    <td>
+                        {{ $trx->created_at->format('H:i') }}<br>
+                        <span style="font-size: 9px; color: #6b7280;">Oleh: {{ $trx->user->name ?? '-' }}</span>
+                    </td>
+                    <td><strong>{{ $trx->inventory->name ?? 'Unknown' }}</strong></td>
+                    <td>
+                        @if($trx->type === 'in')
+                            <span class="badge badge-in">Masuk</span>
+                        @elseif($trx->type === 'out')
+                            <span class="badge badge-out">Keluar</span>
+                        @else
+                            <span class="badge badge-adj">Adj</span>
+                        @endif
+                    </td>
+                    <td>{{ $trx->type === 'in' ? '+' : ($trx->type === 'out' ? '-' : '') }}{{ $trx->quantity }} {{ $trx->inventory->unit ?? '' }}</td>
+                    <td style="font-weight: bold; color: #1e40af;">{{ $trx->stock_after }} {{ $trx->inventory->unit ?? '' }}</td>
+                    <td style="text-align:right">
+                        {{ $trx->total_cost > 0 ? number_format($trx->total_cost, 0, ',', '.') : '-' }}
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @empty
+        <div style="text-align: center; padding: 40px; color: #9ca3af; border: 1px dashed #d1d5db; border-radius: 8px;">
+            Tidak ada transaksi inventori pada periode ini.
+        </div>
+    @endforelse
 
     <div class="footer">
         Laporan ini digenerate secara otomatis oleh Sistem Informasi Wawi Kadio Resort

@@ -1,6 +1,7 @@
 import { Head, Link, usePage, router } from '@inertiajs/react';
-import { Coffee, ArrowLeft, Star, CheckCircle2, Bed, Maximize, Wifi, Users, Building2, Calendar, AlertCircle } from 'lucide-react';
+import { Coffee, ArrowLeft, Star, CheckCircle2, Bed, Maximize, Wifi, Users, Building2, Calendar, AlertCircle, Tv, AirVent, Bath, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -57,8 +58,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                 setErrorMsg('Tgl check-out tidak boleh sebelum check-in.');
             } else if (isDateOverlapping(checkIn, checkOut)) {
                 setErrorMsg('Fasilitas sudah dibooking pada tanggal tersebut.');
-            } else if (facility.type === 'gazebo' && checkIn === checkOut && checkInTime && checkOutTime && checkOutTime <= checkInTime) {
-                setErrorMsg('Jam selesai harus setelah jam mulai.');
+            } else if (false) {
             } else {
                 setErrorMsg('');
             }
@@ -148,7 +148,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                         transition={{ delay: 0.2 }}
                         className="p-8 rounded-3xl bg-white border border-stone-200 shadow-sm"
                     >
-                        <h2 className="text-xl font-bold mb-4 text-slate-900">Tentang Kamar Ini</h2>
+                        <h2 className="text-xl font-bold mb-4 text-slate-900">Tentang Fasilitas Ini</h2>
                         <p className="text-slate-600 leading-relaxed whitespace-pre-wrap">{facility.description || 'Deskripsi segera hadir.'}</p>
                     </motion.section>
 
@@ -156,32 +156,21 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                     <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                         <h2 className="text-xl font-bold mb-6 text-slate-900">Fasilitas Utama</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                            {facility.type === 'homestay' ? (
-                                [
-                                    { icon: Bed, label: '1 King Bed' },
-                                    { icon: Users, label: `Kapasitas ${facility?.capacity ?? 2} Orang` },
-                                    { icon: Wifi, label: 'Wi-Fi Premium' },
-                                    { icon: Maximize, label: 'Kamar Luas' },
-                                    { icon: Calendar, label: 'Booking Fleksibel' },
-                                    { icon: Coffee, label: 'Sarapan Pagi' },
-                                ].map(({ icon: Icon, label }) => (
-                                    <div key={label} className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-2xl hover:border-emerald-300 transition-colors shadow-sm">
-                                        <Icon size={20} className="text-emerald-600 shrink-0" />
-                                        <span className="text-sm font-medium text-slate-700">{label}</span>
-                                    </div>
-                                ))
+                            {facility.amenities && facility.amenities.length > 0 ? (
+                                facility.amenities.map((amenity, idx) => {
+                                    // Fallback to CheckCircle2 if icon not found or we don't want to dynamically load all lucide icons
+                                    // Here we just use a generic icon for dynamic ones since we can't easily map string to component without a large map
+                                    // Or we can check if it's one of the imported ones
+                                    const IconComponent = { Bed, Users, Wifi, Maximize, Calendar, Coffee, Tv, AirVent, Bath, Car }[amenity.icon] || CheckCircle2;
+                                    return (
+                                        <div key={idx} className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-2xl hover:border-emerald-300 transition-colors shadow-sm">
+                                            <IconComponent size={20} className="text-emerald-600 shrink-0" />
+                                            <span className="text-sm font-medium text-slate-700">{amenity.label}</span>
+                                        </div>
+                                    );
+                                })
                             ) : (
-                                [
-                                    { icon: Users, label: `Kapasitas ${facility?.capacity ?? 5} Orang` },
-                                    { icon: Wifi, label: 'Akses Wi-Fi' },
-                                    { icon: Maximize, label: 'Area Terbuka' },
-                                    { icon: Calendar, label: 'Sewa Per Jam / Harian' },
-                                ].map(({ icon: Icon, label }) => (
-                                    <div key={label} className="flex items-center gap-3 p-4 bg-white border border-stone-200 rounded-2xl hover:border-emerald-300 transition-colors shadow-sm">
-                                        <Icon size={20} className="text-emerald-600 shrink-0" />
-                                        <span className="text-sm font-medium text-slate-700">{label}</span>
-                                    </div>
-                                ))
+                                <p className="text-sm text-slate-500 italic col-span-full">Belum ada info fasilitas utama.</p>
                             )}
                         </div>
                     </motion.section>
@@ -226,7 +215,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                         className="sticky top-24 p-8 rounded-3xl bg-white border border-stone-200 shadow-xl"
                     >
                         <div className="mb-6 pb-6 border-b border-stone-100">
-                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tarif per Malam</p>
+                            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tarif {facility?.price_unit || 'per Malam'}</p>
                             <p className="text-4xl font-extrabold text-slate-900">Rp {formatPrice(facility.price_per_day)}</p>
                             {facility.price_per_hour && (
                                 <p className="text-sm font-medium text-slate-500 mt-1">atau Rp {formatPrice(facility.price_per_hour)} / jam</p>
@@ -234,27 +223,16 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                         </div>
 
                         <ul className="space-y-3 mb-8">
-                            {facility.type === 'homestay' ? [
-                                'Batal gratis 24 jam sebelum check-in',
-                                'Sarapan pagi untuk 2 orang',
-                                'Akses Wi-Fi premium tanpa batas',
-                                'Check-in / out fleksibel',
-                            ].map((item) => (
-                                <li key={item} className="flex items-start gap-3">
-                                    <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-                                    <span className="text-slate-600 font-medium text-sm">{item}</span>
-                                </li>
-                            )) : [
-                                'Batal gratis 2 jam sebelum penggunaan',
-                                'Cocok untuk bersantai atau meeting',
-                                'Dapat memesan makanan via QR',
-                                'Durasi fleksibel',
-                            ].map((item) => (
-                                <li key={item} className="flex items-start gap-3">
-                                    <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
-                                    <span className="text-slate-600 font-medium text-sm">{item}</span>
-                                </li>
-                            ))}
+                            {facility.rules && facility.rules.filter(r => r.trim() !== '').length > 0 ? (
+                                facility.rules.filter(r => r.trim() !== '').map((rule, idx) => (
+                                    <li key={idx} className="flex items-start gap-3">
+                                        <CheckCircle2 size={18} className="text-emerald-500 shrink-0 mt-0.5" />
+                                        <span className="text-slate-600 font-medium text-sm">{rule}</span>
+                                    </li>
+                                ))
+                            ) : (
+                                <li className="text-sm text-slate-500 italic">Belum ada info ekstra.</li>
+                            )}
                         </ul>
 
                         {/* Availability Checker */}
@@ -347,6 +325,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                     </motion.div>
                 </div>
             </div>
+            <FloatingWhatsApp />
         </div>
     );
 }

@@ -6,8 +6,12 @@ use App\Models\FoodOrder;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
+use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class CafeExport implements FromCollection, WithHeadings, WithMapping
+class CafeExport implements FromCollection, WithHeadings, WithMapping, WithTitle, ShouldAutoSize, WithStyles
 {
     protected $periodFrom;
     protected $periodTo;
@@ -52,6 +56,19 @@ class CafeExport implements FromCollection, WithHeadings, WithMapping
             $order->order_type,
             $items,
             $order->total_amount,
+        ];
+    }
+
+    public function title(): string
+    {
+        return 'Kafe';
+    }
+
+    public function styles(Worksheet $sheet)
+    {
+        return [
+            1 => ['font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '16a34a']]],
         ];
     }
 }

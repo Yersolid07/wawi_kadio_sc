@@ -26,7 +26,35 @@ class InventoryController extends Controller
     {
         $validated = $request->validated();
 
-        Inventory::create($validated);
+        DB::transaction(function () use ($validated) {
+            $inventory = Inventory::create($validated);
+
+            if ($inventory->current_stock > 0) {
+                $totalCost = $validated['initial_total_cost'] ?? 0;
+                
+                $transaction = InventoryTransaction::create([
+                    'inventory_id' => $inventory->id,
+                    'type' => 'in',
+                    'quantity' => $inventory->current_stock,
+                    'cost' => $totalCost,
+                    'stock_after' => $inventory->current_stock,
+                    'notes' => 'Stok awal sistem',
+                    'user_id' => auth()->id(),
+                ]);
+
+                if ($totalCost > 0) {
+                    FinancialTransaction::create([
+                        'type'             => 'expense',
+                        'category'         => 'inventory_purchase',
+                        'amount'           => $totalCost,
+                        'description'      => "Pembelian Stok Awal: {$inventory->name}",
+                        'reference_id'     => $transaction->id,
+                        'transaction_date' => now()->toDateString(),
+                        'user_id'          => auth()->id(),
+                    ]);
+                }
+            }
+        });
 
         return redirect()->back()->with('success', 'Bahan baku berhasil ditambahkan');
     }

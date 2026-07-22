@@ -36,23 +36,7 @@ export default function Register() {
         >
             <Head title="Daftar — Wawi Kadio" />
 
-            {/* Benefits */}
-            <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                className="mb-7 p-4 bg-emerald-50 border border-emerald-100 rounded-2xl"
-            >
-                <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider mb-3">Keuntungan Akun Gratis</p>
-                <ul className="space-y-1.5">
-                    {benefits.map(b => (
-                        <li key={b} className="flex items-center gap-2.5 text-sm text-emerald-800">
-                            <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
-                            {b}
-                        </li>
-                    ))}
-                </ul>
-            </motion.div>
+
 
             <form onSubmit={submit} className="space-y-5">
                 {/* Name */}

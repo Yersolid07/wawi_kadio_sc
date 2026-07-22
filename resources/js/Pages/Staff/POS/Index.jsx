@@ -257,7 +257,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             <Head title="Point of Sale (POS)" />
 
             {/* Left Side: Active Orders & Catalog */}
-            <div className={`flex flex-col bg-stone-50 ${layoutDirection === 'horizontal' ? 'flex-1 h-screen overflow-hidden' : 'h-[60vh] overflow-hidden border-b border-stone-200'}`}>
+            <div className={`flex flex-col bg-stone-50 ${layoutDirection === 'horizontal' ? 'flex-1 h-[55vh] md:h-screen overflow-hidden border-b md:border-b-0 border-stone-200' : 'h-[55vh] overflow-hidden border-b border-stone-200'}`}>
                 {/* Header */}
                 <header className="bg-white border-b border-stone-200 p-4 flex items-center justify-between shrink-0 shadow-sm z-10">
                     <div className="flex items-center gap-4">
@@ -412,8 +412,8 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             {/* Right Side: Cart */}
             <div className={`bg-white flex flex-col border-stone-200 shadow-2xl z-20 shrink-0 ${
                 layoutDirection === 'horizontal' 
-                    ? 'w-full md:w-[400px] lg:w-[450px] h-screen border-l' 
-                    : 'w-full h-[40vh] border-t'
+                    ? 'w-full md:w-[400px] lg:w-[450px] h-[45vh] md:h-screen md:border-l' 
+                    : 'w-full h-[45vh] border-t'
             }`}>
                 <div className="p-4 border-b border-stone-200 bg-stone-50 flex justify-between items-center shrink-0">
                     <h2 className="font-black text-slate-900 text-xl flex items-center gap-2">

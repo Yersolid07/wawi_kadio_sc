@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Coffee, Star, ArrowRight, HeartPulse, ChevronDown, Utensils, Building2, Leaf, Waves, Sun, Wind, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
 import { Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -301,7 +302,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                                 </div>
                                                 {facility.price_per_day && (
                                                     <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-emerald-500/95 backdrop-blur-sm rounded-full text-xs font-bold text-white shadow-md">
-                                                        Rp {formatPrice(facility.price_per_day)}/malam
+                                                        Rp {formatPrice(facility.price_per_day)}{facility.price_unit || '/malam'}
                                                     </div>
                                                 )}
                                             </div>
@@ -538,7 +539,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ duration: 0.5, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[calc(100vw-2rem)] max-w-md"
+                    className="fixed bottom-24 md:bottom-6 left-1/2 -translate-x-1/2 md:left-6 md:translate-x-0 z-50 w-[calc(100vw-2rem)] md:w-auto md:min-w-[320px] max-w-md"
                 >
                     <Link
                         href={route('customer.orders.show', guestActiveOrder.id)}
@@ -569,6 +570,8 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
             )}
 
             </div>
+            {/* WhatsApp Floating Button */}
+            <FloatingWhatsApp />
         </>
     );
 }

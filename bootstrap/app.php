@@ -38,5 +38,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->reportable(function (Throwable $e) {
+            if (app()->environment('production') && env('TELEGRAM_BOT_TOKEN')) {
+                \Illuminate\Support\Facades\Log::channel('telegram')->error($e->getMessage(), [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'url' => request()->fullUrl(),
+                ]);
+            }
+        });
     })->create();

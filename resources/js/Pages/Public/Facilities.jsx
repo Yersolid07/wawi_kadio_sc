@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Coffee, ArrowLeft, ArrowRight, Bed, Users, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
 
 const formatPrice = (val) => {
     const n = parseFloat(val);
@@ -80,10 +81,12 @@ export default function Facilities({ facilities = [] }) {
                                         </div>
                                         <div className="flex items-center justify-between pt-4 border-t border-stone-100">
                                             <div>
-                                                <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1">Mulai dari</p>
+                                                <p className="text-[11px] text-slate-400 uppercase tracking-wider mb-1">{facility?.price_prefix || 'Mulai dari'}</p>
                                                 <div className="flex items-center gap-4 text-xs font-medium text-slate-400 mb-2">
                                                     <span className="flex items-center gap-1.5"><Users size={14} className="text-emerald-500" /> Maks {facility?.capacity ?? 0}</span>
-                                                    <span className="flex items-center gap-1.5"><Bed size={14} className="text-emerald-500" /> 1 Bed</span>
+                                                    {facility?.bed_count > 0 && (
+                                                        <span className="flex items-center gap-1.5"><Bed size={14} className="text-emerald-500" /> {facility.bed_count} Bed</span>
+                                                    )}
                                                     <span className="flex items-center gap-1.5"><Building2 size={14} className="text-emerald-500" /> {facility?.type || '-'}</span>
                                                 </div>
                                                 {facility?.final_price < facility?.price_per_day ? (
@@ -91,13 +94,13 @@ export default function Facilities({ facilities = [] }) {
                                                         <span className="text-xs text-slate-400 line-through">Rp {formatPrice(facility?.price_per_day)}</span>
                                                         <p className="text-xl font-extrabold text-rose-600">
                                                             Rp {formatPrice(facility?.final_price)}
-                                                            <span className="text-sm font-normal text-slate-400 ml-1">/malam</span>
+                                                            <span className="text-sm font-normal text-slate-400 ml-1">{facility?.price_unit || '/malam'}</span>
                                                         </p>
                                                     </div>
                                                 ) : (
                                                     <p className="text-xl font-extrabold text-slate-900">
                                                         Rp {formatPrice(facility?.price_per_day)}
-                                                        <span className="text-sm font-normal text-slate-400 ml-1">/malam</span>
+                                                        <span className="text-sm font-normal text-slate-400 ml-1">{facility?.price_unit || '/malam'}</span>
                                                     </p>
                                                 )}
                                             </div>
@@ -118,6 +121,7 @@ export default function Facilities({ facilities = [] }) {
                     </div>
                 )}
             </main>
+            <FloatingWhatsApp />
         </div>
     );
 }

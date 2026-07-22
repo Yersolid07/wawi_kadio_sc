@@ -16,11 +16,11 @@ export default function Index({ inventories }) {
     const [transactionItem, setTransactionItem] = useState(null);
 
     const { data: formData, setData: setFormData, post, put, delete: destroy, processing: formProcessing, reset: resetForm, errors: formErrors } = useForm({
-        name: '', category: 'Bahan Makanan', unit: '', minimum_stock: 0, price_per_unit: '', notes: ''
+        name: '', category: 'Bahan Makanan', unit: '', current_stock: '', initial_total_cost: '', minimum_stock: 0, price_per_unit: '', notes: ''
     });
 
     const { data: transData, setData: setTransData, post: postTrans, processing: transProcessing, reset: resetTrans, errors: transErrors } = useForm({
-        type: 'in', quantity: '', notes: ''
+        type: 'in', quantity: '', total_cost: '', notes: ''
     });
 
     const openCreateForm = () => {
@@ -35,6 +35,8 @@ export default function Index({ inventories }) {
             name: item.name,
             category: item.category || 'Bahan Makanan',
             unit: item.unit,
+            current_stock: item.current_stock || '',
+            initial_total_cost: '',
             minimum_stock: item.minimum_stock,
             price_per_unit: item.price_per_unit || '',
             notes: item.notes || ''
@@ -96,60 +98,62 @@ export default function Index({ inventories }) {
                 </div>
 
                 <div className="bg-white rounded-3xl shadow-sm border border-stone-200 overflow-hidden">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-stone-50 border-b border-stone-200 text-stone-500 text-xs uppercase tracking-wider">
-                                <th className="p-4 font-bold">Nama Bahan</th>
-                                <th className="p-4 font-bold">Stok Saat Ini</th>
-                                <th className="p-4 font-bold">Batas Minimum</th>
-                                <th className="p-4 font-bold">Harga/Unit</th>
-                                <th className="p-4 font-bold text-right">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stone-100">
-                            {inventories.map(item => {
-                                const isLowStock = parseFloat(item.current_stock) <= parseFloat(item.minimum_stock);
-                                return (
-                                    <tr key={item.id} className="hover:bg-stone-50/50 transition-colors">
-                                        <td className="p-4">
-                                            <div className="font-bold text-slate-900">{item.name}</div>
-                                            <div className="text-xs font-semibold text-indigo-600 bg-indigo-50 inline-block px-2 py-0.5 rounded mt-1">{item.category}</div>
-                                            {item.notes && <div className="text-xs text-slate-500 truncate max-w-[200px] mt-1">{item.notes}</div>}
-                                        </td>
-                                        <td className="p-4">
-                                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${
-                                                isLowStock ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
-                                            }`}>
-                                                {isLowStock && <AlertCircle size={14} />}
-                                                {parseFloat(item.current_stock)} {item.unit}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 text-slate-600">{parseFloat(item.minimum_stock)} {item.unit}</td>
-                                        <td className="p-4 text-slate-600">{item.price_per_unit ? `Rp ${parseFloat(item.price_per_unit).toLocaleString('id-ID')}` : '-'}</td>
-                                        <td className="p-4 text-right space-x-2">
-                                            <button onClick={() => openTransaction(item)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Catat Transaksi Stok">
-                                                <History size={18} />
-                                            </button>
-                                            <button onClick={() => openEditForm(item)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
-                                                <Edit size={18} />
-                                            </button>
-                                            <button onClick={() => handleDelete(item.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
-                                                <Trash2 size={18} />
-                                            </button>
+                    <div className="overflow-x-auto w-full">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-stone-50 border-b border-stone-200 text-stone-500 text-xs uppercase tracking-wider">
+                                    <th className="p-4 font-bold">Nama Bahan</th>
+                                    <th className="p-4 font-bold">Stok Saat Ini</th>
+                                    <th className="p-4 font-bold">Batas Minimum</th>
+                                    <th className="p-4 font-bold">Harga/Unit</th>
+                                    <th className="p-4 font-bold text-right">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-stone-100">
+                                {inventories.map(item => {
+                                    const isLowStock = parseFloat(item.current_stock) <= parseFloat(item.minimum_stock);
+                                    return (
+                                        <tr key={item.id} className="hover:bg-stone-50/50 transition-colors">
+                                            <td className="p-4">
+                                                <div className="font-bold text-slate-900">{item.name}</div>
+                                                <div className="text-xs font-semibold text-indigo-600 bg-indigo-50 inline-block px-2 py-0.5 rounded mt-1">{item.category}</div>
+                                                {item.notes && <div className="text-xs text-slate-500 truncate max-w-[200px] mt-1">{item.notes}</div>}
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-bold ${
+                                                    isLowStock ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'
+                                                }`}>
+                                                    {isLowStock && <AlertCircle size={14} />}
+                                                    {parseFloat(item.current_stock)} {item.unit}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-slate-600">{parseFloat(item.minimum_stock)} {item.unit}</td>
+                                            <td className="p-4 text-slate-600">{item.price_per_unit ? `Rp ${parseFloat(item.price_per_unit).toLocaleString('id-ID')}` : '-'}</td>
+                                            <td className="p-4 text-right space-x-2">
+                                                <button onClick={() => openTransaction(item)} className="p-2 text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors" title="Catat Transaksi Stok">
+                                                    <History size={18} />
+                                                </button>
+                                                <button onClick={() => openEditForm(item)} className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors" title="Edit">
+                                                    <Edit size={18} />
+                                                </button>
+                                                <button onClick={() => handleDelete(item.id)} className="p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors" title="Hapus">
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                {inventories.length === 0 && (
+                                    <tr>
+                                        <td colSpan="5" className="p-8 text-center text-slate-400">
+                                            <Package size={48} className="mx-auto mb-3 opacity-20" />
+                                            <p>Belum ada data stok bahan baku.</p>
                                         </td>
                                     </tr>
-                                );
-                            })}
-                            {inventories.length === 0 && (
-                                <tr>
-                                    <td colSpan="5" className="p-8 text-center text-slate-400">
-                                        <Package size={48} className="mx-auto mb-3 opacity-20" />
-                                        <p>Belum ada data stok bahan baku.</p>
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 {/* Form Modal */}
@@ -188,6 +192,21 @@ export default function Index({ inventories }) {
                                     <TextInput type="number" step="0.01" className="mt-1 block w-full" value={formData.minimum_stock} onChange={e => setFormData('minimum_stock', e.target.value)} required />
                                 </div>
                             </div>
+                            {!editingItem && (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel value="Stok Awal" />
+                                        <TextInput type="number" step="0.01" className="mt-1 block w-full" value={formData.current_stock} onChange={e => setFormData('current_stock', e.target.value)} required />
+                                        {formErrors.current_stock && <p className="text-sm text-rose-500 mt-1">{formErrors.current_stock}</p>}
+                                    </div>
+                                    <div>
+                                        <InputLabel value="Total Pengeluaran Riil (Rp)" />
+                                        <TextInput type="number" className="mt-1 block w-full" placeholder="Cth: 150000" value={formData.initial_total_cost} onChange={e => setFormData('initial_total_cost', e.target.value)} />
+                                        <p className="text-xs text-stone-500 mt-1">Isi jika pembelian stok awal ini adalah pengeluaran (Opsional)</p>
+                                        {formErrors.initial_total_cost && <p className="text-sm text-rose-500 mt-1">{formErrors.initial_total_cost}</p>}
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <InputLabel value="Harga per Satuan (Opsional)" />
                                 <TextInput type="number" className="mt-1 block w-full" value={formData.price_per_unit} onChange={e => setFormData('price_per_unit', e.target.value)} />
@@ -237,6 +256,16 @@ export default function Index({ inventories }) {
                                     <TextInput type="number" step="0.01" className="mt-1 block w-full text-lg font-bold" value={transData.quantity} onChange={e => setTransData('quantity', e.target.value)} required />
                                     {transErrors.quantity && <p className="text-sm text-rose-500 mt-1">{transErrors.quantity}</p>}
                                 </div>
+                                {transData.type !== 'adjustment' && (
+                                    <div>
+                                        <InputLabel value={transData.type === 'in' ? "Total Pengeluaran Riil (Rp)" : "Total Nilai Kerugian (Rp)"} />
+                                        <TextInput type="number" className="mt-1 block w-full" placeholder="Cth: 150000" value={transData.total_cost} onChange={e => setTransData('total_cost', e.target.value)} />
+                                        <p className="text-xs text-stone-500 mt-1">
+                                            {transData.type === 'in' ? "Isi jumlah uang riil yang dikeluarkan untuk restock ini (Opsional)" : "Isi nilai kerugian jika stok rusak/hilang (Opsional)"}
+                                        </p>
+                                        {transErrors.total_cost && <p className="text-sm text-rose-500 mt-1">{transErrors.total_cost}</p>}
+                                    </div>
+                                )}
                                 <div>
                                     <InputLabel value="Catatan Transaksi" />
                                     <TextInput className="mt-1 block w-full" placeholder="cth: Pembelian dari supplier A" value={transData.notes} onChange={e => setTransData('notes', e.target.value)} />
