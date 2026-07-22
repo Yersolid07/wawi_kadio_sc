@@ -68,13 +68,17 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                                     <select
                                         value={data.facility_id}
                                         onChange={e => setData('facility_id', e.target.value)}
-                                        className="w-full bg-stone-50 border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                                        className="w-full bg-stone-50 border border-stone-200 text-slate-800 rounded-xl px-4 py-3 focus:ring-emerald-500 focus:border-emerald-500 transition-colors capitalize"
                                     >
                                         <option value="" disabled>Pilih Fasilitas</option>
-                                        {facilities.map(facility => (
-                                            <option key={facility.id} value={facility.id}>
-                                                {facility.name} (Kapasitas: {facility.capacity} org)
-                                            </option>
+                                        {Array.from(new Set(facilities.map(f => f.type))).map(type => (
+                                            <optgroup key={type} label={type || 'Lainnya'} className="capitalize font-bold text-emerald-700 bg-emerald-50/50">
+                                                {facilities.filter(f => f.type === type).map(facility => (
+                                                    <option key={facility.id} value={facility.id} className="text-slate-800 font-medium">
+                                                        {facility.name} (Kapasitas: {facility.capacity} org)
+                                                    </option>
+                                                ))}
+                                            </optgroup>
                                         ))}
                                     </select>
                                     {errors.facility_id && <p className="text-red-500 text-xs mt-1">{errors.facility_id}</p>}

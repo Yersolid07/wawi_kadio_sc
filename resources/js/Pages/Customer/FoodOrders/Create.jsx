@@ -125,10 +125,22 @@ export default function Create({ menuItems, reservationId, activeReservations = 
 
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
                 
+                {/* Header for Mobile */}
+            <div className="lg:hidden bg-white border-b border-stone-100 sticky top-0 z-40">
+                <div className="flex items-center gap-4 px-6 py-4">
+                    <Link href={user ? route('dashboard') : route('home')} className="w-10 h-10 bg-stone-50 hover:bg-stone-100 rounded-full flex items-center justify-center transition-colors">
+                        <ArrowLeft size={20} className="text-slate-600" />
+                    </Link>
+                        <h2 className="text-2xl font-bold text-slate-900">
+                            Pesan Makanan
+                        </h2>
+                    </div>
+                </div>
+
                 {/* Left: Menu Catalog */}
-                <div className="flex-1 space-y-8">
-                    <div className="flex items-center gap-4">
-                        <Link href={route('customer.orders.index')} className="p-2 hover:bg-white rounded-xl transition-colors">
+                <div className="flex-1 space-y-8 p-6 lg:p-0">
+                    <div className="hidden lg:flex items-center gap-4">
+                        <Link href={user ? route('dashboard') : route('home')} className="p-2 hover:bg-white rounded-xl transition-colors">
                             <ArrowLeft size={20} className="text-slate-500" />
                         </Link>
                         <h2 className="text-2xl font-bold text-slate-900">
@@ -265,17 +277,39 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                             </div>
                         ) : (
                             <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 mb-6">
-                                {Object.values(cart).map(item => (
-                                    <div key={item.id} className="flex justify-between items-start text-sm border-b border-stone-50 pb-3">
-                                        <div className="flex gap-2 font-medium text-slate-700">
-                                            <span className="font-bold text-slate-900 bg-stone-100 px-1.5 rounded">{item.quantity}x</span>
-                                            <span>{item.name}</span>
+                                {Object.values(cart).map(item => {
+                                    const dbItem = menuItems[item.category]?.find(m => m.id === item.id);
+                                    const isOutOfStock = dbItem?.is_out_of_stock;
+                                    
+                                    return (
+                                    <div key={item.id} className={`flex justify-between items-center bg-white p-4 rounded-xl border ${isOutOfStock ? 'border-rose-200 bg-rose-50/50' : 'border-stone-100'} shadow-sm`}>
+                                        <div className="flex-1">
+                                            <h5 className={`font-bold text-sm leading-tight ${isOutOfStock ? 'text-rose-700 line-through' : 'text-slate-800'}`}>
+                                                {item.name}
+                                                {isOutOfStock && <span className="ml-2 text-xs text-rose-600 no-underline inline-block">(Habis)</span>}
+                                            </h5>
+                                            <p className={`font-bold text-sm mt-1 ${isOutOfStock ? 'text-rose-500' : 'text-emerald-600'}`}>Rp {formatPrice(item.final_price)}</p>
                                         </div>
-                                        <span className="font-bold text-slate-900 whitespace-nowrap">
-                                            Rp {formatPrice((item.final_price !== undefined ? item.final_price : item.price) * item.quantity)}
-                                        </span>
+                                        <div className="flex items-center gap-3 bg-stone-50 rounded-lg p-1 ml-4 border border-stone-200">
+                                            <button
+                                                type="button"
+                                                onClick={() => updateCart(item, -1)}
+                                                className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-rose-600 hover:bg-rose-50"
+                                            >
+                                                <Minus size={14} />
+                                            </button>
+                                            <span className={`font-bold text-sm w-4 text-center ${isOutOfStock ? 'text-rose-600' : ''}`}>{item.quantity}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() => updateCart(item, 1)}
+                                                disabled={isOutOfStock || (dbItem?.daily_stock !== null && item.quantity >= (dbItem?.current_stock || 0))}
+                                                className="w-7 h-7 flex items-center justify-center bg-white rounded shadow-sm text-emerald-600 hover:bg-emerald-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                                            >
+                                                <Plus size={14} />
+                                            </button>
+                                        </div>
                                     </div>
-                                ))}
+                                )})}
                             </div>
                         )}
 
@@ -470,10 +504,17 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                 <span className="text-2xl font-black text-emerald-600">Rp {formatPrice(cartTotal)}</span>
                             </div>
 
+                            {Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock) && (
+                                <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm flex gap-2">
+                                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                                    <span>Ada menu di keranjang yang sudah habis. Silakan hapus menu tersebut.</span>
+                                </div>
+                            )}
+
                             <PrimaryButton 
                                 type="submit" 
                                 className="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3.5 text-base shadow-lg shadow-orange-500/30"
-                                disabled={processing || cartTotal === 0}
+                                disabled={processing || cartTotal === 0 || Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock)}
                             >
                                 <Send size={18} className="mr-2" /> Pesan Sekarang
                             </PrimaryButton>
