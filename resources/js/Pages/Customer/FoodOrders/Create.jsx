@@ -9,6 +9,12 @@ import { useState, useMemo, useEffect } from 'react';
 
 export default function Create({ menuItems, reservationId, activeReservations = [], qrCodes = [], isAuthenticated, user, paymentChannels = [] }) {
     const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+    const [activeCategory, setActiveCategory] = useState('Semua');
+    
+    const categories = useMemo(() => {
+        return ['Semua', ...Object.keys(menuItems || {})];
+    }, [menuItems]);
+
     // Check URL parameters for QR Code ordering
     const params = new URLSearchParams(window.location.search);
     const locationType = params.get('location_type');
@@ -130,7 +136,26 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                         </h2>
                     </div>
 
-                    {Object.entries(menuItems).map(([category, items]) => (
+                    {/* Filter Tabs */}
+                    {categories.length > 1 && (
+                        <div className="flex flex-wrap items-center gap-2 mb-6 p-2 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+                            {categories.map((cat) => (
+                                <button
+                                    key={cat}
+                                    onClick={() => setActiveCategory(cat)}
+                                    className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+                                        activeCategory === cat ? 'bg-emerald-600 text-white' : 'text-slate-500 hover:text-slate-900 bg-transparent hover:bg-stone-50'
+                                    }`}
+                                >
+                                    <span className="capitalize">{cat}</span>
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {Object.entries(menuItems)
+                        .filter(([category, _]) => activeCategory === 'Semua' || category === activeCategory)
+                        .map(([category, items]) => (
                         <div key={category} className="space-y-4">
                             <h3 className="text-xl font-bold text-slate-800 capitalize flex items-center gap-2">
                                 {category}
