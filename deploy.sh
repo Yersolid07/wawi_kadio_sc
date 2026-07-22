@@ -34,6 +34,6 @@ php artisan view:cache
 
 # Restart PM2 services
 echo "Restarting PM2 Services..."
-pm2 reload ecosystem.config.js
+npx pm2 reload ecosystem.config.js || npx pm2 start ecosystem.config.js
 
 echo "Deployment complete!"
