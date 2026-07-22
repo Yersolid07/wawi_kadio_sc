@@ -23,6 +23,7 @@ export default function Form({ item = null }) {
         promo_start: item?.promo_start ? item.promo_start.substring(0, 16) : '',
         promo_end: item?.promo_end ? item.promo_end.substring(0, 16) : '',
         daily_stock: item?.daily_stock ?? '',
+        reset_stock: false,
         image: null,
         _method: item ? 'PUT' : 'POST', // For file uploads in Laravel PUT requests
     });
@@ -149,15 +150,33 @@ export default function Form({ item = null }) {
 
                                     <div className="col-span-2">
                                         <InputLabel htmlFor="daily_stock" value="Stok Harian Default (Kosongkan jika stok tak terbatas)" />
-                                        <TextInput
-                                            id="daily_stock"
-                                            type="number"
-                                            className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
-                                            value={data.daily_stock}
-                                            onChange={(e) => setData('daily_stock', e.target.value)}
-                                            min="0"
-                                        />
-                                        <InputError message={errors.daily_stock} className="mt-2" />
+                                        <div className="flex gap-4 items-start">
+                                            <div className="flex-1">
+                                                <TextInput
+                                                    id="daily_stock"
+                                                    type="number"
+                                                    className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
+                                                    value={data.daily_stock}
+                                                    onChange={(e) => setData('daily_stock', e.target.value)}
+                                                    min="0"
+                                                />
+                                                <InputError message={errors.daily_stock} className="mt-2" />
+                                            </div>
+                                            {item && data.daily_stock !== '' && data.daily_stock !== null && (
+                                                <div className="mt-2 flex items-center gap-2">
+                                                    <input
+                                                        type="checkbox"
+                                                        id="reset_stock"
+                                                        checked={data.reset_stock || false}
+                                                        onChange={(e) => setData('reset_stock', e.target.checked)}
+                                                        className="rounded text-emerald-600 focus:ring-emerald-500"
+                                                    />
+                                                    <label htmlFor="reset_stock" className="text-sm font-medium text-slate-700">
+                                                        Reset Stok Sekarang
+                                                    </label>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
 

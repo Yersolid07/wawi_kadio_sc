@@ -24,6 +24,16 @@ module.exports = {
       max_memory_restart: '512M',
     },
     {
+      name: 'wawi-kadio-schedule',
+      script: 'artisan',
+      interpreter: 'php',
+      args: 'schedule:work',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '256M',
+    },
+    {
       name: 'wawi-kadio-reverb',
       script: 'artisan',
       interpreter: 'php',

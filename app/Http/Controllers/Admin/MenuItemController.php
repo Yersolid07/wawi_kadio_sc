@@ -93,10 +93,15 @@ class MenuItemController extends Controller
             $validated['image_url'] = $request->file('image')->store('menu', 'public');
         }
 
-        // If daily stock changed, adjust current stock relatively or reset it?
-        // Let's reset it if admin changes daily_stock to a new valid number.
-        if (array_key_exists('daily_stock', $validated) && $validated['daily_stock'] !== $menuItem->daily_stock) {
-            $validated['current_stock'] = $validated['daily_stock'];
+        // Reset current stock if daily_stock changes, or if current stock exceeds max, or if explicitly requested.
+        if (array_key_exists('daily_stock', $validated)) {
+            if ($validated['daily_stock'] !== $menuItem->daily_stock) {
+                $validated['current_stock'] = $validated['daily_stock'];
+            } elseif ($validated['daily_stock'] !== null && $menuItem->current_stock > $validated['daily_stock']) {
+                $validated['current_stock'] = $validated['daily_stock'];
+            } elseif ($request->boolean('reset_stock')) {
+                $validated['current_stock'] = $validated['daily_stock'];
+            }
         }
 
         $menuItem->update($validated);
