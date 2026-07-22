@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, useForm, router } from '@inertiajs/react';
-import { ArrowLeft, ShoppingCart, Plus, Minus, Send, UtensilsCrossed, AlertCircle, Info, CreditCard, Banknote } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShoppingCart, Plus, Minus, Send, UtensilsCrossed, AlertCircle, Info, CreditCard, Banknote } from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
@@ -8,6 +8,7 @@ import TextInput from '@/Components/TextInput';
 import { useState, useMemo, useEffect } from 'react';
 
 export default function Create({ menuItems, reservationId, activeReservations = [], qrCodes = [], isAuthenticated, user, paymentChannels = [] }) {
+    const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
     // Check URL parameters for QR Code ordering
     const params = new URLSearchParams(window.location.search);
     const locationType = params.get('location_type');
@@ -218,12 +219,19 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                     ))}
                 </div>
 
-                {/* Right: Cart & Checkout */}
-                <div className="w-full lg:w-[400px]">
-                    <form onSubmit={submit} className="bg-white rounded-[2rem] border border-stone-100 p-6 shadow-sm sticky top-8">
-                        <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2 mb-6 border-b border-stone-100 pb-4">
-                            <ShoppingCart className="text-emerald-500" /> Detail Pesanan
-                        </h3>
+                {/* Right: Cart & Checkout (Fixed at bottom on mobile, sticky on desktop) */}
+                <div className={`w-full lg:w-[400px] lg:block ${isMobileCartOpen ? 'fixed inset-0 z-50 bg-black/60 flex items-end lg:static lg:bg-transparent lg:z-auto' : 'hidden'}`}>
+                    <form onSubmit={submit} className={`bg-white border border-stone-100 shadow-xl lg:shadow-sm w-full lg:w-auto transition-transform duration-300 ${isMobileCartOpen ? 'translate-y-0 rounded-t-3xl max-h-[90vh] overflow-y-auto p-6 pb-24' : 'translate-y-full lg:translate-y-0 lg:sticky lg:top-8 lg:rounded-[2rem] p-6'}`}>
+                        <div className="flex items-center justify-between mb-6 border-b border-stone-100 pb-4">
+                            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                                <ShoppingCart className="text-emerald-500" /> Detail Pesanan
+                            </h3>
+                            {isMobileCartOpen && (
+                                <button type="button" onClick={() => setIsMobileCartOpen(false)} className="lg:hidden p-2 bg-stone-100 rounded-full text-slate-500">
+                                    <ArrowLeft size={20} />
+                                </button>
+                            )}
+                        </div>
 
                         {Object.keys(cart).length === 0 ? (
                             <div className="py-8 text-center text-slate-400">
@@ -447,8 +455,28 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                         </div>
                     </form>
                 </div>
-
             </div>
+
+            {/* Mobile Floating Cart Button */}
+            {!isMobileCartOpen && Object.keys(cart).length > 0 && (
+                <div className="fixed bottom-6 inset-x-6 lg:hidden z-40">
+                    <button
+                        type="button"
+                        onClick={() => setIsMobileCartOpen(true)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between font-bold"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white/20 px-3 py-1 rounded-lg">
+                                {Object.values(cart).reduce((sum, item) => sum + item.quantity, 0)} item
+                            </div>
+                            <span className="text-emerald-50">Rp {formatPrice(cartTotal)}</span>
+                        </div>
+                        <span className="flex items-center gap-1">
+                            Lanjut <ArrowRight size={18} />
+                        </span>
+                    </button>
+                </div>
+            )}
         </AppLayout>
     );
 }

@@ -38,16 +38,5 @@
     </head>
     <body class="font-sans antialiased">
         @inertia
-        
-        <script>
-            // Unregister any existing service workers to clean up old PWA caches
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for(let registration of registrations) {
-                        registration.unregister();
-                    }
-                });
-            }
-        </script>
     </body>
 </html>

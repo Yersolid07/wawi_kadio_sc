@@ -2,6 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { Coffee, ArrowLeft, ArrowRight, Bed, Users, Building2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
+import { useState, useMemo } from 'react';
 
 const formatPrice = (val) => {
     const n = parseFloat(val);
@@ -11,6 +12,19 @@ const formatPrice = (val) => {
 
 export default function Facilities({ facilities = [] }) {
     const safeFacilities = Array.isArray(facilities) ? facilities : [];
+    
+    // Extract unique categories from facilities
+    const categories = useMemo(() => {
+        const types = new Set(safeFacilities.map(f => f?.type).filter(Boolean));
+        return ['Semua', ...Array.from(types)];
+    }, [safeFacilities]);
+
+    const [activeCategory, setActiveCategory] = useState('Semua');
+
+    const filteredFacilities = useMemo(() => {
+        if (activeCategory === 'Semua') return safeFacilities;
+        return safeFacilities.filter(f => f?.type === activeCategory);
+    }, [safeFacilities, activeCategory]);
     return (
         <div className="min-h-screen bg-[#f5f2ec] font-sans text-slate-900">
             <Head>
@@ -45,13 +59,38 @@ export default function Facilities({ facilities = [] }) {
             </div>
 
             <main className="pt-8 pb-24 max-w-7xl mx-auto px-6">
-                <p className="text-slate-500 text-lg mb-12 max-w-2xl">
+                <p className="text-slate-500 text-lg mb-8 max-w-2xl">
                     Setiap ruang kami rancang khusus untuk memberikan pengalaman retret alam yang tak terlupakan — dari gazebo tepi kolam hingga homestay mewah di tengah alam.
                 </p>
 
-                {safeFacilities.length > 0 ? (
+                {/* Filter Tabs */}
+                {categories.length > 1 && (
+                    <div className="flex flex-wrap items-center gap-2 mb-10 p-2 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-x-auto no-scrollbar">
+                        {categories.map((cat) => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`relative px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap ${
+                                    activeCategory === cat ? 'text-white' : 'text-slate-500 hover:text-slate-900'
+                                }`}
+                            >
+                                {activeCategory === cat && (
+                                    <motion.div
+                                        layoutId="facilityTab"
+                                        className="absolute inset-0 bg-emerald-600 rounded-xl"
+                                        initial={false}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                                    />
+                                )}
+                                <span className="relative z-10 capitalize">{cat}</span>
+                            </button>
+                        ))}
+                    </div>
+                )}
+
+                {filteredFacilities.length > 0 ? (
                     <div className="grid lg:grid-cols-2 gap-8">
-                        {safeFacilities.map((facility, i) => (
+                        {filteredFacilities.map((facility, i) => (
                             <motion.div key={facility?.id || i}
                                 initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.6, delay: i * 0.1 }}
