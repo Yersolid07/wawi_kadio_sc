@@ -60,8 +60,8 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             const existing = prev.find(i => i.id === item.id && !i.is_existing);
             
             // Respect stock limit
-            const maxQty = (item.daily_stock !== null && item.current_stock > 0)
-                ? item.current_stock
+            const maxQty = item.daily_stock !== null
+                ? Math.max(0, item.current_stock)
                 : Infinity;
 
             if (existing) {
@@ -133,8 +133,8 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                 const newQty = item.quantity + delta;
                 
                 // Respect stock limit
-                const maxQty = (item.daily_stock !== null && item.current_stock > 0)
-                    ? item.current_stock
+                const maxQty = item.daily_stock !== null
+                    ? Math.max(0, item.current_stock)
                     : Infinity;
                 const clampedQty = Math.min(newQty, maxQty);
 

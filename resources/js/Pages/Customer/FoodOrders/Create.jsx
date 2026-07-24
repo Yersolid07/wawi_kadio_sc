@@ -87,8 +87,8 @@ export default function Create({ menuItems, reservationId, activeReservations = 
             const newQty = Math.max(0, currentQty + delta);
 
             // Respect stock limit
-            const maxQty = (item.daily_stock !== null && item.current_stock > 0)
-                ? item.current_stock
+            const maxQty = item.daily_stock !== null
+                ? Math.max(0, item.current_stock)
                 : Infinity;
             const clampedQty = Math.min(newQty, maxQty);
 
