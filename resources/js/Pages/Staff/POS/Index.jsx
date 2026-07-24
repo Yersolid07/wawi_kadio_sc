@@ -210,7 +210,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             order_id: selectedOrderId,
             order_type: orderType,
             table_number: tableNumber,
-            guest_name: guestName,
+            customer_name: guestName,
             notes: notes,
             payment_method: paymentMethod,
             payment_channel: paymentChannel,
@@ -238,7 +238,10 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                     setPrintUrl(url);
                 }
             },
-            onError: () => setIsProcessing(false)
+            onError: (errors) => {
+                setIsProcessing(false);
+                alert(Object.values(errors).join('\n'));
+            }
         });
     };
 
