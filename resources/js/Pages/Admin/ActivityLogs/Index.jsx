@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import Modal from '@/Components/Modal';
@@ -27,6 +27,14 @@ export default function ActivityLogsIndex({ auth, logs, filters, users }) {
         date_from: filters.date_from || '',
         date_to: filters.date_to || '',
     });
+
+    // Auto-refresh the logs every 15 seconds so it feels real-time
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.reload({ only: ['logs'], preserveState: true, preserveScroll: true });
+        }, 15000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleSearch = (e) => {
         e.preventDefault();

@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { Search, ShoppingCart, Plus, Minus, X, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize, Trash2, QrCode, Smartphone, CreditCard, Building, Wallet } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
 import { useConfirm } from '@/Contexts/ConfirmContext';
+import { connectAndPrint, buildReceiptBuffer } from '@/utils/printer';
 
 export default function POSIndex({ menuItems, activeOrders = [], user, paymentChannels = [] }) {
     const confirm = useConfirm();
@@ -51,14 +52,79 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
     }, [menuItems, activeCategory, search]);
 
     const addToCart = (item) => {
+        if (item.is_out_of_stock) {
+            alert(`Stok ${item.name} habis.`);
+            return;
+        }
         setCart(prev => {
             const existing = prev.find(i => i.id === item.id && !i.is_existing);
+            
+            // Respect stock limit
+            const maxQty = (item.daily_stock !== null && item.current_stock > 0)
+                ? item.current_stock
+                : Infinity;
+
             if (existing) {
-                return prev.map(i => (i.id === item.id && !i.is_existing) ? { ...i, quantity: i.quantity + 1 } : i);
+                const newQty = existing.quantity + 1;
+                if (newQty > maxQty) {
+                    alert(`Stok ${item.name} tidak mencukupi.`);
+                    return prev;
+                }
+                return prev.map(i => (i.id === item.id && !i.is_existing) ? { ...i, quantity: newQty } : i);
             }
             return [...prev, { ...item, quantity: 1, itemNotes: '', is_existing: false }];
         });
     };
+
+    // Barcode Scanner Listener
+    useEffect(() => {
+        let barcodeBuffer = '';
+        let barcodeTimeout = null;
+
+        const handleKeyDown = (e) => {
+            // Ignore if user is typing in a textarea or explicit text input that isn't search
+            if (e.target.tagName === 'TEXTAREA' || (e.target.tagName === 'INPUT' && e.target.type !== 'text')) {
+                return;
+            }
+
+            // Most barcode scanners end with Enter
+            if (e.key === 'Enter') {
+                if (barcodeBuffer.length > 2) {
+                    // Search for item with this barcode
+                    let foundItem = null;
+                    for (const catItems of Object.values(menuItems)) {
+                        const match = catItems.find(item => item.barcode === barcodeBuffer);
+                        if (match) {
+                            foundItem = match;
+                            break;
+                        }
+                    }
+
+                    if (foundItem) {
+                        addToCart(foundItem);
+                    } else {
+                        // Optional: show a small toast or play a beep error
+                        console.warn('Barcode not found:', barcodeBuffer);
+                    }
+                }
+                barcodeBuffer = '';
+            } else if (e.key.length === 1) { // Normal character
+                barcodeBuffer += e.key;
+                
+                // Reset buffer if no input for 50ms (barcode scanners type very fast)
+                if (barcodeTimeout) clearTimeout(barcodeTimeout);
+                barcodeTimeout = setTimeout(() => {
+                    barcodeBuffer = '';
+                }, 100);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            if (barcodeTimeout) clearTimeout(barcodeTimeout);
+        };
+    }, [menuItems, cart]);
 
     const updateQuantity = (id, delta, isExisting) => {
         if (isExisting) return; // Cannot modify existing items quantity from POS (already sent to kitchen)
@@ -327,6 +393,12 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                         {order.guest_name || order.user?.name || 'Tamu'}
                                     </span>
                                     <span className="text-sm font-black text-emerald-600">Rp {formatPrice(order.total_amount)}</span>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handlePrintReceipt(order); }}
+                                        className="mt-2 text-xs font-bold text-stone-500 hover:text-emerald-600 flex items-center gap-1"
+                                    >
+                                        <Receipt size={12} /> Cetak Ulang
+                                    </button>
                                 </div>
                             ))}
                         </div>

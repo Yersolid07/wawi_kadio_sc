@@ -24,6 +24,7 @@ export default function Form({ item = null }) {
         promo_end: item?.promo_end ? item.promo_end.substring(0, 16) : '',
         daily_stock: item?.daily_stock ?? '',
         reset_stock: false,
+        barcode: item?.barcode || '',
         image: null,
         _method: item ? 'PUT' : 'POST', // For file uploads in Laravel PUT requests
     });
@@ -177,6 +178,19 @@ export default function Form({ item = null }) {
                                                 </div>
                                             )}
                                         </div>
+                                    </div>
+
+                                    <div className="col-span-2">
+                                        <InputLabel htmlFor="barcode" value="Barcode Produk (Khusus Snack Kemasan / Scan disini)" />
+                                        <TextInput
+                                            id="barcode"
+                                            type="text"
+                                            className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
+                                            value={data.barcode}
+                                            onChange={(e) => setData('barcode', e.target.value)}
+                                            placeholder="Scan barcode disini..."
+                                        />
+                                        <InputError message={errors.barcode} className="mt-2" />
                                     </div>
                                 </div>
 

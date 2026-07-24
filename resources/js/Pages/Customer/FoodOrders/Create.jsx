@@ -168,11 +168,11 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                     {Object.entries(menuItems)
                         .filter(([category, _]) => activeCategory === 'Semua' || category === activeCategory)
                         .map(([category, items]) => (
-                        <div key={category} className="space-y-4">
-                            <h3 className="text-xl font-bold text-slate-800 capitalize flex items-center gap-2">
+                        <div key={category} className="space-y-4 bg-white p-6 rounded-3xl border border-stone-200 shadow-sm">
+                            <h3 className="text-xl font-extrabold text-slate-800 capitalize flex items-center gap-2 border-b border-stone-100 pb-3">
                                 {category}
                             </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
                             {items.map(item => {
                                     const qty = cart[item.id]?.quantity || 0;
                                     const isOutOfStock = item.is_out_of_stock;
@@ -499,25 +499,27 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                 </div>
                             )}
 
-                            <div className="flex justify-between items-center py-4 border-t border-stone-200 mt-6">
-                                <span className="font-medium text-slate-500">Total Harga</span>
-                                <span className="text-2xl font-black text-emerald-600">Rp {formatPrice(cartTotal)}</span>
-                            </div>
-
-                            {Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock) && (
-                                <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm flex gap-2">
-                                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
-                                    <span>Ada menu di keranjang yang sudah habis. Silakan hapus menu tersebut.</span>
+                            <div className="sticky bottom-0 bg-white pt-4 pb-2 border-t border-stone-100 mt-6 z-10">
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="font-medium text-slate-500">Total Harga</span>
+                                    <span className="text-2xl font-black text-emerald-600">Rp {formatPrice(cartTotal)}</span>
                                 </div>
-                            )}
 
-                            <PrimaryButton 
-                                type="submit" 
-                                className="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3.5 text-base shadow-lg shadow-orange-500/30"
-                                disabled={processing || cartTotal === 0 || Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock)}
-                            >
-                                <Send size={18} className="mr-2" /> Pesan Sekarang
-                            </PrimaryButton>
+                                {Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock) && (
+                                    <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm flex gap-2">
+                                        <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                                        <span>Ada menu di keranjang yang sudah habis. Silakan hapus menu tersebut.</span>
+                                    </div>
+                                )}
+
+                                <PrimaryButton 
+                                    type="submit" 
+                                    className="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3.5 text-base shadow-lg shadow-orange-500/30"
+                                    disabled={processing || cartTotal === 0 || Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock)}
+                                >
+                                    <Send size={18} className="mr-2" /> Pesan Sekarang
+                                </PrimaryButton>
+                            </div>
                         </div>
                     </form>
                 </div>

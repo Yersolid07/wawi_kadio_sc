@@ -48,6 +48,7 @@ class MenuItemController extends Controller
             'promo_end' => 'nullable|date|after_or_equal:promo_start',
             'promo_name' => 'nullable|string|max:255',
             'daily_stock' => 'nullable|integer|min:0',
+            'barcode' => 'nullable|string|max:255|unique:menu_items,barcode',
         ]);
 
         if ($request->hasFile('image')) {
@@ -84,6 +85,7 @@ class MenuItemController extends Controller
             'promo_end' => 'nullable|date|after_or_equal:promo_start',
             'promo_name' => 'nullable|string|max:255',
             'daily_stock' => 'nullable|integer|min:0',
+            'barcode' => 'nullable|string|max:255|unique:menu_items,barcode,'.$menuItem->id,
         ]);
 
         if ($request->hasFile('image')) {

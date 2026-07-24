@@ -126,6 +126,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
         Route::get('/pos/print/{order}', [POSController::class, 'print'])->name('pos.print');
 
+        // Tiket Masuk Kolam / Fasilitas
+        Route::get('/tickets', [\App\Http\Controllers\Staff\TicketController::class, 'index'])->name('tickets.index');
+        Route::post('/tickets', [\App\Http\Controllers\Staff\TicketController::class, 'store'])->name('tickets.store');
+
         Route::get('/food-orders', [StaffFoodOrderController::class, 'index'])->name('food-orders.index');
         Route::delete('/food-orders/{order}', [StaffFoodOrderController::class, 'destroy'])->name('food-orders.destroy');
         Route::get('/kds', [StaffFoodOrderController::class, 'kds'])->name('kds');

@@ -28,7 +28,9 @@ class ReservationPolicy
             return $user->id === $reservation->user_id;
         }
         
-        return $reservation->user_id === null && $reservation->session_id === session()->getId();
+        // For guest reservations, knowing the UUID is sufficient authorization
+        // because UUIDs are practically impossible to guess.
+        return $reservation->user_id === null;
     }
 
     /**

@@ -3,7 +3,7 @@ import { Link, usePage, router } from '@inertiajs/react';
 import {
     LayoutDashboard, Hotel, CalendarDays, UtensilsCrossed,
     CreditCard, Star, Users, FileText, Menu, X, ChevronDown,
-    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart, Image as ImageIcon, Activity
+    Bell, LogOut, Settings, User, Check, QrCode, Package, ShoppingCart, Image as ImageIcon, Activity, Ticket
 } from 'lucide-react';
 import ToastListener from '@/Components/ToastListener';
 
@@ -13,6 +13,7 @@ const navGroups = [
         items: [
             { label: 'Dashboard', href: 'dashboard', icon: LayoutDashboard, roles: ['admin', 'manager', 'staff', 'customer'] },
             { label: 'Kasir POS', href: 'staff.pos.index', icon: ShoppingCart, roles: ['admin', 'manager', 'staff'] },
+            { label: 'Kasir Tiket', href: 'staff.tickets.index', icon: Ticket, roles: ['admin', 'manager', 'staff'] },
             { label: 'Monitor Dapur', href: 'staff.kds', icon: UtensilsCrossed, roles: ['admin', 'manager', 'staff'] },
         ]
     },

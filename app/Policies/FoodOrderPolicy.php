@@ -29,7 +29,8 @@ class FoodOrderPolicy
             return $user->id === $foodOrder->user_id;
         }
 
-        return $foodOrder->user_id === null && $foodOrder->session_id === session()->getId();
+        // For guest food orders, knowing the UUID is sufficient authorization
+        return $foodOrder->user_id === null;
     }
 
     /**
