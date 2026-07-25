@@ -71,9 +71,14 @@ class POSController extends Controller
         ]);
 
         $totalAmount = 0;
+        $menuItemIds = collect($validated['items'])->pluck('menu_item_id')->unique();
+        $menuItems = MenuItem::whereIn('id', $menuItemIds)->get()->keyBy('id');
+
         foreach ($validated['items'] as $item) {
-            $menuItem = MenuItem::findOrFail($item['menu_item_id']);
-            $totalAmount += $menuItem->final_price * $item['quantity'];
+            $menuItem = $menuItems->get($item['menu_item_id']);
+            if ($menuItem) {
+                $totalAmount += $menuItem->final_price * $item['quantity'];
+            }
         }
 
         if ($validated['payment_method'] === 'cash' && ($validated['amount_paid'] ?? 0) < $totalAmount) {

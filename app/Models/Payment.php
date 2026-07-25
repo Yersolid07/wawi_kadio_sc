@@ -54,6 +54,10 @@ class Payment extends Model
 
     public function markAsSuccess(?string $transactionId = null): void
     {
+        if ($this->payment_status === 'success') {
+            return;
+        }
+
         $this->update([
             'payment_status' => 'success',
             'transaction_id' => $transactionId ?? $this->transaction_id,
@@ -116,6 +120,10 @@ class Payment extends Model
 
     public function markAsFailed(array $gatewayResponse = []): void
     {
+        if (in_array($this->payment_status, ['success', 'failed'])) {
+            return;
+        }
+
         $this->update([
             'payment_status' => 'failed',
             'gateway_response' => $gatewayResponse,

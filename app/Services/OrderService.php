@@ -24,8 +24,9 @@ class OrderService
             $realTotal = 0;
             $resolvedItems = []; // pre-validated items with locked menu data
 
-            // STEP 1: Lock and validate ALL items before creating any record
-            foreach ($validated['items'] as $item) {
+            // STEP 1: Lock and validate ALL items before creating any record (Sorted to prevent deadlock)
+            $sortedItems = collect($validated['items'])->sortBy('menu_item_id')->values()->all();
+            foreach ($sortedItems as $item) {
                 $menuItem = MenuItem::where('id', $item['menu_item_id'])->lockForUpdate()->firstOrFail();
 
                 if (!$menuItem->is_available) {
@@ -110,7 +111,8 @@ class OrderService
                 $order = FoodOrder::findOrFail($validated['order_id']);
 
                 $newItemsAdded = false;
-                foreach ($validated['items'] as $item) {
+                $sortedItems = collect($validated['items'])->sortBy('menu_item_id')->values()->all();
+                foreach ($sortedItems as $item) {
                     if (empty($item['is_existing'])) {
                         $menuItem = MenuItem::where('id', $item['menu_item_id'])->lockForUpdate()->firstOrFail();
 
@@ -157,20 +159,17 @@ class OrderService
                     if ($existingPayment) {
                         $existingPayment->update([
                             'payment_method' => $paymentMethod,
-                            'payment_status' => 'success',
                             'amount'         => $order->total_amount,
-                            'payment_date'   => now(),
                         ]);
-                        PaymentService::recordIncome($existingPayment->fresh());
+                        $existingPayment->markAsSuccess();
                     } else {
                         $payment = Payment::create([
                             'food_order_id'  => $order->id,
                             'amount'         => $order->total_amount,
                             'payment_method' => $paymentMethod,
-                            'payment_status' => 'success',
-                            'payment_date'   => now(),
+                            'payment_status' => 'pending',
                         ]);
-                        PaymentService::recordIncome($payment);
+                        $payment->markAsSuccess();
                     }
                 }
 
@@ -192,8 +191,9 @@ class OrderService
                 // ─────────────────────────────────────────────────
                 $realTotal     = 0;
                 $resolvedItems = [];
+                $sortedItems = collect($validated['items'])->sortBy('menu_item_id')->values()->all();
 
-                foreach ($validated['items'] as $item) {
+                foreach ($sortedItems as $item) {
                     $menuItem = MenuItem::where('id', $item['menu_item_id'])->lockForUpdate()->firstOrFail();
 
                     if (!$menuItem->is_available) {
@@ -236,10 +236,9 @@ class OrderService
                         'food_order_id'  => $order->id,
                         'amount'         => $realTotal,
                         'payment_method' => $paymentMethod,
-                        'payment_status' => 'success',
-                        'payment_date'   => now(),
+                        'payment_status' => 'pending',
                     ]);
-                    PaymentService::recordIncome($payment);
+                    $payment->markAsSuccess();
                 }
 
                 $hasFood = false;

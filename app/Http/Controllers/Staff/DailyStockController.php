@@ -32,10 +32,23 @@ class DailyStockController extends Controller
         ]);
 
         DB::transaction(function () use ($validated) {
+            $cases = [];
+            $ids = [];
+            $params = [];
+            
             foreach ($validated['stocks'] as $stockData) {
-                MenuItem::where('id', $stockData['id'])->update([
-                    'current_stock' => $stockData['current_stock'],
-                ]);
+                $cases[] = "WHEN id = ? THEN ?";
+                $params[] = $stockData['id'];
+                $params[] = $stockData['current_stock'];
+                $ids[] = $stockData['id'];
+            }
+            
+            if (!empty($ids)) {
+                $idsPlaceholders = implode(',', array_fill(0, count($ids), '?'));
+                $casesStr = implode(' ', $cases);
+                $params = array_merge($params, $ids);
+                
+                DB::update("UPDATE menu_items SET current_stock = CASE {$casesStr} END WHERE id IN ({$idsPlaceholders})", $params);
             }
         });
 
