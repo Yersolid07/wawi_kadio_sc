@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
+use PHPUnit\Framework\Attributes\Test;
 
 class FoodOrderTest extends TestCase
 {
@@ -22,7 +23,7 @@ class FoodOrderTest extends TestCase
         }
     }
 
-    /** @test */
+    #[Test]
     public function customer_cannot_order_out_of_stock_item()
     {
         $user = User::factory()->create();
@@ -51,7 +52,7 @@ class FoodOrderTest extends TestCase
         $this->assertEquals(5, $menuItem->fresh()->current_stock);
     }
 
-    /** @test */
+    #[Test]
     public function customer_cannot_order_when_daily_stock_is_zero()
     {
         // This was the original bug: daily_stock = 0 was bypassed
@@ -82,7 +83,7 @@ class FoodOrderTest extends TestCase
         $this->assertEquals(0, $menuItem->fresh()->current_stock);
     }
 
-    /** @test */
+    #[Test]
     public function customer_can_order_item_without_daily_stock_tracking()
     {
         // Items with daily_stock = null are unlimited
@@ -112,7 +113,7 @@ class FoodOrderTest extends TestCase
         $this->assertDatabaseCount('food_orders', 1);
     }
 
-    /** @test */
+    #[Test]
     public function stock_is_decremented_after_successful_order()
     {
         $user = User::factory()->create();

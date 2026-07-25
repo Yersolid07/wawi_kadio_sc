@@ -58,6 +58,7 @@ class HandleInertiaRequests extends Middleware
                 'error' => fn () => $request->session()->get('error'),
                 'warning' => fn () => $request->session()->get('warning'),
                 'print_order_id' => fn () => $request->session()->get('print_order_id'),
+                'print_order_data' => fn () => $request->session()->get('print_order_data'),
                 'change_amount' => fn () => $request->session()->get('change_amount'),
             ],
             'cms_settings' => $cmsSettings,

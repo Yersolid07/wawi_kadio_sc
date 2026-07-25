@@ -70,6 +70,8 @@ class POSController extends Controller
             'amount_paid'          => 'required_if:payment_method,cash|nullable|numeric|min:0',
         ]);
 
+        // Map handled later to preserve original string for $isTripay
+        
         $totalAmount = 0;
         $menuItemIds = collect($validated['items'])->pluck('menu_item_id')->unique();
         $menuItems = MenuItem::whereIn('id', $menuItemIds)->get()->keyBy('id');
@@ -85,7 +87,16 @@ class POSController extends Controller
             return back()->withErrors(['amount_paid' => 'Jumlah bayar kurang dari total tagihan.']);
         }
 
-        $isTripay = in_array($validated['payment_method'], ['qris', 'transfer', 'ewallet']);
+        // Keep the original requested method for the Tripay check
+        $originalPaymentMethod = $validated['payment_method'];
+        $isTripay = in_array($originalPaymentMethod, ['qris', 'transfer', 'ewallet', 'tripay']);
+
+        // Map POS frontend payment methods to Database ENUM values for OrderService
+        if ($validated['payment_method'] === 'edc') {
+            $validated['payment_method'] = 'credit_card';
+        } elseif ($validated['payment_method'] === 'qris') {
+            $validated['payment_method'] = 'tripay';
+        }
 
         try {
             // If it's Tripay, we do NOT mark it as paid immediately
@@ -95,7 +106,7 @@ class POSController extends Controller
             if ($isTripay) {
                 // Determine channel code
                 $channel = $validated['payment_channel'] ?? null;
-                if ($validated['payment_method'] === 'qris' && empty($channel)) {
+                if ($originalPaymentMethod === 'qris' && empty($channel)) {
                     $channel = 'QRIS';
                 }
 
@@ -120,9 +131,25 @@ class POSController extends Controller
             return back()->withErrors(['items' => $e->getMessage()]);
         }
 
+        // Load items for bluetooth receipt printing
+        $order->load(['items.menuItem', 'user']);
+        $orderDataForPrint = [
+            'id' => $order->id,
+            'customerName' => $order->customer_name ?? ($order->user?->name ?? 'Tamu'),
+            'total' => $order->total_amount,
+            'items' => $order->items->map(function ($item) {
+                return [
+                    'name' => $item->menuItem->name ?? 'Item',
+                    'quantity' => $item->quantity,
+                    'price' => $item->price
+                ];
+            })->toArray()
+        ];
+
         return back()->with([
             'success'        => 'Transaksi berhasil diproses.',
             'print_order_id' => $order->id,
+            'print_order_data' => $orderDataForPrint,
             'change_amount'  => $validated['payment_method'] === 'cash'
                 ? (($validated['amount_paid'] ?? 0) - $totalAmount)
                 : 0,

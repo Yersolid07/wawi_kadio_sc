@@ -27,6 +27,8 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
     
     // Print Modal State
     const [printUrl, setPrintUrl] = useState(null);
+    const [printOrderData, setPrintOrderData] = useState(null);
+    const [isPrintingBt, setIsPrintingBt] = useState(false);
 
     // Layout State
     const [layoutDirection, setLayoutDirection] = useState('horizontal'); // 'horizontal' or 'vertical'
@@ -239,11 +241,15 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                         url += '?change_amount=' + page.props.flash.change_amount;
                     }
                     setPrintUrl(url);
+                    setPrintOrderData(page.props.flash.print_order_data || null);
                 }
             },
             onError: (errors) => {
                 setIsProcessing(false);
                 alert(Object.values(errors).join('\n'));
+            },
+            onFinish: () => {
+                setIsProcessing(false);
             }
         });
     };
@@ -259,6 +265,24 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                 }
             });
         }
+    };
+
+    const handlePrintReceipt = (order) => {
+        // Set standard print iframe URL
+        setPrintUrl(route('staff.pos.print', order.id));
+        
+        // Setup data for Bluetooth printing
+        const orderData = {
+            id: order.id,
+            customerName: order.guest_name || (order.user ? order.user.name : 'Tamu'),
+            total: order.total_amount,
+            items: order.items.map(item => ({
+                name: item.menu_item.name,
+                quantity: item.quantity,
+                price: item.price
+            }))
+        };
+        setPrintOrderData(orderData);
     };
 
     const quickCashOptions = [50000, 100000, 150000, 200000, 500000];
@@ -321,6 +345,26 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
+        }
+    };
+
+    const handleBluetoothPrint = async () => {
+        if (!printOrderData) return;
+        setIsPrintingBt(true);
+        try {
+            const buffer = buildReceiptBuffer(
+                { customerName: printOrderData.customerName },
+                printOrderData.items,
+                printOrderData.total
+            );
+            const res = await connectAndPrint(buffer);
+            if (!res.success) {
+                alert('Gagal mencetak bluetooth: ' + res.error);
+            }
+        } catch (err) {
+            alert('Gagal: ' + err.message);
+        } finally {
+            setIsPrintingBt(false);
         }
     };
 
@@ -840,12 +884,20 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                 }}
                             ></iframe>
                         </div>
-                        <div className="p-4 bg-white border-t border-stone-200 shrink-0">
+                        <div className="p-4 bg-white border-t border-stone-200 shrink-0 grid grid-cols-2 gap-3">
                             <button
-                                onClick={() => setPrintUrl(null)}
+                                onClick={handleBluetoothPrint}
+                                disabled={isPrintingBt || !printOrderData}
+                                className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-stone-300 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                            >
+                                {isPrintingBt ? <Loader2 size={18} className="animate-spin" /> : <Smartphone size={18} />}
+                                Cetak Bluetooth
+                            </button>
+                            <button
+                                onClick={() => { setPrintUrl(null); setPrintOrderData(null); }}
                                 className="w-full py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
                             >
-                                Tutup & Lanjut Pesanan Baru
+                                Tutup & Lanjut
                             </button>
                         </div>
                     </div>

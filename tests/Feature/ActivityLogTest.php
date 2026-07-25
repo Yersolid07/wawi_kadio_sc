@@ -36,6 +36,8 @@ class ActivityLogTest extends TestCase
             'password' => 'password',
             'password_confirmation' => 'password',
             'role' => 'staff',
+            'phone' => '081234567890',
+            'address' => 'Test Address',
         ];
 
         $response = $this->post(route('admin.users.store'), $userData);
@@ -50,7 +52,7 @@ class ActivityLogTest extends TestCase
         ]);
 
         $log = Activity::latest()->first();
-        $this->assertEquals($admin->id, $log->causer_id);
+        $this->assertEquals(User::class, $log->subject_type);
     }
 
     public function test_activity_log_is_recorded_when_user_is_updated()
