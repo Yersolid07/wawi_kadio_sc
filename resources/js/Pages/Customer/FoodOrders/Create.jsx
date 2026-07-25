@@ -505,7 +505,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                     <span className="text-2xl font-black text-emerald-600">Rp {formatPrice(cartTotal)}</span>
                                 </div>
 
-                                {Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock) && (
+                                {Object.values(cart).some(item => Object.values(menuItems).flat().find(m => m.id === item.id)?.is_out_of_stock) && (
                                     <div className="mb-4 p-3 bg-rose-50 text-rose-600 rounded-xl text-sm flex gap-2">
                                         <AlertCircle size={16} className="shrink-0 mt-0.5" />
                                         <span>Ada menu di keranjang yang sudah habis. Silakan hapus menu tersebut.</span>
@@ -515,7 +515,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
                                 <PrimaryButton 
                                     type="submit" 
                                     className="w-full justify-center bg-orange-500 hover:bg-orange-600 text-white rounded-xl py-3.5 text-base shadow-lg shadow-orange-500/30"
-                                    disabled={processing || cartTotal === 0 || Object.values(cart).some(item => menuItems[item.category]?.find(m => m.id === item.id)?.is_out_of_stock)}
+                                    disabled={processing || cartTotal === 0 || Object.values(cart).some(item => Object.values(menuItems).flat().find(m => m.id === item.id)?.is_out_of_stock)}
                                 >
                                     <Send size={18} className="mr-2" /> Pesan Sekarang
                                 </PrimaryButton>

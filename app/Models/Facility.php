@@ -61,7 +61,8 @@ class Facility extends Model
     public function getFinalPriceAttribute()
     {
         $now = now();
-        $basePrice = $this->price_per_day;
+        // Use whichever price is the primary one for this facility
+        $basePrice = $this->price_per_day > 0 ? $this->price_per_day : ($this->price_per_hour ?? 0);
 
         if ($this->promo_start && $this->promo_end && $now->between($this->promo_start, $this->promo_end)) {
             if ($this->discount_type === 'percentage') {

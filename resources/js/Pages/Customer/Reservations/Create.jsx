@@ -1,6 +1,6 @@
 import { Head, useForm, Link, usePage } from '@inertiajs/react';
 import AppLayout from '@/Layouts/AppLayout';
-import { Building2, Calendar, Clock, Users, ArrowRight, Wallet, CheckCircle2, Tag, CreditCard, Banknote } from 'lucide-react';
+import { Building2, Calendar, Clock, Users, ArrowRight, Wallet, CheckCircle2, Tag, CreditCard, Banknote, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import InputError from '@/Components/InputError';
 import { motion } from 'framer-motion';

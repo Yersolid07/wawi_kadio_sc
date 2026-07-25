@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Customer;
 use App\Http\Controllers\Controller;
 use App\Models\Coupon;
 use App\Models\Facility;
+use App\Models\QRCode;
 use App\Models\Reservation;
 use App\Models\User;
 use App\Notifications\NewReservation;
@@ -108,7 +109,12 @@ class ReservationController extends Controller
 
     public function coupon(Reservation $reservation): Response
     {
-        $this->authorize('view', $reservation);
+        // Allow guests who own the reservation (null user_id) to view coupon
+        if (auth()->check()) {
+            $this->authorize('view', $reservation);
+        } elseif ($reservation->user_id !== null) {
+            abort(403);
+        }
 
         $reservation->load('facility');
 

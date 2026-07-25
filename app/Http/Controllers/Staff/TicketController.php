@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\Facility;
+use App\Models\Payment;
 use App\Models\Reservation;
 use App\Services\ReservationService;
 use Illuminate\Http\Request;
@@ -15,8 +16,6 @@ class TicketController extends Controller
 {
     public function index(): Response
     {
-        // Only load facilities of type 'tiket' or similar
-        // Adjust the type based on how it's actually classified in the database
         $tickets = Facility::where('is_active', true)
             ->where(function($q) {
                 $q->where('type', 'ticket')
@@ -27,7 +26,7 @@ class TicketController extends Controller
             ->get();
 
         $activeReservations = Reservation::with(['facility', 'user', 'payment'])
-            ->whereDate('check_in', today())
+            ->whereDate('check_in_date', today())
             ->latest()
             ->limit(20)
             ->get();
@@ -50,30 +49,34 @@ class TicketController extends Controller
 
         DB::beginTransaction();
         try {
-            // For POS Tickets, we generate a reservation that acts as a ticket
-            // We set it for today and automatically confirm and pay it.
             $reservationData = [
                 'facility_id'    => $validated['facility_id'],
                 'check_in_date'  => date('Y-m-d'),
                 'check_out_date' => date('Y-m-d'),
+                'check_in_time'  => now()->format('H:i'),
+                'check_out_time' => now()->addHours(4)->format('H:i'),
                 'guest_count'    => $validated['quantity'],
                 'customer_name'  => $validated['customer_name'] ?? 'Walk-in Ticket',
                 'payment_method' => $validated['payment_method'],
             ];
 
-            // Use the standard service, but override statuses
-            $reservation = $reservationService->createReservation($reservationData, auth()->id());
-            
-            // Mark as confirmed and paid
-            $reservation->update(['status' => 'confirmed']);
-            
-            if ($reservation->payment) {
-                $reservation->payment->update([
-                    'payment_status' => 'success',
-                    'payment_date'   => now(),
-                ]);
-                \App\Services\PaymentService::recordIncome($reservation->payment);
-            }
+            // Fix: pass all 3 required args (data, userId, sessionId)
+            $reservation = $reservationService->createReservation($reservationData, auth()->id(), null);
+
+            // Mark as confirmed
+            $reservation->update(['status' => 'confirmed', 'payment_status' => 'paid']);
+
+            // Create Payment record (the service doesn't auto-create one for POS tickets)
+            $payment = Payment::create([
+                'reservation_id' => $reservation->id,
+                'amount'         => $reservation->total_amount,
+                'payment_method' => $validated['payment_method'],
+                'payment_status' => 'success',
+                'payment_date'   => now(),
+            ]);
+
+            // Record income in financial ledger
+            \App\Services\PaymentService::recordIncome($payment);
 
             DB::commit();
 

@@ -140,6 +140,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
 
     return (
         <AppLayout title="Penjualan Tiket">
+            <Head title="Kasir Tiket — Wawi Kadio" />
             <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-stone-50 overflow-hidden">
                 
                 {/* Main Content (Tickets) */}
@@ -213,7 +214,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                     <div>
                                         <h4 className="font-bold text-slate-800 text-sm">{res.facility?.name}</h4>
                                         <p className="text-xs text-slate-500 mt-1">
-                                            {res.user?.name || res.guest_name || 'Walk-in'} &bull; {res.guest_count} Orang
+                                            {res.user?.name || res.customer_name || 'Walk-in'} &bull; {res.guest_count} Orang
                                         </p>
                                     </div>
                                     <div className="mt-4 flex justify-between items-center border-t border-stone-200 pt-3">

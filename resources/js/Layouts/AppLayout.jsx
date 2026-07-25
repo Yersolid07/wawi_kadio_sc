@@ -70,7 +70,7 @@ export default function AppLayout({ children, title }) {
     useEffect(() => {
         const interval = setInterval(() => {
             router.reload({ only: ['auth'], preserveState: true, preserveScroll: true });
-        }, 10000);
+        }, 30000);
         return () => clearInterval(interval);
     }, []);
 

@@ -158,7 +158,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
         setSelectedOrderId(order.id);
         setOrderType(order.order_type);
         setTableNumber(order.table_number || (order.reservation ? order.reservation.facility.name : ''));
-        setGuestName(order.guest_name || (order.user ? order.user.name : 'Tamu QR'));
+        setGuestName(order.customer_name || (order.user ? order.user.name : 'Tamu QR'));
         setNotes(order.notes || '');
         
         // Load items into cart and mark as existing
@@ -166,6 +166,9 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             id: item.menu_item.id,
             name: item.menu_item.name,
             price: item.price,
+            final_price: item.menu_item.final_price ?? item.price,
+            daily_stock: item.menu_item.daily_stock ?? null,
+            current_stock: item.menu_item.current_stock ?? 0,
             quantity: item.quantity,
             itemNotes: item.notes || '',
             is_existing: true // Flag to prevent modifying/removing
@@ -323,7 +326,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
 
     return (
         <div className={`min-h-screen bg-stone-100 flex font-sans ${layoutDirection === 'horizontal' ? 'flex-col md:flex-row' : 'flex-col'}`}>
-            <Head title="Point of Sale (POS)" />
+            <Head title="Kasir POS — Wawi Kadio" />
 
             {/* Left Side: Active Orders & Catalog */}
             <div className={`flex flex-col bg-stone-50 ${layoutDirection === 'horizontal' ? 'flex-1 h-[55vh] md:h-screen overflow-hidden border-b md:border-b-0 border-stone-200' : 'h-[55vh] overflow-hidden border-b border-stone-200'}`}>
