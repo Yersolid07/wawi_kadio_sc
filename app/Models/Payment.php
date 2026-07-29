@@ -18,6 +18,7 @@ class Payment extends Model
         'food_order_id',
         'amount',
         'payment_method',
+        'payment_type',
         'payment_status',
         'transaction_id',
         'payment_reference',
@@ -66,8 +67,13 @@ class Payment extends Model
 
         // Update related reservation/order payment status
         if ($this->reservation) {
+            $paymentStatus = 'paid';
+            if ($this->reservation->payment_preference === 'dp' && $this->payment_type === 'booking') {
+                $paymentStatus = 'dp_paid';
+            }
+
             $this->reservation->update([
-                'payment_status' => 'paid',
+                'payment_status' => $paymentStatus,
                 'status' => 'confirmed'
             ]);
             $email = $this->reservation->user?->email ?? $this->reservation->customer_email;

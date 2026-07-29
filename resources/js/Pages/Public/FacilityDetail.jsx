@@ -175,6 +175,59 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                         </div>
                     </motion.section>
 
+                    {/* Syarat & Ketentuan */}
+                    <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+                        <div className="p-8 bg-white border border-rose-100 rounded-3xl shadow-sm relative overflow-hidden">
+                            <div className="absolute -top-6 -right-6 p-8 opacity-5">
+                                <AlertCircle size={120} />
+                            </div>
+                            <h2 className="text-xl font-bold mb-6 text-slate-900 flex items-center gap-2">
+                                <AlertCircle className="text-rose-500" />
+                                Syarat & Ketentuan Pemesanan
+                            </h2>
+
+                            <div className="space-y-6 relative z-10">
+                                {facility.type === 'homestay' ? (
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                            <Bed size={16} className="text-emerald-600" /> Ketentuan Homestay
+                                        </h3>
+                                        <ul className="space-y-2 text-sm text-slate-600">
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Uang Muka (DP):</b> Wajib membayar DP sebesar 25% dari total harga.</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Biaya Jaminan Properti:</b> Tambahan Rp 100.000 dibayarkan saat pelunasan untuk jaminan kerusakan (akan dikembalikan penuh saat check-out jika tidak ada kerusakan).</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Identitas Wajib:</b> Pelanggan wajib menunjukkan KTP asli atau tanda pengenal lain yang sah saat proses check-in.</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Kapasitas Kamar:</b> Maksimal 5 orang per kamar.</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Aturan Menginap (berpasangan):</b> Hanya menerima pasangan sah (suami-istri).</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Kebijakan Pembatalan:</b> DP otomatis hangus jika pesanan dibatalkan.</span></li>
+                                        </ul>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                            <Building2 size={16} className="text-emerald-600" /> Ketentuan Aula & Gazebo
+                                        </h3>
+                                        <ul className="space-y-2 text-sm text-slate-600">
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Uang Muka (DP):</b> Wajib membayar DP sebesar 30% dari total harga.</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Tiket Masuk:</b> Biaya sewa aula dan gazebo belum termasuk tiket masuk lokasi.</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Tarif Tiket Masuk:</b> Dikenakan biaya tambahan sebesar Rp 10.000 / orang.</span></li>
+                                            <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Kebijakan Pembatalan:</b> DP otomatis hangus jika pesanan dibatalkan.</span></li>
+                                        </ul>
+                                    </div>
+                                )}
+                                
+                                <div>
+                                    <h3 className="font-bold text-slate-800 mb-3 flex items-center gap-2">
+                                        <CheckCircle2 size={16} className="text-emerald-600" /> Metode Pembayaran & Pelunasan
+                                    </h3>
+                                    <ul className="space-y-2 text-sm text-slate-600">
+                                        <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Cara Bayar:</b> Menerima via Transfer Bank (TF), E-Wallet, dan Tunai (Cash).</span></li>
+                                        <li className="flex gap-2"><span className="text-rose-500 font-bold">•</span> <span><b>Waktu Pelunasan:</b> Sisa pembayaran {facility.type === 'homestay' ? '+ biaya jaminan homestay ' : ''}wajib dilunasi sepenuhnya pada saat check-in.</span></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.section>
+
                     {/* Reviews */}
                     <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                         <h2 className="text-xl font-bold mb-6 text-slate-900">Ulasan Tamu</h2>

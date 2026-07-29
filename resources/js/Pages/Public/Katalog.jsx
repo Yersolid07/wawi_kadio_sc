@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { Coffee, Search, ArrowLeft, ArrowRight, Utensils, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
@@ -19,6 +19,9 @@ const CATEGORIES = [
 ];
 
 export default function Katalog({ menuItems = [], filters = {} }) {
+    const { cms_settings } = usePage().props;
+    const showImages = cms_settings?.catalog_show_images !== 'false' && cms_settings?.catalog_show_images !== '0';
+
     const [search, setSearch] = useState(filters.search || '');
     const [category, setCategory] = useState(filters.category || 'all');
     const [debouncedSearch, setDebouncedSearch] = useState(search);
@@ -130,24 +133,37 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                                     transition={{ duration: 0.3, delay: i * 0.05 }}
                                     className="group bg-white border border-stone-200 hover:border-emerald-300 rounded-3xl p-4 transition-all hover:shadow-xl hover:shadow-emerald-100/50"
                                 >
-                                    <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
-                                        <img
-                                            src={item.image_url || `/storage/facilities/Wawi-Kadio-Photo--1251368554.jpeg`}
-                                            alt={item.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600"
-                                        />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
-                                        <div className="absolute top-3 left-3 flex flex-col gap-2">
-                                            <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm w-max">
+                                    {showImages ? (
+                                        <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
+                                            <img
+                                                src={item.image_url || `/storage/facilities/Wawi-Kadio-Photo--1251368554.jpeg`}
+                                                alt={item.name}
+                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+                                            <div className="absolute top-3 left-3 flex flex-col gap-2">
+                                                <span className="px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm w-max">
+                                                    {item.category}
+                                                </span>
+                                                {item.final_price < item.price && (
+                                                    <span className="px-2.5 py-1 bg-rose-500 text-white rounded-full text-[10px] font-black uppercase shadow-sm w-max">
+                                                        {item.promo_name || 'Promo Spesial'}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2 mb-3">
+                                            <span className="px-2.5 py-1 bg-emerald-50 rounded-full text-[10px] font-bold text-emerald-700 capitalize w-max">
                                                 {item.category}
                                             </span>
                                             {item.final_price < item.price && (
-                                                <span className="px-2.5 py-1 bg-rose-500 text-white rounded-full text-[10px] font-black uppercase shadow-sm w-max">
+                                                <span className="px-2.5 py-1 bg-rose-50 text-rose-600 rounded-full text-[10px] font-black uppercase w-max">
                                                     {item.promo_name || 'Promo Spesial'}
                                                 </span>
                                             )}
                                         </div>
-                                    </div>
+                                    )}
                                     <h3 className="font-bold text-slate-900 text-base mb-1 truncate group-hover:text-emerald-700 transition-colors">{item.name}</h3>
                                     <p className="text-slate-500 text-xs line-clamp-2 mb-4 leading-relaxed">{item.description}</p>
                                     <div className="flex items-center justify-between pt-3 border-t border-stone-100">

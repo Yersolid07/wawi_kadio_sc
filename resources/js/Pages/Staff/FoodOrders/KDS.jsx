@@ -214,9 +214,9 @@ export default function KDS({ orders }) {
             {/* Top Bar */}
             <header className="bg-stone-900 border-b border-stone-800 px-6 py-4 flex items-center justify-between shrink-0">
                 <div className="flex items-center gap-6">
-                    <a href={route('dashboard')} className="w-12 h-12 bg-stone-800 hover:bg-stone-700 rounded-full flex items-center justify-center text-stone-300 transition-colors">
+                    <Link href={route('dashboard')} className="w-12 h-12 bg-stone-800 hover:bg-stone-700 rounded-full flex items-center justify-center transition-colors text-stone-400 hover:text-white">
                         <ArrowLeft size={24} />
-                    </a>
+                    </Link>
                     <div className="flex items-center gap-3 text-emerald-500">
                         <ChefHat size={40} />
                         <div>

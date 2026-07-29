@@ -17,6 +17,7 @@ export default function Index({ settings }) {
         theme_color: settings.theme_color || '#10b981', // Default emerald-500
         primary_logo: null,
         auth_image: null,
+        catalog_show_images: settings.catalog_show_images === 'false' || settings.catalog_show_images === '0' ? false : true,
         // Hero
         hero_title: settings.hero_title || '',
         hero_subtitle: settings.hero_subtitle || '',
@@ -289,6 +290,24 @@ export default function Index({ settings }) {
                                             onChange={e => setData('footer_text', e.target.value)}
                                             className="mt-1 block w-full"
                                         />
+                                    </div>
+
+                                    <div className="pt-4 border-t border-stone-100">
+                                        <label className="flex items-center gap-3 cursor-pointer group">
+                                            <div className="relative flex items-center justify-center">
+                                                <input 
+                                                    type="checkbox" 
+                                                    className="peer sr-only"
+                                                    checked={data.catalog_show_images}
+                                                    onChange={e => setData('catalog_show_images', e.target.checked)}
+                                                />
+                                                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500 group-hover:after:scale-95"></div>
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-slate-800 text-sm">Tampilkan Foto Menu di Katalog</p>
+                                                <p className="text-xs text-slate-500">Jika dimatikan, halaman katalog (QR Menu) hanya akan menampilkan nama dan deskripsi menu tanpa gambar.</p>
+                                            </div>
+                                        </label>
                                     </div>
                                 </div>
                             )}

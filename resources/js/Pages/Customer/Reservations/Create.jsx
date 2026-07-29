@@ -22,6 +22,7 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
         customer_name: '',
         customer_email: '',
         customer_phone: '',
+        payment_preference: 'full',
     });
 
     const [selectedFacility, setSelectedFacility] = useState(null);
@@ -230,6 +231,39 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                                 )}
 
                                 <div className="pt-4 mt-4 border-t border-stone-100">
+                                    <label className="text-sm font-semibold text-slate-700 mb-2 block">Opsi Pembayaran</label>
+                                    
+                                    <div className="grid grid-cols-2 gap-3 mt-2 mb-6">
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('payment_preference', 'full')}
+                                            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
+                                                data.payment_preference === 'full'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-stone-200 bg-white text-slate-500 hover:border-emerald-200'
+                                            }`}
+                                        >
+                                            <span className="font-bold text-sm">Bayar Penuh (100%)</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('payment_preference', 'dp')}
+                                            className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1 transition-all ${
+                                                data.payment_preference === 'dp'
+                                                    ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                    : 'border-stone-200 bg-white text-slate-500 hover:border-emerald-200'
+                                            }`}
+                                        >
+                                            <span className="font-bold text-sm">Bayar Uang Muka (DP)</span>
+                                            {selectedFacility?.type === 'homestay' ? (
+                                                <span className="text-xs">DP 25%</span>
+                                            ) : (
+                                                <span className="text-xs">DP 30%</span>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <InputError message={errors.payment_preference} className="mt-2" />
+
                                     <label className="text-sm font-semibold text-slate-700 mb-2 block">Metode Pembayaran</label>
                                     
                                     <div className="grid grid-cols-2 gap-3 mt-2">
@@ -358,6 +392,23 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                                             </p>
                                         </div>
                                     </div>
+
+                                    {data.payment_preference === 'dp' && (
+                                        <div className="mt-4 bg-orange-500/10 p-4 rounded-xl border border-orange-500/20">
+                                            <div className="flex gap-2 items-start">
+                                                <AlertCircle size={18} className="text-orange-400 shrink-0 mt-0.5" />
+                                                <div className="text-xs text-orange-200/90 leading-relaxed">
+                                                    <p className="font-bold text-orange-400 mb-1">Informasi Pembayaran DP</p>
+                                                    Anda memilih pembayaran Uang Muka (DP). 
+                                                    {selectedFacility.type === 'homestay' ? (
+                                                        <span> Anda akan ditagihkan DP sebesar 25% dari total harga. Sisa pembayaran beserta Biaya Jaminan Rp 100.000 wajib dilunasi saat Check-in.</span>
+                                                    ) : (
+                                                        <span> Anda akan ditagihkan DP sebesar 30% dari total harga. Sisa pembayaran wajib dilunasi saat kedatangan.</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-10 opacity-50">

@@ -34,6 +34,7 @@ class MenuItem extends Model
         'promo_start',
         'promo_end',
         'promo_name',
+        'barcode',
     ];
 
     protected $casts = [
@@ -54,7 +55,7 @@ class MenuItem extends Model
         if ($this->promo_start && $this->promo_end && $now->between($this->promo_start, $this->promo_end)) {
             if ($this->discount_type === 'percentage') {
                 return $basePrice - ($basePrice * ($this->discount_value / 100));
-            } elseif ($this->discount_type === 'fixed') {
+            } elseif ($this->discount_type === 'nominal') {
                 return max(0, $basePrice - $this->discount_value);
             }
         }

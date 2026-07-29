@@ -27,17 +27,25 @@ class PaymentService
      */
     public function createForReservation(Reservation $reservation, string $paymentMethod, ?string $paymentChannel = null): array
     {
+        $paymentAmount = $reservation->total_amount;
+        if ($reservation->payment_preference === 'dp') {
+            $facilityType = $reservation->facility->type ?? 'homestay';
+            $dpPercentage = $facilityType === 'homestay' ? 25 : 30;
+            $paymentAmount = $reservation->total_amount * ($dpPercentage / 100);
+        }
+
         $paymentData = [
             'reservation_id' => $reservation->id,
-            'amount'         => $reservation->total_amount,
+            'amount'         => $paymentAmount,
             'payment_method' => $paymentMethod,
+            'payment_type'   => 'booking',
             'payment_status' => 'pending',
         ];
 
         $checkoutUrl = null;
         $errorMessage = null;
 
-        if ($reservation->total_amount <= 0) {
+        if ($paymentAmount <= 0) {
             $paymentData['payment_status'] = 'success';
             $paymentData['payment_method'] = 'free'; // or whatever makes sense
             $payment = Payment::create($paymentData);
@@ -48,10 +56,15 @@ class PaymentService
         if ($paymentMethod === 'tripay') {
             try {
                 $merchantRef = $this->tripay->makeMerchantRef('RES', $reservation->id);
+                
+                $itemName = 'Reservasi '.($reservation->facility->name ?? 'Fasilitas');
+                if ($reservation->payment_preference === 'dp') {
+                    $itemName = 'DP ' . $itemName;
+                }
 
                 $result = $this->tripay->createTransaction(
                     $merchantRef,
-                    (int) $reservation->total_amount,
+                    (int) $paymentAmount,
                     [
                         'name'  => $reservation->customer_name ?? ($reservation->user?->name ?? 'Guest'),
                         'email' => $reservation->customer_email ?? ($reservation->user?->email ?? null),
@@ -59,8 +72,8 @@ class PaymentService
                     ],
                     [[
                         'sku'      => 'RES-'.$reservation->unique_code,
-                        'name'     => 'Reservasi '.($reservation->facility->name ?? 'Fasilitas'),
-                        'price'    => (int) $reservation->total_amount,
+                        'name'     => $itemName,
+                        'price'    => (int) $paymentAmount,
                         'quantity' => 1,
                     ]],
                     route('customer.reservations.show', $reservation->id),

@@ -37,6 +37,8 @@ class Reservation extends Model
         'discount_amount',
         'status',
         'payment_status',
+        'payment_preference',
+        'guarantee_fee',
         'special_requests',
         'unique_code',
         'customer_name',

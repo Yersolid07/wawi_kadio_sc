@@ -377,9 +377,9 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                 {/* Header */}
                 <header className="bg-white border-b border-stone-200 p-4 flex items-center justify-between shrink-0 shadow-sm z-10">
                     <div className="flex items-center gap-4">
-                        <a href={route('dashboard')} className="p-2 text-stone-500 hover:text-emerald-600 bg-stone-100 rounded-xl transition-colors">
+                        <Link href={route('dashboard')} className="p-2 text-stone-500 hover:text-emerald-600 bg-stone-100 rounded-xl transition-colors">
                             <ArrowLeft size={20} />
-                        </a>
+                        </Link>
                         <div>
                             <h1 className="text-xl font-black text-slate-900 flex items-center gap-2">
                                 <UtensilsCrossed className="text-emerald-500" size={24} /> 

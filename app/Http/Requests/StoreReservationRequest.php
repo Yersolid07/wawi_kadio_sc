@@ -33,6 +33,7 @@ class StoreReservationRequest extends FormRequest
             'coupon_code' => 'nullable|string|exists:coupons,code',
             'payment_method' => 'required|in:tripay,cash',
             'payment_channel' => 'nullable|string',
+            'payment_preference' => 'nullable|in:full,dp',
         ];
 
         if (! auth()->check()) {

@@ -17,7 +17,7 @@ export default function Form({ item = null }) {
         category: item?.category || '',
         price: item?.price || '',
         is_available: item?.is_available ?? true,
-        discount_type: item?.discount_type || '',
+        discount_type: item?.discount_type || 'none',
         discount_value: item?.discount_value || '',
         promo_name: item?.promo_name || '',
         promo_start: item?.promo_start ? item.promo_start.substring(0, 16) : '',
@@ -232,9 +232,9 @@ export default function Form({ item = null }) {
                                                 value={data.discount_type}
                                                 onChange={(e) => setData('discount_type', e.target.value)}
                                             >
-                                                <option value="">Tidak Ada Diskon</option>
+                                                <option value="none">Tidak Ada Diskon</option>
                                                 <option value="percentage">Persentase (%)</option>
-                                                <option value="fixed">Potongan Tetap (Rp)</option>
+                                                <option value="nominal">Potongan Tetap (Rp)</option>
                                             </select>
                                             <InputError message={errors.discount_type} className="mt-2" />
                                         </div>
@@ -246,7 +246,7 @@ export default function Form({ item = null }) {
                                                 className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl"
                                                 value={data.discount_value}
                                                 onChange={(e) => setData('discount_value', e.target.value)}
-                                                disabled={!data.discount_type}
+                                                disabled={data.discount_type === 'none'}
                                                 min="0"
                                             />
                                             <InputError message={errors.discount_value} className="mt-2" />
@@ -262,7 +262,7 @@ export default function Form({ item = null }) {
                                             className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl"
                                             value={data.promo_name}
                                             onChange={(e) => setData('promo_name', e.target.value)}
-                                            disabled={!data.discount_type}
+                                            disabled={data.discount_type === 'none'}
                                         />
                                         <InputError message={errors.promo_name} className="mt-2" />
                                     </div>
@@ -276,7 +276,7 @@ export default function Form({ item = null }) {
                                                 className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl text-sm"
                                                 value={data.promo_start}
                                                 onChange={(e) => setData('promo_start', e.target.value)}
-                                                disabled={!data.discount_type}
+                                                disabled={data.discount_type === 'none'}
                                             />
                                             <InputError message={errors.promo_start} className="mt-2" />
                                         </div>
@@ -288,7 +288,7 @@ export default function Form({ item = null }) {
                                                 className="mt-1 block w-full bg-white border-orange-200 focus:border-orange-500 rounded-xl text-sm"
                                                 value={data.promo_end}
                                                 onChange={(e) => setData('promo_end', e.target.value)}
-                                                disabled={!data.discount_type}
+                                                disabled={data.discount_type === 'none'}
                                             />
                                             <InputError message={errors.promo_end} className="mt-2" />
                                         </div>

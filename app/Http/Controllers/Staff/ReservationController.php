@@ -40,23 +40,57 @@ class ReservationController extends Controller
 
         $reservation->load('payment', 'user');
 
-        if ($validated['status'] === 'checked_in' && $reservation->payment_status !== 'paid') {
-            if ($reservation->payment && $reservation->payment->payment_method === 'cash') {
-                $reservation->update(['payment_status' => 'paid']);
-                $reservation->payment->markAsSuccess();
-            } else {
-                return back()->withErrors(['error' => 'Reservasi belum lunas dan bukan pembayaran cash!']);
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $reservation) {
+                if ($validated['status'] === 'checked_in' && $reservation->payment_status !== 'paid') {
+                    if ($reservation->payment_status === 'dp_paid') {
+                        $dpAmount = $reservation->payment ? $reservation->payment->amount : 0;
+                        $remaining = $reservation->total_amount - $dpAmount + $reservation->guarantee_fee;
+                        
+                        $pelunasan = \App\Models\Payment::create([
+                            'reservation_id' => $reservation->id,
+                            'amount' => $remaining,
+                            'payment_method' => 'cash',
+                            'payment_type' => 'pelunasan',
+                            'payment_status' => 'success',
+                            'payment_date' => now()
+                        ]);
+                        \App\Services\PaymentService::recordIncome($pelunasan);
+                        $reservation->update(['payment_status' => 'paid']);
+                    } elseif ($reservation->payment && $reservation->payment->payment_method === 'cash') {
+                        $reservation->update(['payment_status' => 'paid']);
+                        $reservation->payment->markAsSuccess();
+                    } else {
+                        throw new \Exception('Reservasi belum lunas dan bukan pembayaran cash/DP!');
+                    }
+                }
+
+                if ($validated['status'] === 'completed' && $reservation->status !== 'completed') {
+                    if ($reservation->guarantee_fee > 0) {
+                        \App\Models\FinancialTransaction::create([
+                            'type' => 'expense',
+                            'category' => 'reservation',
+                            'amount' => $reservation->guarantee_fee,
+                            'description' => 'Pengembalian Jaminan Homestay - ' . $reservation->unique_code,
+                            'reference_id' => $reservation->id,
+                            'transaction_date' => now()->toDateString(),
+                            'user_id' => auth()->id() ?? null
+                        ]);
+                    }
+                }
+
+                $reservation->update(['status' => $validated['status']]);
+            });
+
+            // Only notify registered users (guests have no user account)
+            if ($reservation->user) {
+                $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));
             }
+
+            return back()->with('success', 'Status berhasil diubah.');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => $e->getMessage()]);
         }
-
-        $reservation->update(['status' => $validated['status']]);
-
-        // Only notify registered users (guests have no user account)
-        if ($reservation->user) {
-            $reservation->user->notify(new ReservationStatusUpdated($reservation, $validated['status']));
-        }
-
-        return back()->with('success', 'Status berhasil diubah.');
     }
 
     public function scan()
@@ -77,7 +111,7 @@ class ReservationController extends Controller
             ->firstOrFail();
 
         // Verify status and payment
-        if ($reservation->payment_status !== 'paid') {
+        if (!in_array($reservation->payment_status, ['paid', 'dp_paid'])) {
             if (!($reservation->payment && $reservation->payment->payment_method === 'cash')) {
                 return back()->withErrors(['unique_code' => 'Reservasi ini belum lunas. Metode: '.($reservation->payment ? $reservation->payment->payment_method : 'Belum ada').' ('.$reservation->payment_status.')']);
             }
