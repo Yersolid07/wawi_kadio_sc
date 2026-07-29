@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { Coffee, Star, ArrowRight, HeartPulse, ChevronDown, Utensils, Building2, Leaf, Waves, Sun, Wind, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -351,19 +351,27 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                         viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.08 }}
                                         className="group bg-[#f5f2ec] hover:bg-white rounded-3xl p-4 border border-stone-200 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100 transition-all duration-300"
                                     >
-                                        <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
-                                            <img
-                                                src={item.image_url || `/storage/facilities/placeholder.jpg`}
-                                                alt={item.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                            <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm">
-                                                {item.category}
+                                        {(usePage().props.cms_settings?.catalog_show_images !== 'false' && usePage().props.cms_settings?.catalog_show_images !== '0') ? (
+                                            <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
+                                                <img
+                                                    src={item.image_url || `/storage/facilities/placeholder.jpg`}
+                                                    alt={item.name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm">
+                                                    {item.category}
+                                                </div>
                                             </div>
-                                        </div>
+                                        ) : (
+                                            <div className="mb-3">
+                                                <span className="inline-block px-2.5 py-1 bg-white/90 border border-stone-200 rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm">
+                                                    {item.category}
+                                                </span>
+                                            </div>
+                                        )}
                                         <h3 className="font-bold text-slate-900 text-base mb-1 truncate">{item.name}</h3>
                                         <p className="text-slate-500 text-xs line-clamp-1 mb-4">{item.description}</p>
-                                        <div className="flex items-center justify-between">
+                                        <div className="flex items-center justify-between mt-auto">
                                             <p className="font-extrabold text-emerald-700">Rp {formatPrice(item.price)}</p>
                                             <Link href={route('customer.orders.create')} className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all">
                                                 <ArrowRight size={14} />
