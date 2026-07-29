@@ -59,6 +59,10 @@ class MenuItemController extends Controller
             $validated['current_stock'] = $validated['daily_stock'];
         }
 
+        if (empty($validated['discount_type'])) {
+            $validated['discount_type'] = 'none';
+        }
+
         MenuItem::create($validated);
 
         return redirect()->route('admin.menu-items.index')
@@ -104,6 +108,10 @@ class MenuItemController extends Controller
             } elseif ($request->boolean('reset_stock')) {
                 $validated['current_stock'] = $validated['daily_stock'];
             }
+        }
+
+        if (empty($validated['discount_type'])) {
+            $validated['discount_type'] = 'none';
         }
 
         $menuItem->update($validated);

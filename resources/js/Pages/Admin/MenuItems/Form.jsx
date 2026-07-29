@@ -180,18 +180,23 @@ export default function Form({ item = null }) {
                                         </div>
                                     </div>
 
-                                    <div className="col-span-2">
-                                        <InputLabel htmlFor="barcode" value="Barcode Produk (Khusus Snack Kemasan / Scan disini)" />
-                                        <TextInput
-                                            id="barcode"
-                                            type="text"
-                                            className="mt-1 block w-full bg-stone-50 border-stone-200 focus:border-emerald-500 rounded-xl"
-                                            value={data.barcode}
-                                            onChange={(e) => setData('barcode', e.target.value)}
-                                            placeholder="Scan barcode disini..."
-                                        />
-                                        <InputError message={errors.barcode} className="mt-2" />
-                                    </div>
+                                    {data.category === 'snack' && (
+                                        <div className="col-span-2 bg-blue-50 border border-blue-100 p-4 rounded-xl">
+                                            <InputLabel htmlFor="barcode" value="Barcode Produk (Khusus Snack Kemasan)" />
+                                            <p className="text-xs text-blue-600 mb-3 mt-1">
+                                                * Letakkan kursor di kolom bawah ini, lalu gunakan alat scanner barcode fisik (USB/Bluetooth) untuk memindai kemasan snack.
+                                            </p>
+                                            <TextInput
+                                                id="barcode"
+                                                type="text"
+                                                className="mt-1 block w-full bg-white border-blue-200 focus:border-blue-500 rounded-xl"
+                                                value={data.barcode}
+                                                onChange={(e) => setData('barcode', e.target.value)}
+                                                placeholder="Klik disini lalu scan barcode kemasan..."
+                                            />
+                                            <InputError message={errors.barcode} className="mt-2" />
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div>
