@@ -94,8 +94,8 @@ export default function FacilitiesIndex({ facilities, filters }) {
     const [type, setType] = useState(filters?.type || '');
     const [status, setStatus] = useState(filters?.status || '');
 
-    const handleFilter = () => {
-        router.get(route('admin.facilities.index'), { search, type, status }, { preserveState: true });
+    const handleFilter = (s = search, t = type, st = status) => {
+        router.get(route('admin.facilities.index'), { search: s, type: t, status: st }, { preserveState: true });
     };
 
     const handleToggle = (facility) => {
@@ -131,15 +131,20 @@ export default function FacilitiesIndex({ facilities, filters }) {
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            handleFilter(e.target.value, type, status);
+                        }}
                         placeholder="Cari fasilitas..."
                         className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     />
                 </div>
                 <select
                     value={type}
-                    onChange={(e) => { setType(e.target.value); }}
+                    onChange={(e) => {
+                        setType(e.target.value);
+                        handleFilter(search, e.target.value, status);
+                    }}
                     className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                 >
                     <option value="">Semua Tipe</option>
@@ -150,19 +155,16 @@ export default function FacilitiesIndex({ facilities, filters }) {
                 </select>
                 <select
                     value={status}
-                    onChange={(e) => setStatus(e.target.value)}
+                    onChange={(e) => {
+                        setStatus(e.target.value);
+                        handleFilter(search, type, e.target.value);
+                    }}
                     className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                 >
                     <option value="">Semua Status</option>
                     <option value="active">Aktif</option>
                     <option value="inactive">Nonaktif</option>
                 </select>
-                <button
-                    onClick={handleFilter}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors"
-                >
-                    Filter
-                </button>
             </div>
 
             {/* Grid */}
