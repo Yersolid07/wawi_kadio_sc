@@ -100,7 +100,7 @@ export default function Facilities({ facilities = [] }) {
                                     className="group flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden border border-stone-200 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100/50 transition-all duration-300"
                                 >
                                     <div className="w-full md:w-2/5 h-56 md:h-auto relative overflow-hidden">
-                                        <img src={facility?.image_url ? `/storage/${facility.image_url}` : '/storage/facilities/Wawi-Kadio-Photo-1560840653.jpeg'} alt={facility?.name || 'Fasilitas'} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                        <img src={facility?.image_url ? (facility.image_url.startsWith('/storage/') ? facility.image_url : `/storage/${facility.image_url}`) : '/storage/facilities/Wawi-Kadio-Photo-1560840653.jpeg'} alt={facility?.name || 'Fasilitas'} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                                         <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 to-transparent opacity-60" />
                                         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                                             <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold uppercase tracking-wider border border-white/20">

@@ -136,7 +136,7 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                                     {showImages ? (
                                         <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
                                             <img
-                                                src={item.image_url ? `/storage/${item.image_url}` : `/storage/facilities/Wawi-Kadio-Photo--1251368554.jpeg`}
+                                                src={item.image_url ? (item.image_url.startsWith('/storage/') ? item.image_url : `/storage/${item.image_url}`) : `/storage/facilities/Wawi-Kadio-Photo--1251368554.jpeg`}
                                                 alt={item.name}
                                                 loading="lazy"
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600"
