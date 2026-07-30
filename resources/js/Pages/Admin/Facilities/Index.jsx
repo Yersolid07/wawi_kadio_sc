@@ -20,7 +20,7 @@ function FacilityCard({ facility, onToggle, onDelete }) {
             <div className="relative h-44 bg-gradient-to-br from-green-100 to-green-200 dark:from-green-900 dark:to-green-800 overflow-hidden">
                 {facility.image_url ? (
                     <img
-                        src={facility.image_url}
+                        src={`/storage/${facility.image_url}`}
                         alt={facility.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />

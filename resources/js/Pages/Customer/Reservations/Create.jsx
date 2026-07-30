@@ -362,7 +362,7 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                             {selectedFacility ? (
                                 <div className="space-y-6">
                                     {selectedFacility.image_url && (
-                                        <img src={selectedFacility.image_url} alt={selectedFacility.name} className="w-full h-40 object-cover rounded-2xl" />
+                                        <img src={`/storage/${selectedFacility.image_url}`} alt={selectedFacility.name} className="w-full h-40 object-cover rounded-2xl" />
                                     )}
                                     
                                     <div>

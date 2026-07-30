@@ -111,8 +111,8 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
 
             {/* Hero Image */}
             <div className="relative w-full h-[55vh] md:h-[70vh]">
-                <img
-                    src={facility.image_url || `/storage/facilities/Wawi-Kadio-Photo--442654165.jpeg`}
+                <img 
+                    src={facility.image_url ? `/storage/${facility.image_url}` : `/storage/facilities/placeholder.jpg`}
                     alt={facility.name}
                     className="w-full h-full object-cover"
                 />

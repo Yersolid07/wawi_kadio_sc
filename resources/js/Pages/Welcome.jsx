@@ -292,7 +292,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                         <Link href={route('facilities.public.show', facility.id)} className="group block bg-white rounded-3xl overflow-hidden border border-stone-200 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-100 transition-all duration-300">
                                             <div className="relative h-60 overflow-hidden">
                                                 <img
-                                                    src={facility.image_url || `/storage/facilities/placeholder.jpg`}
+                                                    src={facility.image_url ? `/storage/${facility.image_url}` : `/storage/facilities/placeholder.jpg`}
                                                     alt={facility.name}
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                 />
@@ -354,7 +354,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                         {(usePage().props.cms_settings?.catalog_show_images !== 'false' && usePage().props.cms_settings?.catalog_show_images !== '0') ? (
                                             <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
                                                 <img
-                                                    src={item.image_url || `/storage/facilities/placeholder.jpg`}
+                                                    src={item.image_url ? `/storage/${item.image_url}` : `/storage/facilities/placeholder.jpg`}
                                                     alt={item.name}
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />

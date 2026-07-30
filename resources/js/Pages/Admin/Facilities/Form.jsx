@@ -6,7 +6,7 @@ import { Link } from '@inertiajs/react';
 
 export default function FacilityForm({ facility }) {
     const isEdit = !!facility;
-    const [imagePreview, setImagePreview] = useState(facility?.image_url || null);
+    const [imagePreview, setImagePreview] = useState(facility?.image_url ? `/storage/${facility.image_url}` : null);
     const imageRef = useRef(null);
 
     const { data, setData, post, put, processing, errors, reset } = useForm({
