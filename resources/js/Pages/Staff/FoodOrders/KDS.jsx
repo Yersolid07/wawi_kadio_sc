@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import { ChefHat, CheckCircle2, Clock, PlayCircle, Maximize, ArrowLeft, Flame, AlertCircle } from 'lucide-react';
 
 // Custom relative time formatter
