@@ -35,16 +35,18 @@ class DashboardController extends Controller
         $thisMonth = now()->month;
         $thisYear = now()->year;
 
-        $stats = [
-            'total_reservations' => Reservation::count(),
-            'pending_reservations' => Reservation::where('status', 'pending')->count(),
-            'confirmed_today' => Reservation::where('check_in_date', $today)->where('status', 'confirmed')->count(),
-            'revenue_today' => \App\Models\FinancialTransaction::where('type', 'income')->whereDate('transaction_date', today())->sum('amount'),
-            'revenue_month' => \App\Models\FinancialTransaction::where('type', 'income')->whereMonth('transaction_date', $thisMonth)->whereYear('transaction_date', $thisYear)->sum('amount'),
-            'total_customers' => User::role('customer')->count(),
-            'active_food_orders' => FoodOrder::whereIn('status', ['pending', 'preparing', 'ready'])->count(),
-            'average_rating' => Review::where('is_public', true)->avg('rating'),
-        ];
+        $stats = \Illuminate\Support\Facades\Cache::remember('admin_dashboard_stats', 60, function () use ($today, $thisMonth, $thisYear) {
+            return [
+                'total_reservations' => Reservation::count(),
+                'pending_reservations' => Reservation::where('status', 'pending')->count(),
+                'confirmed_today' => Reservation::where('check_in_date', $today)->where('status', 'confirmed')->count(),
+                'revenue_today' => \App\Models\FinancialTransaction::where('type', 'income')->whereDate('transaction_date', today())->sum('amount'),
+                'revenue_month' => \App\Models\FinancialTransaction::where('type', 'income')->whereMonth('transaction_date', $thisMonth)->whereYear('transaction_date', $thisYear)->sum('amount'),
+                'total_customers' => User::role('customer')->count(),
+                'active_food_orders' => FoodOrder::whereIn('status', ['pending', 'preparing', 'ready'])->count(),
+                'average_rating' => Review::where('is_public', true)->avg('rating'),
+            ];
+        });
 
         $recent_reservations = Reservation::with(['user', 'facility'])
             ->latest()

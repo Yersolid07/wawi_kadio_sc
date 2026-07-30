@@ -294,6 +294,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                                 <img
                                                     src={facility.image_url ? `/storage/${facility.image_url}` : `/storage/facilities/placeholder.jpg`}
                                                     alt={facility.name}
+                                                    loading="lazy"
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
@@ -356,6 +357,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                                 <img
                                                     src={item.image_url ? `/storage/${item.image_url}` : `/storage/facilities/placeholder.jpg`}
                                                     alt={item.name}
+                                                    loading="lazy"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                                 />
                                                 <div className="absolute top-3 left-3 px-2.5 py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm">

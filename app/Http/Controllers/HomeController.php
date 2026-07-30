@@ -14,36 +14,46 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Get top active facilities ordered by reservation count
-        $facilities = Facility::where('is_active', true)
-            ->withCount('reservations')
-            ->orderByDesc('reservations_count')
-            ->take(3)
-            ->get();
-
-        // Get top available menu items
-        $menuItems = MenuItem::where('is_available', true)
-            ->orderByDesc('price')
-            ->take(4)
-            ->get();
-
-        // Get reviews with 5 stars
-        $reviews = Review::with(['user:id,name,avatar'])
-            ->where('is_visible', true)
-            ->where('rating', 5)
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Get all settings
-        $settings = Setting::all()->keyBy('key')->map(function ($setting) {
-            return $setting->value;
+        // Get top active facilities ordered by reservation count (cache 1 hour)
+        $facilities = \Illuminate\Support\Facades\Cache::remember('home_facilities', 3600, function () {
+            return Facility::where('is_active', true)
+                ->withCount('reservations')
+                ->orderByDesc('reservations_count')
+                ->take(3)
+                ->get();
         });
 
-        // Get banners
-        $banners = Banner::where('is_active', true)
-            ->orderBy('sort_order')
-            ->get();
+        // Get top available menu items (cache 1 hour)
+        $menuItems = \Illuminate\Support\Facades\Cache::remember('home_menu_items', 3600, function () {
+            return MenuItem::where('is_available', true)
+                ->orderByDesc('price')
+                ->take(4)
+                ->get();
+        });
+
+        // Get reviews with 5 stars (cache 1 hour)
+        $reviews = \Illuminate\Support\Facades\Cache::remember('home_reviews', 3600, function () {
+            return Review::with(['user:id,name,avatar'])
+                ->where('is_visible', true)
+                ->where('rating', 5)
+                ->latest()
+                ->take(5)
+                ->get();
+        });
+
+        // Get all settings (cache 24 hours)
+        $settings = \Illuminate\Support\Facades\Cache::remember('cms_settings', 86400, function () {
+            return Setting::all()->keyBy('key')->map(function ($setting) {
+                return $setting->value;
+            })->toArray();
+        });
+
+        // Get banners (cache 1 hour)
+        $banners = \Illuminate\Support\Facades\Cache::remember('home_banners', 3600, function () {
+            return Banner::where('is_active', true)
+                ->orderBy('sort_order')
+                ->get();
+        });
 
         // ── Guest Order Tracking ──────────────────────────────────────────────
         // If a non-authenticated guest has an active order from this session,

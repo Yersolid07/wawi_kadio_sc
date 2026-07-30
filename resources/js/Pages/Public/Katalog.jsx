@@ -138,6 +138,7 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                                             <img
                                                 src={item.image_url ? `/storage/${item.image_url}` : `/storage/facilities/Wawi-Kadio-Photo--1251368554.jpeg`}
                                                 alt={item.name}
+                                                loading="lazy"
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600"
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
