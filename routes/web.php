@@ -44,6 +44,24 @@ Route::get('/fasilitas/{facility}', [PublicFacilityController::class, 'show'])->
 Route::get('/fasilitas/{facility}/booked-dates', [PublicFacilityController::class, 'bookedDates'])->name('facilities.public.booked-dates');
 Route::get('/katalog', [MenuItemController::class, 'index'])->name('catalog.public');
 
+// Informational pages
+Route::get('/kebijakan-privasi', function () {
+    return inertia('Public/PrivacyPolicy', [
+        'cms_settings' => \App\Models\Setting::pluck('value', 'key')->toArray()
+    ]);
+})->name('privacy');
+
+Route::get('/ketentuan-layanan', function () {
+    return inertia('Public/TermsOfService', [
+        'cms_settings' => \App\Models\Setting::pluck('value', 'key')->toArray()
+    ]);
+})->name('terms');
+
+Route::get('/tentang-kami', function () {
+    return inertia('Public/AboutUs', [
+        'cms_settings' => \App\Models\Setting::pluck('value', 'key')->toArray()
+    ]);
+})->name('about');
 // Payment gateway webhooks (no auth)
 Route::post('/webhook/tripay', [AdminPaymentController::class, 'tripayWebhook'])->name('webhook.tripay');
 

@@ -1,5 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { getImageUrl } from '@/utils/imagePath';
 import { Coffee, ArrowLeft, ArrowRight, Bed, Users, Building2 } from 'lucide-react';
+import PublicFooter from '@/Components/PublicFooter';
 import { motion } from 'framer-motion';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
 import { useState, useMemo } from 'react';
@@ -11,6 +13,7 @@ const formatPrice = (val) => {
 };
 
 export default function Facilities({ facilities = [] }) {
+    const { cms_settings } = usePage().props;
     const safeFacilities = Array.isArray(facilities) ? facilities : [];
     
     // Extract unique categories from facilities
@@ -99,8 +102,12 @@ export default function Facilities({ facilities = [] }) {
                                     href={facility?.id ? route('facilities.public.show', facility.id) : '#'}
                                     className="group flex flex-col md:flex-row bg-white rounded-3xl overflow-hidden border border-stone-200 hover:border-emerald-300 hover:shadow-2xl hover:shadow-emerald-100/50 transition-all duration-300"
                                 >
-                                    <div className="w-full md:w-2/5 h-56 md:h-auto relative overflow-hidden">
-                                        <img src={facility?.image_url ? (facility.image_url.startsWith('/storage/') ? facility.image_url : `/storage/${facility.image_url}`) : '/storage/facilities/Wawi-Kadio-Photo-1560840653.jpeg'} alt={facility?.name || 'Fasilitas'} loading="lazy" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                                    <div className="w-full md:w-2/5 h-56 md:h-auto relative overflow-hidden group">
+                                        <img
+                                            src={getImageUrl(facility.image_url)}
+                                            alt={facility.name}
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-stone-900/60 to-transparent opacity-60" />
                                         <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                                             <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-white text-xs font-bold uppercase tracking-wider border border-white/20">
@@ -160,6 +167,7 @@ export default function Facilities({ facilities = [] }) {
                     </div>
                 )}
             </main>
+            <PublicFooter settings={cms_settings} />
             <FloatingWhatsApp />
         </div>
     );

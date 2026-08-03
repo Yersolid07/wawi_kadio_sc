@@ -1,7 +1,9 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { getImageUrl } from '@/utils/imagePath';
 import { Coffee, Search, ArrowLeft, ArrowRight, Utensils, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
+import PublicFooter from '@/Components/PublicFooter';
 import { useState, useEffect } from 'react';
 
 const formatPrice = (val) => {
@@ -20,7 +22,7 @@ const CATEGORIES = [
 
 export default function Katalog({ menuItems = [], filters = {} }) {
     const { cms_settings } = usePage().props;
-    const showImages = cms_settings?.catalog_show_images !== 'false' && cms_settings?.catalog_show_images !== '0';
+    const showImages = cms_settings?.catalog_show_images !== 'false' && cms_settings?.catalog_show_images !== '0' && cms_settings?.catalog_show_images !== false;
 
     const [search, setSearch] = useState(filters.search || '');
     const [category, setCategory] = useState(filters.category || 'all');
@@ -136,7 +138,7 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                                     {showImages ? (
                                         <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
                                             <img
-                                                src={item.image_url ? (item.image_url.startsWith('/storage/') ? item.image_url : `/storage/${item.image_url}`) : `/storage/facilities/Wawi-Kadio-Photo--1251368554.jpeg`}
+                                                src={getImageUrl(item.image_url, '/storage/menu/placeholder.jpg')}
                                                 alt={item.name}
                                                 loading="lazy"
                                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600"
@@ -209,6 +211,7 @@ export default function Katalog({ menuItems = [], filters = {} }) {
                     </motion.div>
                 )}
             </main>
+            <PublicFooter settings={cms_settings} />
             <FloatingWhatsApp />
         </div>
     );

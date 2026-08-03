@@ -1,8 +1,10 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, usePage, router } from '@inertiajs/react';
+import { getImageUrl } from '@/utils/imagePath';
 import { Coffee, Star, ArrowRight, HeartPulse, ChevronDown, Utensils, Building2, Leaf, Waves, Sun, Wind, CheckCircle2, ShoppingBag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
+import PublicFooter from '@/Components/PublicFooter';
 import { Autoplay, Pagination, EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
@@ -199,7 +201,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                     <SwiperSlide key={banner.id}>
                                         <div className="relative aspect-[21/9] md:aspect-[21/7] lg:aspect-[21/6] bg-slate-900 group">
                                             <img
-                                                src={`/storage/${banner.image_path}`}
+                                                src={getImageUrl(banner.image_path, '/storage/banners/placeholder.jpg')}
                                                 alt={banner.title}
                                                 className="w-full h-full object-cover opacity-90 transition-transform duration-1000 group-hover:scale-105"
                                             />
@@ -245,7 +247,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                             className="flex-1 relative"
                         >
                             <div className="aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl">
-                                <img src={getSetting('hero_image', '/storage/facilities/Wawi-Kadio-Photo-1983748777.jpeg')} alt="Wawi Kadio Nature" className="w-full h-full object-cover" />
+                                <img src={getImageUrl(getSetting('hero_image'))} alt="Wawi Kadio Nature" className="w-full h-full object-cover" />
                             </div>
                             <div className="absolute -bottom-8 -left-8 bg-white p-6 rounded-3xl shadow-xl border border-stone-100 hidden md:block">
                                 <div className="flex items-center gap-4 mb-2">
@@ -292,7 +294,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                         <Link href={route('facilities.public.show', facility.id)} className="group block bg-white rounded-3xl overflow-hidden border border-stone-200 hover:border-emerald-300 hover:shadow-xl hover:shadow-emerald-100 transition-all duration-300">
                                             <div className="relative h-60 overflow-hidden">
                                                 <img
-                                                    src={facility.image_url ? (facility.image_url.startsWith('/storage/') ? facility.image_url : `/storage/${facility.image_url}`) : `/storage/facilities/placeholder.jpg`}
+                                                    src={getImageUrl(facility.image_url)}
                                                     alt={facility.name}
                                                     loading="lazy"
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -352,10 +354,10 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                         viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.08 }}
                                         className="group bg-[#f5f2ec] hover:bg-white rounded-3xl p-4 border border-stone-200 hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100 transition-all duration-300"
                                     >
-                                        {(usePage().props.cms_settings?.catalog_show_images !== 'false' && usePage().props.cms_settings?.catalog_show_images !== '0') ? (
+                                        {(usePage().props.cms_settings?.catalog_show_images !== 'false' && usePage().props.cms_settings?.catalog_show_images !== '0' && usePage().props.cms_settings?.catalog_show_images !== false) ? (
                                             <div className="h-44 rounded-2xl overflow-hidden mb-5 relative">
                                                 <img
-                                                    src={item.image_url ? (item.image_url.startsWith('/storage/') ? item.image_url : `/storage/${item.image_url}`) : `/storage/facilities/placeholder.jpg`}
+                                                    src={getImageUrl(item.image_url, '/storage/menu/placeholder.jpg')}
                                                     alt={item.name}
                                                     loading="lazy"
                                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
@@ -365,14 +367,14 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="mb-3">
-                                                <span className="inline-block px-2.5 py-1 bg-white/90 border border-stone-200 rounded-full text-[10px] font-bold text-slate-700 capitalize shadow-sm">
-                                                    {item.category}
+                                            <div className="mb-4">
+                                                <span className="inline-block px-3 py-1 bg-orange-100 text-orange-700 border border-orange-200 rounded-full text-xs font-bold capitalize shadow-sm">
+                                                    🍽️ {item.category}
                                                 </span>
                                             </div>
                                         )}
-                                        <h3 className="font-bold text-slate-900 text-base mb-1 truncate">{item.name}</h3>
-                                        <p className="text-slate-500 text-xs line-clamp-1 mb-4">{item.description}</p>
+                                        <h3 className="font-bold text-slate-900 text-lg mb-1 truncate">{item.name}</h3>
+                                        <p className="text-slate-500 text-sm line-clamp-2 mb-4 h-10">{item.description}</p>
                                         <div className="flex items-center justify-between mt-auto">
                                             <p className="font-extrabold text-emerald-700">Rp {formatPrice(item.price)}</p>
                                             <Link href={route('customer.orders.create')} className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-500 hover:text-white transition-all">
@@ -524,22 +526,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                 </section>
 
                 {/* ═══ FOOTER ═══ */}
-                <footer className="border-t border-stone-200 py-10 px-6 bg-slate-900">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-slate-400 text-sm">
-                        <div className="flex items-center gap-2 text-white">
-                            {getSetting('primary_logo') ? (
-                                <img src={getSetting('primary_logo')} alt="Logo" className="w-6 h-6 object-contain" />
-                            ) : (
-                                <Coffee size={20} className="text-emerald-500" />
-                            )}
-                            <span className="font-bold">{getSetting('site_name', 'Wawi Kadio')}</span>
-                        </div>
-                        <p>{getSetting('footer_text', '© 2024 Wawi Kadio')}</p>
-                        <div className="flex items-center gap-1.5">
-                            Dibuat dengan <HeartPulse size={15} className="text-rose-500 mx-1" /> untuk alam & Anda
-                        </div>
-                    </div>
-                </footer>
+                <PublicFooter settings={siteSettings} />
             {/* ═══ GUEST ORDER TRACKING BANNER ═══
                  Floats at the bottom of the page when a guest has an active order
                  so they can always find their way back to the tracking page.

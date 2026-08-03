@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { debounce } from 'lodash';
 import { Plus, Search, Edit, Trash2, ToggleLeft, ToggleRight, Hotel, Trees, Waves, Coffee, Eye } from 'lucide-react';
 
 const typeConfig = {
@@ -93,10 +94,26 @@ export default function FacilitiesIndex({ facilities, filters }) {
     const [search, setSearch] = useState(filters?.search || '');
     const [type, setType] = useState(filters?.type || '');
     const [status, setStatus] = useState(filters?.status || '');
+    const isFirstRender = useRef(true);
 
-    const handleFilter = (s = search, t = type, st = status) => {
-        router.get(route('admin.facilities.index'), { search: s, type: t, status: st }, { preserveState: true });
-    };
+    const applyFilter = useCallback(
+        debounce((s, t, st) => {
+            router.get(
+                route('admin.facilities.index'),
+                { search: s, type: t, status: st },
+                { preserveState: true, replace: true }
+            );
+        }, 300),
+        []
+    );
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+            return;
+        }
+        applyFilter(search, type, status);
+    }, [search, type, status, applyFilter]);
 
     const handleToggle = (facility) => {
         router.patch(route('admin.facilities.toggle-status', facility.id));
@@ -131,20 +148,14 @@ export default function FacilitiesIndex({ facilities, filters }) {
                     <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                         value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            handleFilter(e.target.value, type, status);
-                        }}
+                        onChange={(e) => setSearch(e.target.value)}
                         placeholder="Cari fasilitas..."
                         className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
                     />
                 </div>
                 <select
                     value={type}
-                    onChange={(e) => {
-                        setType(e.target.value);
-                        handleFilter(search, e.target.value, status);
-                    }}
+                    onChange={(e) => setType(e.target.value)}
                     className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                 >
                     <option value="">Semua Tipe</option>
@@ -155,10 +166,7 @@ export default function FacilitiesIndex({ facilities, filters }) {
                 </select>
                 <select
                     value={status}
-                    onChange={(e) => {
-                        setStatus(e.target.value);
-                        handleFilter(search, type, e.target.value);
-                    }}
+                    onChange={(e) => setStatus(e.target.value)}
                     className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
                 >
                     <option value="">Semua Status</option>

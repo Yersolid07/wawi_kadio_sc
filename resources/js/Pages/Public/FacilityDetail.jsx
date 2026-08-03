@@ -1,7 +1,9 @@
 import { Head, Link, usePage, router } from '@inertiajs/react';
+import { getImageUrl } from '@/utils/imagePath';
 import { Coffee, ArrowLeft, Star, CheckCircle2, Bed, Maximize, Wifi, Users, Building2, Calendar, AlertCircle, Tv, AirVent, Bath, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
+import PublicFooter from '@/Components/PublicFooter';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 
@@ -12,7 +14,7 @@ const formatPrice = (val) => {
 };
 
 export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }) {
-    const { auth } = usePage().props;
+    const { auth, cms_settings } = usePage().props;
 
     if (!facility) {
         return (
@@ -112,7 +114,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
             {/* Hero Image */}
             <div className="relative w-full h-[55vh] md:h-[70vh]">
                 <img 
-                    src={facility.image_url ? `/storage/${facility.image_url}` : `/storage/facilities/placeholder.jpg`}
+                    src={getImageUrl(facility.image_url)}
                     alt={facility.name}
                     className="w-full h-full object-cover"
                 />
@@ -378,6 +380,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                     </motion.div>
                 </div>
             </div>
+            <PublicFooter settings={cms_settings} />
             <FloatingWhatsApp />
         </div>
     );
