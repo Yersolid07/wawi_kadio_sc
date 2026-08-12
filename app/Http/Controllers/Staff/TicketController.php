@@ -20,6 +20,8 @@ class TicketController extends Controller
             ->where(function($q) {
                 $q->where('type', 'ticket')
                   ->orWhere('type', 'tiket')
+                  ->orWhere('type', 'pool')
+                  ->orWhere('type', 'gazebo')
                   ->orWhere('name', 'like', '%tiket%')
                   ->orWhere('name', 'like', '%ticket%');
             })
@@ -80,7 +82,12 @@ class TicketController extends Controller
 
             DB::commit();
 
-            return back()->with('success', 'Tiket berhasil diterbitkan!')->with('print_ticket_id', $reservation->id);
+            // Reload reservation with relations for printing
+            $reservation->load(['facility', 'payment']);
+
+            return back()->with('success', 'Tiket berhasil diterbitkan!')
+                         ->with('print_ticket_id', $reservation->id)
+                         ->with('order_details', $reservation);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->withErrors(['error' => 'Gagal menerbitkan tiket: ' . $e->getMessage()]);

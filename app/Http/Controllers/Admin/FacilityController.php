@@ -27,9 +27,9 @@ class FacilityController extends Controller implements HasMiddleware
     public function index(Request $request): Response
     {
         $facilities = Facility::query()
-            ->when($request->search, fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
-            ->when($request->type, fn ($q) => $q->where('type', $request->type))
-            ->when($request->status !== null, fn ($q) => $q->where('is_active', $request->status === 'active'))
+            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->filled('type'), fn ($q) => $q->where('type', $request->type))
+            ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->status === 'active'))
             ->withCount('reservations')
             ->latest()
             ->paginate(12)

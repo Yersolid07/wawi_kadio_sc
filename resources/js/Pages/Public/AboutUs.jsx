@@ -30,53 +30,62 @@ export default function AboutUs({ cms_settings }) {
                     </div>
 
                     <div className="p-8 md:p-14">
-                        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-                            <div>
-                                <h2 className="text-3xl font-bold text-slate-900 mb-6">Kisah Kami</h2>
-                                <p className="text-slate-600 text-lg leading-relaxed mb-4">
-                                    Berawal dari keinginan untuk menyediakan tempat pelarian dari hiruk-pikuk 
-                                    kehidupan perkotaan, Wawi Kadio didirikan sebagai destinasi agrowisata 
-                                    dan retret keluarga yang menyatu dengan keindahan alam Sulawesi.
-                                </p>
-                                <p className="text-slate-600 text-lg leading-relaxed">
-                                    Kami percaya bahwa setiap orang membutuhkan tempat untuk berhenti sejenak, 
-                                    menghirup udara segar, menikmati hidangan lezat, dan menciptakan 
-                                    kenangan indah bersama orang-orang tercinta.
-                                </p>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="bg-emerald-50 p-6 rounded-2xl flex flex-col items-center text-center">
-                                    <MapPin size={32} className="text-emerald-600 mb-4" />
-                                    <h3 className="font-bold text-slate-900 mb-2">Lokasi Strategis</h3>
-                                    <p className="text-sm text-slate-600">Tersembunyi dalam pelukan alam namun mudah dijangkau.</p>
+                        {cms_settings?.about_us_content ? (
+                            <div 
+                                className="prose prose-lg prose-emerald max-w-none text-slate-600"
+                                dangerouslySetInnerHTML={{ __html: cms_settings.about_us_content }}
+                            />
+                        ) : (
+                            <>
+                                <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+                                    <div>
+                                        <h2 className="text-3xl font-bold text-slate-900 mb-6">Kisah Kami</h2>
+                                        <p className="text-slate-600 text-lg leading-relaxed mb-4">
+                                            Berawal dari keinginan untuk menyediakan tempat pelarian dari hiruk-pikuk 
+                                            kehidupan perkotaan, Wawi Kadio didirikan sebagai destinasi agrowisata 
+                                            dan retret keluarga yang menyatu dengan keindahan alam Sulawesi.
+                                        </p>
+                                        <p className="text-slate-600 text-lg leading-relaxed">
+                                            Kami percaya bahwa setiap orang membutuhkan tempat untuk berhenti sejenak, 
+                                            menghirup udara segar, menikmati hidangan lezat, dan menciptakan 
+                                            kenangan indah bersama orang-orang tercinta.
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-emerald-50 p-6 rounded-2xl flex flex-col items-center text-center">
+                                            <MapPin size={32} className="text-emerald-600 mb-4" />
+                                            <h3 className="font-bold text-slate-900 mb-2">Lokasi Strategis</h3>
+                                            <p className="text-sm text-slate-600">Tersembunyi dalam pelukan alam namun mudah dijangkau.</p>
+                                        </div>
+                                        <div className="bg-amber-50 p-6 rounded-2xl flex flex-col items-center text-center">
+                                            <Coffee size={32} className="text-amber-600 mb-4" />
+                                            <h3 className="font-bold text-slate-900 mb-2">Kelezatan Kuliner</h3>
+                                            <p className="text-sm text-slate-600">Menyajikan cita rasa otentik dari bahan-bahan segar lokal.</p>
+                                        </div>
+                                        <div className="bg-blue-50 p-6 rounded-2xl flex flex-col items-center text-center">
+                                            <Users size={32} className="text-blue-600 mb-4" />
+                                            <h3 className="font-bold text-slate-900 mb-2">Kapasitas Besar</h3>
+                                            <p className="text-sm text-slate-600">Fasilitas memadai untuk acara keluarga hingga gathering kantor.</p>
+                                        </div>
+                                        <div className="bg-rose-50 p-6 rounded-2xl flex flex-col items-center text-center">
+                                            <Phone size={32} className="text-rose-600 mb-4" />
+                                            <h3 className="font-bold text-slate-900 mb-2">Layanan Ramah</h3>
+                                            <p className="text-sm text-slate-600">Tim kami selalu siap memberikan pelayanan sepenuh hati.</p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="bg-amber-50 p-6 rounded-2xl flex flex-col items-center text-center">
-                                    <Coffee size={32} className="text-amber-600 mb-4" />
-                                    <h3 className="font-bold text-slate-900 mb-2">Kelezatan Kuliner</h3>
-                                    <p className="text-sm text-slate-600">Menyajikan cita rasa otentik dari bahan-bahan segar lokal.</p>
-                                </div>
-                                <div className="bg-blue-50 p-6 rounded-2xl flex flex-col items-center text-center">
-                                    <Users size={32} className="text-blue-600 mb-4" />
-                                    <h3 className="font-bold text-slate-900 mb-2">Kapasitas Besar</h3>
-                                    <p className="text-sm text-slate-600">Fasilitas memadai untuk acara keluarga hingga gathering kantor.</p>
-                                </div>
-                                <div className="bg-rose-50 p-6 rounded-2xl flex flex-col items-center text-center">
-                                    <Phone size={32} className="text-rose-600 mb-4" />
-                                    <h3 className="font-bold text-slate-900 mb-2">Layanan Ramah</h3>
-                                    <p className="text-sm text-slate-600">Tim kami selalu siap memberikan pelayanan sepenuh hati.</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <hr className="border-stone-200 mb-16" />
+                                <hr className="border-stone-200 mb-16" />
 
-                        <div className="text-center max-w-3xl mx-auto">
-                            <h2 className="text-3xl font-bold text-slate-900 mb-6">Misi Kami</h2>
-                            <p className="text-slate-600 text-xl italic leading-relaxed">
-                                "Menjadi destinasi pilihan utama untuk relaksasi, rekreasi, dan perayaan 
-                                dengan terus menjaga kelestarian alam dan memberdayakan komunitas lokal."
-                            </p>
-                        </div>
+                                <div className="text-center max-w-3xl mx-auto">
+                                    <h2 className="text-3xl font-bold text-slate-900 mb-6">Misi Kami</h2>
+                                    <p className="text-slate-600 text-xl italic leading-relaxed">
+                                        "Menjadi destinasi pilihan utama untuk relaksasi, rekreasi, dan perayaan 
+                                        dengan terus menjaga kelestarian alam dan memberdayakan komunitas lokal."
+                                    </p>
+                                </div>
+                            </>
+                        )}
                     </div>
                 </motion.div>
             </main>

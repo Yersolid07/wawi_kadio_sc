@@ -14,9 +14,9 @@ class MenuItemController extends Controller
     public function index(Request $request): Response
     {
         $items = MenuItem::query()
-            ->when($request->search, fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
-            ->when($request->category, fn ($q) => $q->where('category', $request->category))
-            ->when($request->status !== null, fn ($q) => $q->where('is_available', $request->status === 'available'))
+            ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', "%{$request->search}%"))
+            ->when($request->filled('category'), fn ($q) => $q->where('category', $request->category))
+            ->when($request->filled('status'), fn ($q) => $q->where('is_available', $request->status === 'available'))
             ->orderBy('category')
             ->orderBy('name')
             ->paginate(15)

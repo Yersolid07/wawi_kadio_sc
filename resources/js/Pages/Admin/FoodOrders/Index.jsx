@@ -171,7 +171,7 @@ export default function Index({ orders, filters, stats }) {
                                         <ul className="space-y-2 mb-4">
                                             {order.items?.map((item) => (
                                                 <li key={item.id} className="flex justify-between text-sm">
-                                                    <span className="font-medium text-slate-900">{item.quantity}x {item.menuItem?.name}</span>
+                                                    <span className="font-medium text-slate-900">{item.quantity}x {item.menu_item?.name}</span>
                                                     <span className="text-slate-600">Rp {formatPrice(item.price * item.quantity)}</span>
                                                 </li>
                                             ))}

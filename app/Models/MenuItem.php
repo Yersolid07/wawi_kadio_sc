@@ -24,6 +24,7 @@ class MenuItem extends Model
         'name',
         'description',
         'category',
+        'barcode',
         'price',
         'image_url',
         'daily_stock',

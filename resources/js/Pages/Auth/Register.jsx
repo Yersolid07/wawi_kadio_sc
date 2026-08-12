@@ -146,6 +146,20 @@ export default function Register() {
                     <InputError message={errors.password_confirmation} className="mt-2 text-xs" />
                 </div>
 
+                {/* Legal Consent Checkbox */}
+                <div className="pt-2">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <input 
+                            type="checkbox" 
+                            required 
+                            className="mt-1 rounded text-emerald-600 focus:ring-emerald-500 bg-white border-slate-300"
+                        />
+                        <span className="text-sm text-slate-600 leading-relaxed">
+                            Saya telah membaca dan menyetujui <a href={route('terms')} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline font-bold">Syarat & Ketentuan</a> serta <a href={route('privacy')} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline font-bold">Kebijakan Privasi</a> Wawi Kadio.
+                        </span>
+                    </label>
+                </div>
+
                 {/* Submit */}
                 <motion.button
                     type="submit"

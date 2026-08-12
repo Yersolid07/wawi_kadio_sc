@@ -338,6 +338,20 @@ export default function Create({ facilities, selectedFacilityId, initialCheckIn,
                                     <InputError message={errors.payment_method} className="mt-2" />
                                 </div>
 
+                                {/* Legal Consent Checkbox */}
+                                <div className="pt-4 border-t border-stone-100">
+                                    <label className="flex items-start gap-3 cursor-pointer">
+                                        <input 
+                                            type="checkbox" 
+                                            required 
+                                            className="mt-1 rounded text-emerald-600 focus:ring-emerald-500 bg-white border-stone-300"
+                                        />
+                                        <span className="text-sm text-slate-600 leading-relaxed">
+                                            Saya telah membaca dan menyetujui <a href={route('terms')} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline font-bold">Syarat & Ketentuan</a> serta <a href={route('privacy')} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline font-bold">Kebijakan Privasi</a> Wawi Kadio.
+                                        </span>
+                                    </label>
+                                </div>
+
                                 <div className="pt-6">
                                     <button
                                         type="submit"

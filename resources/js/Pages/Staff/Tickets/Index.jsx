@@ -98,9 +98,8 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                 setGuestName('Walk-in Customer');
                 setAmountPaid('');
                 
-                if (page.props.flash.print_ticket_id) {
-                    // Logic to print ticket if needed
-                    // window.open(route('staff.tickets.print', page.props.flash.print_ticket_id), '_blank');
+                if (page.props.flash.print_ticket_id && page.props.flash.order_details) {
+                    handlePrintReceipt(page.props.flash.order_details);
                 }
             },
             onError: (errors) => {
@@ -114,7 +113,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
         try {
             // Build simple order object for receipt
             const printOrder = {
-                customerName: order.user?.name || order.guest_name || 'Walk-in Ticket',
+                customerName: order.user?.name || order.customer_name || 'Walk-in Ticket',
             };
             
             // Format items

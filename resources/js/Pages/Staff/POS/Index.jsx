@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, Link } from '@inertiajs/react';
 import { Search, ShoppingCart, Plus, Minus, X, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize, Trash2, QrCode, Smartphone, CreditCard, Building, Wallet } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
 import { useConfirm } from '@/Contexts/ConfirmContext';

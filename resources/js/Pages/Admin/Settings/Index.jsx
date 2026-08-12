@@ -1,7 +1,9 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, useForm } from '@inertiajs/react';
-import { Settings, Save, Image as ImageIcon, MessageSquare, PhoneCall } from 'lucide-react';
+import { Settings, Save, Image as ImageIcon, MessageSquare, PhoneCall, BookOpen } from 'lucide-react';
 import { useState } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -31,6 +33,10 @@ export default function Index({ settings }) {
         contact_email: settings.contact_email || '',
         contact_address: settings.contact_address || '',
         contact_map_embed: settings.contact_map_embed || '',
+        // Static Pages (Rich Text)
+        about_us_content: settings.about_us_content || '',
+        privacy_policy_content: settings.privacy_policy_content || '',
+        terms_of_service_content: settings.terms_of_service_content || '',
     });
 
     const submit = (e) => {
@@ -47,8 +53,9 @@ export default function Index({ settings }) {
 
     const tabs = [
         { id: 'hero', label: 'Tampilan Awal (Hero)', icon: ImageIcon },
-        { id: 'about', label: 'Tentang Kami', icon: MessageSquare },
+        { id: 'about', label: 'Tentang Kami (Hero)', icon: MessageSquare },
         { id: 'contact', label: 'Kontak & Maps', icon: PhoneCall },
+        { id: 'static_pages', label: 'Halaman Info (Rich Text)', icon: BookOpen },
         { id: 'general', label: 'Pengaturan Umum', icon: Settings },
     ];
 
@@ -205,6 +212,43 @@ export default function Index({ settings }) {
                                             className="mt-1 block w-full"
                                         />
                                         <p className="text-xs text-slate-500 mt-1">Hanya ambil URL yang ada di dalam src="..." ketika Anda membagikan embed peta di Google Maps.</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* STATIC PAGES SETTINGS (RICH TEXT) */}
+                            {activeTab === 'static_pages' && (
+                                <div className="space-y-8 animate-fade-in">
+                                    <h3 className="text-lg font-bold text-slate-900 mb-4 border-b pb-2">Konten Halaman Informasi</h3>
+                                    
+                                    <div>
+                                        <InputLabel value="Tentang Kami (Full Content)" className="mb-2 text-base font-semibold" />
+                                        <ReactQuill 
+                                            theme="snow" 
+                                            value={data.about_us_content} 
+                                            onChange={val => setData('about_us_content', val)} 
+                                            className="bg-white rounded-b-xl"
+                                        />
+                                    </div>
+                                    
+                                    <div>
+                                        <InputLabel value="Kebijakan Privasi" className="mb-2 text-base font-semibold" />
+                                        <ReactQuill 
+                                            theme="snow" 
+                                            value={data.privacy_policy_content} 
+                                            onChange={val => setData('privacy_policy_content', val)} 
+                                            className="bg-white rounded-b-xl"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel value="Syarat dan Ketentuan" className="mb-2 text-base font-semibold" />
+                                        <ReactQuill 
+                                            theme="snow" 
+                                            value={data.terms_of_service_content} 
+                                            onChange={val => setData('terms_of_service_content', val)} 
+                                            className="bg-white rounded-b-xl"
+                                        />
                                     </div>
                                 </div>
                             )}

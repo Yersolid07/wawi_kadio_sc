@@ -22,45 +22,51 @@ export default function TermsOfService({ cms_settings }) {
                     </h1>
 
                     <div className="prose prose-lg prose-emerald max-w-none text-slate-600">
-                        <p className="lead text-xl text-slate-700 font-medium mb-8">
-                            Selamat datang di Wawi Kadio. Dengan menggunakan layanan kami, Anda menyetujui syarat dan ketentuan berikut ini. Harap baca dengan cermat.
-                        </p>
+                        {cms_settings?.terms_of_service_content ? (
+                            <div dangerouslySetInnerHTML={{ __html: cms_settings.terms_of_service_content }} />
+                        ) : (
+                            <>
+                                <p className="lead text-xl text-slate-700 font-medium mb-8">
+                                    Selamat datang di Wawi Kadio. Dengan menggunakan layanan kami, Anda menyetujui syarat dan ketentuan berikut ini. Harap baca dengan cermat.
+                                </p>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">1. Penggunaan Layanan</h3>
-                        <p>
-                            Anda setuju untuk menggunakan layanan website Wawi Kadio hanya untuk tujuan yang sah, 
-                            seperti melakukan reservasi fasilitas dan pemesanan makanan, serta tidak melanggar hak 
-                            atau membatasi penggunaan dan kenikmatan situs ini oleh pihak ketiga manapun.
-                        </p>
+                                <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">1. Penggunaan Layanan</h3>
+                                <p>
+                                    Anda setuju untuk menggunakan layanan website Wawi Kadio hanya untuk tujuan yang sah, 
+                                    seperti melakukan reservasi fasilitas dan pemesanan makanan, serta tidak melanggar hak 
+                                    atau membatasi penggunaan dan kenikmatan situs ini oleh pihak ketiga manapun.
+                                </p>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">2. Reservasi dan Pembayaran</h3>
-                        <ul>
-                            <li>Semua reservasi fasilitas dan pemesanan makanan tunduk pada ketersediaan.</li>
-                            <li>Harga yang tercantum dapat berubah sewaktu-waktu tanpa pemberitahuan sebelumnya, namun harga untuk reservasi yang sudah dikonfirmasi tidak akan berubah.</li>
-                            <li>Anda bertanggung jawab atas semua biaya yang timbul dari akun Anda.</li>
-                            <li>Pembatalan atau perubahan jadwal harus dilakukan sesuai dengan kebijakan pembatalan yang berlaku di Wawi Kadio.</li>
-                        </ul>
+                                <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">2. Reservasi dan Pembayaran</h3>
+                                <ul>
+                                    <li>Semua reservasi fasilitas dan pemesanan makanan tunduk pada ketersediaan.</li>
+                                    <li>Harga yang tercantum dapat berubah sewaktu-waktu tanpa pemberitahuan sebelumnya, namun harga untuk reservasi yang sudah dikonfirmasi tidak akan berubah.</li>
+                                    <li>Anda bertanggung jawab atas semua biaya yang timbul dari akun Anda.</li>
+                                    <li>Pembatalan atau perubahan jadwal harus dilakukan sesuai dengan kebijakan pembatalan yang berlaku di Wawi Kadio.</li>
+                                </ul>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">3. Kebijakan Pembatalan</h3>
-                        <p>
-                            Pembatalan reservasi yang dilakukan kurang dari 24 jam sebelum waktu kedatangan mungkin 
-                            dikenakan biaya pembatalan. Kami berhak membatalkan reservasi jika terjadi keadaan kahar 
-                            (force majeure) atau kondisi di luar kendali kami.
-                        </p>
+                                <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">3. Kebijakan Pembatalan</h3>
+                                <p>
+                                    Pembatalan reservasi yang dilakukan kurang dari 24 jam sebelum waktu kedatangan mungkin 
+                                    dikenakan biaya pembatalan. Kami berhak membatalkan reservasi jika terjadi keadaan kahar 
+                                    (force majeure) atau kondisi di luar kendali kami.
+                                </p>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">4. Kewajiban Pengguna</h3>
-                        <p>
-                            Saat berkunjung ke Wawi Kadio, Anda setuju untuk menjaga ketertiban, kebersihan, dan 
-                            mematuhi semua peraturan yang berlaku di area fasilitas kami. Kerusakan yang disebabkan 
-                            oleh kelalaian pengunjung dapat dikenakan biaya ganti rugi.
-                        </p>
+                                <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">4. Kewajiban Pengguna</h3>
+                                <p>
+                                    Saat berkunjung ke Wawi Kadio, Anda setuju untuk menjaga ketertiban, kebersihan, dan 
+                                    mematuhi semua peraturan yang berlaku di area fasilitas kami. Kerusakan yang disebabkan 
+                                    oleh kelalaian pengunjung dapat dikenakan biaya ganti rugi.
+                                </p>
 
-                        <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">5. Perubahan Syarat & Ketentuan</h3>
-                        <p>
-                            Wawi Kadio berhak memperbarui atau mengubah Syarat dan Ketentuan ini sewaktu-waktu 
-                            tanpa pemberitahuan sebelumnya. Penggunaan Anda yang berkelanjutan atas situs web 
-                            ini setelah adanya perubahan merupakan penerimaan Anda terhadap perubahan tersebut.
-                        </p>
+                                <h3 className="text-2xl font-bold text-slate-900 mt-10 mb-4">5. Perubahan Syarat & Ketentuan</h3>
+                                <p>
+                                    Wawi Kadio berhak memperbarui atau mengubah Syarat dan Ketentuan ini sewaktu-waktu 
+                                    tanpa pemberitahuan sebelumnya. Penggunaan Anda yang berkelanjutan atas situs web 
+                                    ini setelah adanya perubahan merupakan penerimaan Anda terhadap perubahan tersebut.
+                                </p>
+                            </>
+                        )}
                     </div>
                 </motion.div>
             </main>

@@ -49,17 +49,17 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                     className="fixed w-full z-50 px-4 pt-4"
                 >
                     <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3.5 rounded-2xl bg-white/80 backdrop-blur-xl border border-stone-200/80 shadow-lg shadow-stone-900/5">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 shrink-0">
                             {getSetting('primary_logo') ? (
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center p-1">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center p-1 shrink-0">
                                     <img src={getSetting('primary_logo')} alt="Logo" className="max-w-full max-h-full object-contain" />
                                 </div>
                             ) : (
-                                <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/30">
+                                <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md shadow-emerald-500/30 shrink-0">
                                     <Coffee size={18} className="text-white" />
                                 </div>
                             )}
-                            <span className="text-lg font-bold tracking-tight text-slate-900">{getSetting('site_name', 'Wawi Kadio')}</span>
+                            <span className="text-sm md:text-lg font-bold tracking-tight text-slate-900 truncate max-w-[120px] md:max-w-none">{getSetting('site_name', 'Wawi Kadio')}</span>
                         </div>
 
                         <nav className="hidden md:flex items-center gap-1">
@@ -106,12 +106,13 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                             src={getSetting('hero_image', '/storage/facilities/Wawi-Kadio-Photo--1253605224.jpeg')}
                             alt="Hero Background"
                             className="w-full h-full object-cover"
+                            onError={(e) => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=Wawi+Kadio&background=0f172a&color=fff&size=1024'; }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-r from-stone-900/85 via-stone-900/50 to-stone-900/10" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#f5f2ec] via-transparent to-transparent opacity-60" />
                     </div>
 
-                    <div className="relative max-w-7xl mx-auto px-6 pb-20 mt-20">
+                    <div className="relative max-w-7xl mx-auto px-6 pb-20 pt-32 md:pt-20">
                         <motion.div initial="hidden" animate="visible" variants={STAGGER} className="max-w-2xl">
                             <motion.div variants={FADE_UP} custom={0}
                                 className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 text-emerald-300 text-sm font-semibold mb-7">
@@ -247,7 +248,12 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                             className="flex-1 relative"
                         >
                             <div className="aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl">
-                                <img src={getImageUrl(getSetting('hero_image'))} alt="Wawi Kadio Nature" className="w-full h-full object-cover" />
+                                <img 
+                                    src={getImageUrl(getSetting('hero_image'))} 
+                                    alt="Wawi Kadio Nature" 
+                                    className="w-full h-full object-cover" 
+                                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=Wawi+Kadio&background=059669&color=fff&size=512'; }}
+                                />
                             </div>
                             <div className="absolute -bottom-8 -left-8 bg-white p-6 rounded-3xl shadow-xl border border-stone-100 hidden md:block">
                                 <div className="flex items-center gap-4 mb-2">
@@ -298,6 +304,7 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                                                     alt={facility.name}
                                                     loading="lazy"
                                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                                    onError={(e) => { e.target.onerror = null; e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(facility.name)}&background=059669&color=fff&size=512`; }}
                                                 />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
                                                 <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-[11px] font-semibold text-slate-700 capitalize">
