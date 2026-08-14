@@ -71,8 +71,8 @@ class ReservationService
             // PESSIMISTIC LOCK: Lock the facility to prevent concurrent identical bookings
             $facility = Facility::where('id', $validated['facility_id'])->lockForUpdate()->firstOrFail();
 
-            // Check availability inside the lock
-            if (! $facility->isAvailable($validated['check_in_date'], $validated['check_out_date'], $validated['check_in_time'] ?? null, $validated['check_out_time'] ?? null)) {
+            // Check availability inside the lock (skip for tickets as they don't have time constraints)
+            if ($facility->type !== 'ticket' && ! $facility->isAvailable($validated['check_in_date'], $validated['check_out_date'], $validated['check_in_time'] ?? null, $validated['check_out_time'] ?? null)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     'check_in_date' => 'Fasilitas tidak tersedia untuk tanggal/jam yang dipilih.'
                 ]);

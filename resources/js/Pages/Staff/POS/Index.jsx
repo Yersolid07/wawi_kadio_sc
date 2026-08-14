@@ -486,7 +486,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-stone-50">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {filteredItems.map(item => {
-                            const isOutOfStock = item.daily_stock !== null && item.current_stock <= 0;
+                            const isOutOfStock = item.is_out_of_stock;
                             return (
                                 <div 
                                     key={item.id} 

@@ -46,7 +46,12 @@ class MenuItem extends Model
         'promo_end' => 'datetime',
     ];
 
-    protected $appends = ['final_price'];
+    protected $appends = ['final_price', 'is_out_of_stock'];
+
+    public function getIsOutOfStockAttribute(): bool
+    {
+        return !$this->is_available || ($this->daily_stock !== null && $this->current_stock <= 0);
+    }
 
     public function getFinalPriceAttribute()
     {
