@@ -176,6 +176,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // POS Closing
         Route::get('/pos-closing', [\App\Http\Controllers\Staff\PosClosingController::class, 'index'])->name('pos-closing.index');
         Route::post('/pos-closing', [\App\Http\Controllers\Staff\PosClosingController::class, 'store'])->name('pos-closing.store');
+        
+        // Polling Payment Status
+        Route::get('/payments/{id}/status', [\App\Http\Controllers\Staff\PaymentStatusController::class, 'show'])->name('payments.status');
     });
 
     /*

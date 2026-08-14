@@ -156,7 +156,8 @@ class POSController extends Controller
             'print_order_id' => $order->id,
             'print_order_data' => $orderDataForPrint,
             'checkout_url'   => $checkoutUrl,
-            'qr_url'         => $qrUrl,
+            'qr_url'         => $result['qr_url'] ?? ($result['gateway_response']['qr_url'] ?? null),
+            'payment_id'     => $result['payment']->id ?? null,
             'change_amount'  => $validated['payment_method'] === 'cash'
                 ? (($validated['amount_paid'] ?? 0) - $totalAmount)
                 : 0,

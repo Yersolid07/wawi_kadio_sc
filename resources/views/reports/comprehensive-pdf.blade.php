@@ -52,7 +52,10 @@
                     <strong>Kinerja Keuangan:</strong><br>
                     Total Pemasukan: <span class="text-emerald">Rp {{ number_format($income, 0, ',', '.') }}</span><br>
                     Total Pengeluaran: <span class="text-rose">Rp {{ number_format($expense, 0, ',', '.') }}</span><br>
-                    Laba Bersih (Net Profit): <strong>Rp {{ number_format($income - $expense, 0, ',', '.') }}</strong>
+                    @if(isset($totalFees) && $totalFees > 0)
+                        Potongan Merchant: <span class="text-rose">Rp {{ number_format($totalFees, 0, ',', '.') }}</span><br>
+                    @endif
+                    Laba Bersih (Net Profit): <strong>Rp {{ number_format($income - $expense - ($totalFees ?? 0), 0, ',', '.') }}</strong>
                 </td>
                 <td style="border: none; width: 50%; vertical-align: top;">
                     <strong>Kinerja Operasional:</strong><br>

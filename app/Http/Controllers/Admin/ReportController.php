@@ -64,6 +64,11 @@ class ReportController extends Controller
         $ticketRevenue = $totalCafeItems > 0 ? ($ticketItemSum / $totalCafeItems) * $revenueCafeTotal : 0;
         $foodOrderRevenue = $revenueCafeTotal - $ticketRevenue;
 
+        // Calculate Total Merchant Fees (Tripay)
+        $totalFees = \App\Models\Payment::whereBetween('created_at', [$periodFrom, $periodTo.' 23:59:59'])
+            ->where('payment_status', 'success')
+            ->sum('fee_merchant');
+
         $stats = [
             'total_visitors'      => $reservations->sum('guest_count') ?: $reservations->count(),
             'total_reservations'  => $reservations->count(),
@@ -73,8 +78,9 @@ class ReportController extends Controller
             'revenue_tickets'     => $ticketRevenue,
             'revenue_other'       => $revenueOther,
             'total_revenue'       => $totalRevenue,
+            'total_fees'          => (float) $totalFees,
             'total_expense'       => $totalExpense,
-            'net_profit'          => $totalRevenue - $totalExpense,
+            'net_profit'          => $totalRevenue - $totalExpense - $totalFees,
         ];
 
         // Build chart data — index by date for O(1) lookups
@@ -222,12 +228,18 @@ class ReportController extends Controller
         $invTotalAdj = $inventoryTxs->where('type', 'adjustment')->count();
         $invTxsByDate = $inventoryTxs->groupBy(fn($tx) => $tx->created_at->format('d M Y'));
 
+        // 5. Merchant Fees (Tripay)
+        $totalFees = \App\Models\Payment::whereBetween('created_at', [$periodFrom, $periodTo.' 23:59:59'])
+            ->where('payment_status', 'success')
+            ->sum('fee_merchant');
+
         return Pdf::loadView('reports.comprehensive-pdf', compact(
             'periodFrom', 'periodTo',
             'income', 'expense', 'txsByDate',
             'cafeRevenue', 'cafeTotalOrders', 'cafeTotalItems', 'ordersByDate',
             'resRevenue', 'resTotalGuests', 'resTotalCancelled', 'resTotalActive', 'resByDate',
-            'invTotalCost', 'invTotalIn', 'invTotalOut', 'invTotalAdj', 'invTxsByDate'
+            'invTotalCost', 'invTotalIn', 'invTotalOut', 'invTotalAdj', 'invTxsByDate',
+            'totalFees'
         ))
         ->setPaper('a4', 'portrait')
         ->download("Laporan_Komprehensif_{$periodFrom}_sd_{$periodTo}.pdf");

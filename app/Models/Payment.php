@@ -17,6 +17,8 @@ class Payment extends Model
         'reservation_id',
         'food_order_id',
         'amount',
+        'fee_merchant',
+        'fee_customer',
         'payment_method',
         'payment_type',
         'payment_status',

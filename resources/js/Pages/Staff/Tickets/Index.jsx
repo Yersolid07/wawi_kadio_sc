@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
 import { Ticket, Search, Plus, Minus, Users, Banknote, Calendar, Smartphone, CreditCard, Receipt, Loader2, ArrowLeft, X, ShoppingCart, QrCode } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
@@ -22,6 +22,8 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     const [amountPaid, setAmountPaid] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [paymentQR, setPaymentQR] = useState(null);
+    const [paymentId, setPaymentId] = useState(null);
+    const [printUrl, setPrintUrl] = useState(null);
 
     // Filter Items
     const filteredTickets = tickets.filter(ticket => 
@@ -100,8 +102,9 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                 setGuestName('Walk-in Customer');
                 setAmountPaid('');
                 
-                if (page.props.flash.qr_url) {
+                if (page.props.flash.qr_url && page.props.flash.payment_id) {
                     setPaymentQR(page.props.flash.qr_url);
+                    setPaymentId(page.props.flash.payment_id);
                     // Store the order details to print later
                     if (page.props.flash.order_details) {
                         setPrintUrl(page.props.flash.order_details);
@@ -116,6 +119,37 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
             }
         });
     };
+
+    // Polling Payment Status for QRIS
+    useEffect(() => {
+        let interval;
+        if (paymentId && paymentQR) {
+            interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/staff/payments/${paymentId}/status`);
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        clearInterval(interval);
+                        setPaymentQR(null);
+                        setPaymentId(null);
+                        
+                        // Cek order details
+                        if (printUrl) {
+                            handlePrintReceipt(printUrl);
+                            setPrintUrl(null);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore errors during polling
+                }
+            }, 3000); // Check every 3 seconds
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [paymentId, paymentQR, printUrl]);
 
     const handlePrintReceipt = async (order) => {
         try {
@@ -472,18 +506,29 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                             <img src={paymentQR} alt="QRIS Payment" className="w-64 h-64 rounded-xl shadow-sm border border-stone-200" />
                         </div>
                         
-                        <div className="p-6 bg-white border-t border-stone-100">
+                        <div className="p-6 bg-white border-t border-stone-100 flex gap-4">
+                            <button
+                                onClick={() => {
+                                    setPaymentQR(null);
+                                    setPaymentId(null);
+                                    setPrintUrl(null);
+                                }}
+                                className="px-6 py-4 rounded-xl font-bold text-slate-600 bg-stone-100 hover:bg-stone-200 transition-colors"
+                            >
+                                Tutup
+                            </button>
                             <PrimaryButton 
                                 onClick={() => {
                                     setPaymentQR(null);
+                                    setPaymentId(null);
                                     if (printUrl) {
                                         handlePrintReceipt(printUrl);
                                         setPrintUrl(null);
                                     }
                                 }}
-                                className="w-full justify-center bg-sky-500 hover:bg-sky-600 rounded-xl py-4 shadow-xl shadow-sky-500/20 text-lg font-bold"
+                                className="flex-1 justify-center bg-sky-500 hover:bg-sky-600 rounded-xl py-4 shadow-xl shadow-sky-500/20 text-lg font-bold"
                             >
-                                Selesai & Cetak Struk
+                                Cetak & Selesai (Manual)
                             </PrimaryButton>
                         </div>
                     </div>

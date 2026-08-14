@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import { Search, ShoppingCart, Plus, Minus, X, Banknote, Receipt, ArrowLeft, Loader2, UtensilsCrossed, Users, Maximize, Trash2, QrCode, Smartphone, CreditCard, Building, Wallet } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
@@ -32,6 +32,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
     
     // QR Modal State
     const [paymentQR, setPaymentQR] = useState(null);
+    const [paymentId, setPaymentId] = useState(null);
 
     // Layout State
     const [layoutDirection, setLayoutDirection] = useState('horizontal'); // 'horizontal' or 'vertical'
@@ -243,6 +244,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                         checkoutUrl: page.props.flash.checkout_url,
                         qrUrl: page.props.flash.qr_url
                     });
+                    setPaymentId(page.props.flash.payment_id);
                 }
 
                 if (page.props.flash.print_order_id) {
@@ -276,6 +278,40 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             });
         }
     };
+
+    // Polling Payment Status for QRIS
+    useEffect(() => {
+        let interval;
+        if (paymentId && paymentQR) {
+            interval = setInterval(async () => {
+                try {
+                    const res = await fetch(`/staff/payments/${paymentId}/status`);
+                    const data = await res.json();
+                    
+                    if (data.status === 'success') {
+                        clearInterval(interval);
+                        setPaymentQR(null);
+                        setPaymentId(null);
+                        
+                        // Proceed to print automatically since payment succeeded
+                        if (printOrderData) {
+                            handlePrintReceipt(printOrderData);
+                        } else if (printUrl) {
+                            // Fallback if no bluetooth
+                            window.open(printUrl, '_blank', 'width=400,height=600');
+                            setPrintUrl(null);
+                        }
+                    }
+                } catch (e) {
+                    // Ignore polling errors
+                }
+            }, 3000); // Check every 3 seconds
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [paymentId, paymentQR, printUrl, printOrderData]);
 
     const handlePrintReceipt = (order) => {
         // Set standard print iframe URL
@@ -901,12 +937,33 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                     Buka Halaman Tripay
                                 </button>
                             )}
-                            <button 
-                                onClick={() => setPaymentQR(null)} 
-                                className="w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold transition-colors"
-                            >
-                                Tutup
-                            </button>
+                            <div className="flex gap-2 w-full mt-2">
+                                <button 
+                                    onClick={() => {
+                                        setPaymentQR(null);
+                                        setPaymentId(null);
+                                        setPrintUrl(null);
+                                    }} 
+                                    className="flex-1 py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold transition-colors"
+                                >
+                                    Tutup
+                                </button>
+                                <button 
+                                    onClick={() => {
+                                        setPaymentQR(null);
+                                        setPaymentId(null);
+                                        if (printOrderData) {
+                                            handlePrintReceipt(printOrderData);
+                                        } else if (printUrl) {
+                                            window.open(printUrl, '_blank', 'width=400,height=600');
+                                            setPrintUrl(null);
+                                        }
+                                    }} 
+                                    className="flex-1 py-3 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold transition-colors"
+                                >
+                                    Cetak Manual
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

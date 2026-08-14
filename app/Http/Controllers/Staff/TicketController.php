@@ -82,7 +82,8 @@ class TicketController extends Controller
                 DB::commit();
 
                 return back()->with('success', 'Silakan scan QRIS untuk membayar.')
-                             ->with('qr_url', $result['checkout_url'])
+                             ->with('qr_url', $result['qr_url'] ?? $result['checkout_url'])
+                             ->with('payment_id', $result['payment']->id)
                              ->with('print_ticket_id', $reservation->id)
                              ->with('order_details', $reservation);
             }

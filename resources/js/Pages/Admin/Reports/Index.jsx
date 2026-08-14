@@ -145,7 +145,13 @@ export default function Index({ stats, chartData, filters, bestSellingMenus, rec
                             <TrendingUp size={20} />
                         </div>
                         <h3 className="text-3xl font-black mb-1">Rp {formatPrice(stats.net_profit)}</h3>
-                        <p className="text-xs opacity-75">Pendapatan - Pengeluaran</p>
+                        <p className="text-xs opacity-90">Pendapatan - Pengeluaran - Potongan Merchant</p>
+                        <div className="mt-4 pt-4 border-t border-white/20">
+                            <div className="flex justify-between items-center text-sm font-medium">
+                                <span>Potongan Merchant (Tripay)</span>
+                                <span>Rp {formatPrice(stats.total_fees || 0)}</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-stone-200">

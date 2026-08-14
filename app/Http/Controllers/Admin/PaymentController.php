@@ -114,6 +114,8 @@ class PaymentController extends Controller
                 $payment->update([
                     'gateway_response' => $data,
                     'transaction_id'   => $data['reference'],
+                    'fee_merchant'     => $data['total_fee']['merchant'] ?? 0,
+                    'fee_customer'     => $data['total_fee']['customer'] ?? 0,
                 ]);
                 $payment->markAsSuccess($data['reference']);
             } elseif (in_array($data['status'] ?? '', ['EXPIRED', 'FAILED'])) {

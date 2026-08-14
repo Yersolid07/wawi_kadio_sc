@@ -84,6 +84,7 @@ class PaymentService
                 $paymentData['payment_reference']  = $merchantRef;
                 $paymentData['gateway_response']   = $result;
                 $checkoutUrl                       = $result['checkout_url'];
+                $qrUrl                             = $result['qr_url'] ?? null;
             } catch (\Exception $e) {
                 Log::error('[PaymentService] Tripay error for reservation', [
                     'reservation_id' => $reservation->id,
@@ -96,7 +97,7 @@ class PaymentService
 
         $payment = Payment::create($paymentData);
 
-        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'error' => $errorMessage];
+        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'qr_url' => $qrUrl ?? null, 'error' => $errorMessage];
     }
 
     /**
@@ -114,6 +115,7 @@ class PaymentService
         ];
 
         $checkoutUrl = null;
+        $qrUrl = null;
         $errorMessage = null;
 
         if ($order->total_amount <= 0) {
@@ -121,7 +123,7 @@ class PaymentService
             $paymentData['payment_method'] = 'free';
             $payment = Payment::create($paymentData);
             $payment->markAsSuccess('FREE-FOD-'.$order->id);
-            return ['payment' => $payment, 'checkout_url' => null, 'error' => null];
+            return ['payment' => $payment, 'checkout_url' => null, 'qr_url' => null, 'error' => null];
         }
 
         if ($paymentMethod === 'tripay') {
@@ -148,6 +150,7 @@ class PaymentService
                 $paymentData['payment_reference'] = $merchantRef;
                 $paymentData['gateway_response']  = $result;
                 $checkoutUrl                      = $result['checkout_url'];
+                $qrUrl                            = $result['qr_url'] ?? null;
             } catch (\Exception $e) {
                 Log::error('[PaymentService] Tripay error for food order', [
                     'order_id' => $order->id,
@@ -159,7 +162,7 @@ class PaymentService
 
         $payment = Payment::create($paymentData);
 
-        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'gateway_response' => $result ?? null, 'error' => $errorMessage];
+        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'qr_url' => $qrUrl, 'gateway_response' => $result ?? null, 'error' => $errorMessage];
     }
 
     /**
