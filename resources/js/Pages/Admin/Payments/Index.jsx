@@ -160,7 +160,10 @@ export default function Index({ payments, filters, stats }) {
                                         </td>
                                         <td className="py-4 px-4">
                                             <p className="font-bold text-slate-900">
-                                                {payment.reservation?.user?.name || payment.foodOrder?.user?.name || 'Unknown User'}
+                                                {payment.reservation?.user?.name || payment.reservation?.customer_name || 
+                                                 payment.food_order?.user?.name || payment.food_order?.customer_name || 
+                                                 payment.foodOrder?.user?.name || payment.foodOrder?.customer_name || 
+                                                 'Unknown User'}
                                             </p>
                                             <p className="text-xs text-slate-500">{formatDate(payment.created_at)}</p>
                                         </td>
