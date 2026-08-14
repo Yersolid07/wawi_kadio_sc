@@ -26,6 +26,8 @@ class ReservationService
         $checkOut = Carbon::parse($validated['check_out_date']);
 
         $facility = Facility::findOrFail($validated['facility_id']);
+        
+        $days = 1;
 
         // Handle time, pricing calculation, and midnight crossover
         if (!empty($validated['check_in_time']) && !empty($validated['check_out_time'])) {
