@@ -182,7 +182,7 @@ export default function Index({ payments, filters, stats }) {
                                                         <ImageIcon size={18} />
                                                     </button>
                                                 )}
-                                                {payment.payment_status === 'pending' && payment.payment_method === 'transfer' && (
+                                                {payment.payment_status === 'pending' && (
                                                     <>
                                                         <button
                                                             onClick={() => verifyPayment(payment.id, 'approve')}
