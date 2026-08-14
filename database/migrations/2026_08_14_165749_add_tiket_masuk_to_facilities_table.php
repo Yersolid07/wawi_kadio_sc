@@ -12,16 +12,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::table('facilities')->insertOrIgnore([
-            'name' => 'Tiket Masuk',
-            'type' => 'ticket',
-            'description' => 'Tiket masuk harian untuk pengunjung Wawi Kadio.',
-            'price_per_day' => 10000,
-            'capacity' => 1,
-            'is_active' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        \App\Models\Facility::updateOrCreate(
+            ['name' => 'Tiket Masuk', 'type' => 'ticket'],
+            [
+                'description' => 'Tiket masuk harian untuk pengunjung Wawi Kadio.',
+                'price_per_day' => 10000,
+                'capacity' => 1,
+                'is_active' => true,
+            ]
+        );
     }
 
     /**
