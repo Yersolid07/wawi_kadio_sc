@@ -73,10 +73,24 @@ class TicketController extends Controller
             // Fix: pass all 3 required args (data, userId, sessionId)
             $reservation = $reservationService->createReservation($reservationData, auth()->id(), null);
 
-            // Mark as confirmed
+            if ($validated['payment_method'] === 'qris') {
+                $reservation->update(['status' => 'pending', 'payment_status' => 'pending']);
+                
+                $paymentService = app(\App\Services\PaymentService::class);
+                $result = $paymentService->createForReservation($reservation, 'QRISC', '082197432499', true);
+                
+                DB::commit();
+
+                return back()->with('success', 'Silakan scan QRIS untuk membayar.')
+                             ->with('qr_url', $result['checkout_url'])
+                             ->with('print_ticket_id', $reservation->id)
+                             ->with('order_details', $reservation);
+            }
+
+            // Mark as confirmed for non-QRIS
             $reservation->update(['status' => 'confirmed', 'payment_status' => 'paid']);
 
-            // Map QRIS to Tripay for the database ENUM
+            // Map QRIS to Tripay for the database ENUM (fallback if needed)
             $dbPaymentMethod = $validated['payment_method'];
             if ($dbPaymentMethod === 'qris') {
                 $dbPaymentMethod = 'tripay';

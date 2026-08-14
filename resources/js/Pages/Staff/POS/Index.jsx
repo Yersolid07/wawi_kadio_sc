@@ -243,7 +243,9 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                         checkoutUrl: page.props.flash.checkout_url,
                         qrUrl: page.props.flash.qr_url
                     });
-                } else if (page.props.flash.print_order_id) {
+                }
+
+                if (page.props.flash.print_order_id) {
                     let url = route('staff.pos.print', page.props.flash.print_order_id);
                     if (page.props.flash.change_amount !== undefined) {
                         url += '?change_amount=' + page.props.flash.change_amount;
@@ -911,7 +913,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
             )}
 
             {/* Print Modal (Bypass Pop-up Blocker) */}
-            {printUrl && (
+            {!paymentQR && printUrl && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
                     <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden flex flex-col h-[80vh]">
                         <div className="p-4 bg-slate-900 text-white flex justify-between items-center shrink-0">

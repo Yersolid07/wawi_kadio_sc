@@ -21,6 +21,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     const [paymentMethod, setPaymentMethod] = useState('cash');
     const [amountPaid, setAmountPaid] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [paymentQR, setPaymentQR] = useState(null);
 
     // Filter Items
     const filteredTickets = tickets.filter(ticket => 
@@ -99,7 +100,13 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                 setGuestName('Walk-in Customer');
                 setAmountPaid('');
                 
-                if (page.props.flash.print_ticket_id && page.props.flash.order_details) {
+                if (page.props.flash.qr_url) {
+                    setPaymentQR(page.props.flash.qr_url);
+                    // Store the order details to print later
+                    if (page.props.flash.order_details) {
+                        setPrintUrl(page.props.flash.order_details);
+                    }
+                } else if (page.props.flash.print_ticket_id && page.props.flash.order_details) {
                     handlePrintReceipt(page.props.flash.order_details);
                 }
             },
@@ -447,6 +454,36 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                 ) : (
                                     <>Selesaikan Pembayaran</>
                                 )}
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {paymentQR && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+                        <div className="p-6 text-center border-b border-stone-100">
+                            <h2 className="text-2xl font-black text-slate-800">Scan QRIS</h2>
+                            <p className="text-slate-500 text-sm mt-1">Silakan scan kode QR di bawah ini dengan aplikasi pembayaran Anda.</p>
+                        </div>
+                        
+                        <div className="p-8 flex justify-center bg-stone-50">
+                            <img src={paymentQR} alt="QRIS Payment" className="w-64 h-64 rounded-xl shadow-sm border border-stone-200" />
+                        </div>
+                        
+                        <div className="p-6 bg-white border-t border-stone-100">
+                            <PrimaryButton 
+                                onClick={() => {
+                                    setPaymentQR(null);
+                                    if (printUrl) {
+                                        handlePrintReceipt(printUrl);
+                                        setPrintUrl(null);
+                                    }
+                                }}
+                                className="w-full justify-center bg-sky-500 hover:bg-sky-600 rounded-xl py-4 shadow-xl shadow-sky-500/20 text-lg font-bold"
+                            >
+                                Selesai & Cetak Struk
                             </PrimaryButton>
                         </div>
                     </div>
