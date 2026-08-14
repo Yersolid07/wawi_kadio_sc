@@ -137,7 +137,6 @@ class Payment extends Model
 
         if ($this->reservation && $this->reservation->payment_status !== 'paid') {
             $this->reservation->update([
-                'payment_status' => 'failed',
                 'status' => 'cancelled'
             ]);
 
@@ -147,7 +146,6 @@ class Payment extends Model
             foreach ($this->reservation->foodOrders as $foodOrder) {
                 if ($foodOrder->status !== 'cancelled' && $foodOrder->payment_status !== 'paid') {
                     $foodOrder->update([
-                        'payment_status' => 'failed',
                         'status' => 'cancelled'
                     ]);
 
@@ -162,7 +160,6 @@ class Payment extends Model
 
         if ($this->foodOrder && $this->foodOrder->payment_status !== 'paid') {
             $this->foodOrder->update([
-                'payment_status' => 'failed',
                 'status' => 'cancelled'
             ]);
 

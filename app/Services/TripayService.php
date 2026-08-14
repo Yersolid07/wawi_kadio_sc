@@ -69,8 +69,14 @@ class TripayService
             'signature'      => $this->makeSignature($merchantRef, $amount),
         ];
 
-        $response = Http::withToken($this->apiKey)
-            ->post($this->getBaseUrl().'/transaction/create', $payload);
+        if (empty($this->apiKey)) {
+            throw new \Exception('Tripay API Key tidak ditemukan. Pastikan Anda telah mengatur TRIPAY_API_KEY di file .env dan melakukan config:clear.');
+        }
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Accept'        => 'application/json',
+        ])->post($this->getBaseUrl().'/transaction/create', $payload);
 
         if (! $response->successful()) {
             Log::error('[TripayService] HTTP error', [
