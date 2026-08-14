@@ -43,11 +43,19 @@ class TicketController extends Controller
     public function store(Request $request, ReservationService $reservationService)
     {
         $validated = $request->validate([
-            'facility_id'    => 'required|exists:facilities,id',
+            'facility_id'    => 'nullable|exists:facilities,id',
             'quantity'       => 'required|integer|min:1',
             'customer_name'  => 'nullable|string|max:255',
             'payment_method' => 'required|in:cash,qris,transfer',
         ]);
+
+        if (empty($validated['facility_id'])) {
+            $defaultTicket = Facility::where('type', 'ticket')->where('is_active', true)->first();
+            if (!$defaultTicket) {
+                return back()->withErrors(['facility_id' => 'Tiket Masuk tidak ditemukan di sistem.']);
+            }
+            $validated['facility_id'] = $defaultTicket->id;
+        }
 
         DB::beginTransaction();
         try {

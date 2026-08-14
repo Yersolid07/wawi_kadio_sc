@@ -118,8 +118,8 @@ class POSController extends Controller
 
                 $customerInfo = [
                     'name'  => $validated['customer_name'] ?? 'Walk-in Customer',
-                    'email' => null,
-                    'phone' => null,
+                    'email' => 'walkin@wawikadio.com',
+                    'phone' => '080000000000',
                 ];
 
                 $result = app(\App\Services\PaymentService::class)
