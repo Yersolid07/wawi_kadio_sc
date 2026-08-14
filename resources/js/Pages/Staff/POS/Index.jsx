@@ -243,9 +243,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                         checkoutUrl: page.props.flash.checkout_url,
                         qrUrl: page.props.flash.qr_url
                     });
-                }
-                
-                if (page.props.flash.print_order_id) {
+                } else if (page.props.flash.print_order_id) {
                     let url = route('staff.pos.print', page.props.flash.print_order_id);
                     if (page.props.flash.change_amount !== undefined) {
                         url += '?change_amount=' + page.props.flash.change_amount;
