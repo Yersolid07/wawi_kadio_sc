@@ -104,6 +104,7 @@ class POSController extends Controller
 
         $checkoutUrl = null;
         $qrUrl = null;
+        $paymentId = null;
         try {
             // If it's Tripay, we do NOT mark it as paid immediately
             $markAsPaid = !$isTripay;
@@ -130,7 +131,8 @@ class POSController extends Controller
                 }
                 
                 $checkoutUrl = $result['checkout_url'] ?? null;
-                $qrUrl = $result['gateway_response']['qr_url'] ?? null;
+                $qrUrl = $result['qr_url'] ?? ($result['gateway_response']['qr_url'] ?? null);
+                $paymentId = $result['payment']->id ?? null;
             }
         } catch (\Exception $e) {
             return back()->withErrors(['items' => $e->getMessage()]);
@@ -156,8 +158,8 @@ class POSController extends Controller
             'print_order_id' => $order->id,
             'print_order_data' => $orderDataForPrint,
             'checkout_url'   => $checkoutUrl,
-            'qr_url'         => $result['qr_url'] ?? ($result['gateway_response']['qr_url'] ?? null),
-            'payment_id'     => $result['payment']->id ?? null,
+            'qr_url'         => $qrUrl,
+            'payment_id'     => $paymentId,
             'change_amount'  => $validated['payment_method'] === 'cash'
                 ? (($validated['amount_paid'] ?? 0) - $totalAmount)
                 : 0,
