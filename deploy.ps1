@@ -9,7 +9,7 @@ Write-Host ""
 
 
 Write-Host "🔄 2/4 - Adding changes to Git..." -ForegroundColor Yellow
-git add .
+git add -A
 
 Write-Host "📝 3/4 - Committing changes..." -ForegroundColor Yellow
 git commit -m $commitMessage
