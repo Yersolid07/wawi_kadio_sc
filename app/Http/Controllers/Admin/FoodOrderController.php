@@ -16,13 +16,15 @@ class FoodOrderController extends Controller
         $orders = FoodOrder::with(['user', 'items.menuItem', 'reservation'])
             ->when($request->status, fn ($q) => $q->where('status', $request->status))
             ->when($request->type, fn ($q) => $q->where('order_type', $request->type))
+            ->when($request->date_from, fn ($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to, fn ($q) => $q->whereDate('created_at', '<=', $request->date_to))
             ->latest()
             ->paginate(15)
             ->withQueryString();
 
         return Inertia::render('Admin/FoodOrders/Index', [
             'orders' => $orders,
-            'filters' => $request->only(['status', 'type']),
+            'filters' => $request->only(['status', 'type', 'date_from', 'date_to']),
             'stats' => [
                 'pending' => FoodOrder::where('status', 'pending')->count(),
                 'preparing' => FoodOrder::where('status', 'preparing')->count(),

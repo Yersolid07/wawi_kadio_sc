@@ -7,11 +7,13 @@ import debounce from 'lodash/debounce';
 export default function Index({ orders, filters, stats }) {
     const [status, setStatus] = useState(filters.status || '');
     const [type, setType] = useState(filters.type || '');
+    const [dateFrom, setDateFrom] = useState(filters.date_from || '');
+    const [dateTo, setDateTo] = useState(filters.date_to || '');
 
-    const handleFilter = debounce((statusValue, typeValue) => {
+    const handleFilter = debounce((statusValue, typeValue, from, to) => {
         router.get(
             route('admin.food-orders.index'),
-            { status: statusValue, type: typeValue },
+            { status: statusValue, type: typeValue, date_from: from, date_to: to },
             { preserveState: true, replace: true }
         );
     }, 300);
@@ -110,19 +112,48 @@ export default function Index({ orders, filters, stats }) {
                             <option value="delivered">Selesai</option>
                             <option value="cancelled">Dibatalkan</option>
                         </select>
-                        <select
-                            className="bg-stone-50 border-stone-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl md:w-48"
-                            value={type}
-                            onChange={(e) => {
-                                setType(e.target.value);
-                                handleFilter(status, e.target.value);
-                            }}
-                        >
-                            <option value="">Semua Tipe</option>
-                            <option value="room_delivery">Antar ke Kamar/Fasilitas</option>
-                            <option value="dine_in">Makan di Resto/Cafe</option>
-                            <option value="takeaway">Bawa Pulang</option>
-                        </select>
+                        <div className="relative md:w-48">
+                            <select
+                                value={type}
+                                onChange={(e) => {
+                                    setType(e.target.value);
+                                    handleFilter(status, e.target.value, dateFrom, dateTo);
+                                }}
+                                className="pl-4 pr-10 py-2 bg-stone-50 border-stone-200 focus:border-sky-500 rounded-xl text-sm w-full"
+                            >
+                                <option value="">Semua Tipe</option>
+                                <option value="room_delivery">Antar ke Kamar/Fasilitas</option>
+                                <option value="dine_in">Makan di Resto/Cafe</option>
+                                <option value="takeaway">Bawa Pulang</option>
+                            </select>
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                <ChevronDown size={16} />
+                            </div>
+                        </div>
+
+                        {/* Filter Tanggal */}
+                        <div className="flex gap-2">
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => {
+                                    setDateFrom(e.target.value);
+                                    handleFilter(status, type, e.target.value, dateTo);
+                                }}
+                                className="px-4 py-2 bg-stone-50 border-stone-200 focus:border-sky-500 rounded-xl text-sm w-full"
+                                placeholder="Mulai Tanggal"
+                            />
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => {
+                                    setDateTo(e.target.value);
+                                    handleFilter(status, type, dateFrom, e.target.value);
+                                }}
+                                className="px-4 py-2 bg-stone-50 border-stone-200 focus:border-sky-500 rounded-xl text-sm w-full"
+                                placeholder="Sampai Tanggal"
+                            />
+                        </div>
                     </div>
 
                     <div className="space-y-4">
@@ -208,6 +239,10 @@ export default function Index({ orders, filters, stats }) {
                                                 Validasi Bayar Kasir
                                             </button>
                                         )}
+                                        {/* Print Button */}
+                                        <a href={route('staff.pos.print', order.id)} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 border border-slate-200">
+                                            Print Struk
+                                        </a>
                                     </div>
                                 </div>
                             </div>

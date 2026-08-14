@@ -66,6 +66,15 @@ function ReservationRow({ reservation, onStatusChange }) {
                     >
                         <Eye size={15} />
                     </Link>
+                    <a
+                        href={route('customer.reservations.print', reservation.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                        title="Print Struk / Invoice"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                    </a>
                     {actions.length > 0 && (
                         <div className="relative">
                             <button
@@ -104,9 +113,11 @@ export default function AdminReservationsIndex({ reservations, filters, faciliti
     const [search, setSearch] = useState(filters?.search || '');
     const [status, setStatus] = useState(filters?.status || '');
     const [facilityId, setFacilityId] = useState(filters?.facility_id || '');
+    const [dateFrom, setDateFrom] = useState(filters?.date_from || '');
+    const [dateTo, setDateTo] = useState(filters?.date_to || '');
 
     const applyFilter = () => {
-        router.get(route('admin.reservations.index'), { search, status, facility_id: facilityId }, { preserveState: true });
+        router.get(route('admin.reservations.index'), { search, status, facility_id: facilityId, date_from: dateFrom, date_to: dateTo }, { preserveState: true });
     };
 
     const handleStatusChange = async (reservation, newStatus) => {
@@ -159,9 +170,24 @@ export default function AdminReservationsIndex({ reservations, filters, faciliti
                     <option value="">Semua Fasilitas</option>
                     {facilities?.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
                 </select>
-                <button onClick={applyFilter}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors">
-                    Filter
+                
+                {/* Filter Tanggal */}
+                <input
+                    type="date"
+                    value={dateFrom}
+                    onChange={e => setDateFrom(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                    placeholder="Mulai Tanggal"
+                />
+                <input
+                    type="date"
+                    value={dateTo}
+                    onChange={e => setDateTo(e.target.value)}
+                    className="px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-gray-200 focus:ring-2 focus:ring-green-500 outline-none"
+                    placeholder="Sampai Tanggal"
+                />
+                <button onClick={applyFilter} className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg flex items-center gap-1 transition-colors">
+                    <Filter size={14} /> Filter
                 </button>
             </div>
 
