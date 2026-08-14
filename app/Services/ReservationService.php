@@ -56,19 +56,19 @@ class ReservationService
         // Calculate base total for facility
         $total = 0;
         $ticketFacility = Facility::where('type', 'ticket')->where('is_active', true)->first();
-        $ticketPrice = $ticketFacility ? ($ticketFacility->price_per_day ?? 10000) : 10000;
+        $ticketPrice = $ticketFacility ? ($ticketFacility->final_price ?? 10000) : 10000;
         
         $guestCount = $validated['guest_count'] ?? 1;
 
         if ($facility->type === 'ticket') {
-            $total = $facility->price_per_day * $guestCount;
+            $total = ($facility->final_price ?? 0) * $guestCount;
         } else {
             if (!empty($validated['check_in_time']) && !empty($validated['check_out_time'])) {
                 $hours = max($checkInTime->diffInHours($checkOutTime), 1);
                 if ($facility->price_per_hour > 0) {
                     $facilityTotal = $facility->price_per_hour * $hours * $days;
                 } else {
-                    $facilityTotal = ($facility->price_per_day ?? 0) * $days;
+                    $facilityTotal = ($facility->final_price ?? 0) * $days;
                 }
             } else {
                 if (in_array($facility->type, ['gazebo', 'pool'])) {
@@ -76,7 +76,7 @@ class ReservationService
                     $validated['check_out_date'] = $checkOut->toDateString();
                 }
                 $days = max($checkIn->diffInDays($checkOut), 1);
-                $facilityTotal = ($facility->price_per_day ?? 0) * $days;
+                $facilityTotal = ($facility->final_price ?? 0) * $days;
             }
 
             // Total = Facility Cost + (Guest Count * Ticket Price)
