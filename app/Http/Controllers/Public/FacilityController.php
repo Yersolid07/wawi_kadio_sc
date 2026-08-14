@@ -15,6 +15,7 @@ class FacilityController extends Controller
     public function index(): Response
     {
         $facilities = Facility::active()
+            ->whereNotIn('type', ['ticket', 'tiket'])
             ->withCount('reservations')
             ->get();
 

@@ -27,6 +27,12 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     const [autoPrint, setAutoPrint] = useState(true);
     const [showTodayTickets, setShowTodayTickets] = useState(true);
 
+    // Date/Time State for non-ticket facilities
+    const [checkInDate, setCheckInDate] = useState(new Date().toISOString().split('T')[0]);
+    const [checkOutDate, setCheckOutDate] = useState(new Date().toISOString().split('T')[0]);
+    const [checkInTime, setCheckInTime] = useState('14:00');
+    const [checkOutTime, setCheckOutTime] = useState('12:00');
+
     // Filter Items
     const filteredTickets = tickets.filter(ticket => 
         ticket.name.toLowerCase().includes(search.toLowerCase())
@@ -89,12 +95,21 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
             return;
         }
 
+        const isTicket = ['ticket', 'tiket'].includes(cart[0].type?.toLowerCase());
+
         const payload = {
             facility_id: cart[0].id,
             quantity: cart[0].quantity,
             customer_name: guestName,
             payment_method: paymentMethod,
         };
+
+        if (!isTicket) {
+            payload.check_in_date = checkInDate;
+            payload.check_out_date = checkOutDate;
+            payload.check_in_time = checkInTime;
+            payload.check_out_time = checkOutTime;
+        }
 
         router.post(route('staff.tickets.store'), payload, {
             onSuccess: (page) => {
@@ -103,6 +118,11 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                 setCart([]);
                 setGuestName('Walk-in Customer');
                 setAmountPaid('');
+                // reset dates
+                setCheckInDate(new Date().toISOString().split('T')[0]);
+                setCheckOutDate(new Date().toISOString().split('T')[0]);
+                setCheckInTime('14:00');
+                setCheckOutTime('12:00');
                 
                 if (page.props.flash.qr_url && page.props.flash.payment_id) {
                     setPaymentQR(page.props.flash.qr_url);
@@ -425,9 +445,35 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
 
                         <div className="p-6 sm:p-8 overflow-y-auto">
                             <form id="paymentForm" onSubmit={handleCheckout} className="space-y-6">
+                                {cart.length > 0 && !['ticket', 'tiket'].includes(cart[0].type?.toLowerCase()) && (
+                                    <div className="bg-sky-50 p-6 rounded-2xl border border-sky-100 space-y-4">
+                                        <h3 className="font-bold text-sky-800 flex items-center gap-2">
+                                            <Calendar size={18} /> Jadwal Reservasi Fasilitas
+                                        </h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-in Date</label>
+                                                <input type="date" value={checkInDate} onChange={e => setCheckInDate(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-in Time</label>
+                                                <input type="time" value={checkInTime} onChange={e => setCheckInTime(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-out Date</label>
+                                                <input type="date" value={checkOutDate} onChange={e => setCheckOutDate(e.target.value)} min={checkInDate} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-out Time</label>
+                                                <input type="time" value={checkOutTime} onChange={e => setCheckOutTime(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-3">Metode Pembayaran</label>
-                                    <div className="grid grid-cols-3 gap-3">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                         <button
                                             type="button"
                                             onClick={() => setPaymentMethod('cash')}
@@ -463,6 +509,18 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                         >
                                             <CreditCard size={24} className={paymentMethod === 'transfer' ? 'text-sky-500' : ''} />
                                             <span className="font-semibold text-sm">Transfer</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setPaymentMethod('pay_later')}
+                                            className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all text-center ${
+                                                paymentMethod === 'pay_later' 
+                                                ? 'border-sky-500 bg-sky-50 text-sky-700' 
+                                                : 'border-stone-200 hover:border-sky-200 text-slate-600'
+                                            }`}
+                                        >
+                                            <Calendar size={24} className={paymentMethod === 'pay_later' ? 'text-sky-500' : ''} />
+                                            <span className="font-semibold text-sm leading-tight">Bayar Nanti</span>
                                         </button>
                                     </div>
                                 </div>

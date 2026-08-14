@@ -16,16 +16,7 @@ class TicketController extends Controller
 {
     public function index(): Response
     {
-        $tickets = Facility::where('is_active', true)
-            ->where(function($q) {
-                $q->where('type', 'ticket')
-                  ->orWhere('type', 'tiket')
-                  ->orWhere('type', 'pool')
-                  ->orWhere('type', 'gazebo')
-                  ->orWhere('name', 'like', '%tiket%')
-                  ->orWhere('name', 'like', '%ticket%');
-            })
-            ->get();
+        $tickets = Facility::where('is_active', true)->get();
 
         $activeReservations = Reservation::with(['facility', 'user', 'payment'])
             ->whereDate('check_in_date', today())
@@ -46,7 +37,11 @@ class TicketController extends Controller
             'facility_id'    => 'nullable|exists:facilities,id',
             'quantity'       => 'required|integer|min:1',
             'customer_name'  => 'nullable|string|max:255',
-            'payment_method' => 'required|in:cash,qris,transfer',
+            'payment_method' => 'required|in:cash,qris,transfer,pay_later',
+            'check_in_date'  => 'nullable|date',
+            'check_out_date' => 'nullable|date|after_or_equal:check_in_date',
+            'check_in_time'  => 'nullable|string',
+            'check_out_time' => 'nullable|string',
         ]);
 
         if (empty($validated['facility_id'])) {
@@ -61,10 +56,10 @@ class TicketController extends Controller
         try {
             $reservationData = [
                 'facility_id'    => $validated['facility_id'],
-                'check_in_date'  => date('Y-m-d'),
-                'check_out_date' => date('Y-m-d'),
-                'check_in_time'  => now()->format('H:i'),
-                'check_out_time' => now()->addHours(4)->format('H:i'),
+                'check_in_date'  => $validated['check_in_date'] ?? date('Y-m-d'),
+                'check_out_date' => $validated['check_out_date'] ?? date('Y-m-d'),
+                'check_in_time'  => $validated['check_in_time'] ?? now()->format('H:i'),
+                'check_out_time' => $validated['check_out_time'] ?? now()->addHours(4)->format('H:i'),
                 'guest_count'    => $validated['quantity'],
                 'customer_name'  => $validated['customer_name'] ?? 'Walk-in Ticket',
                 'payment_method' => $validated['payment_method'],
@@ -93,8 +88,11 @@ class TicketController extends Controller
                              ->with('order_details', $reservation);
             }
 
-            // Mark as confirmed for non-QRIS
-            $reservation->update(['status' => 'confirmed', 'payment_status' => 'paid']);
+            if ($validated['payment_method'] === 'pay_later') {
+                $reservation->update(['status' => 'confirmed', 'payment_status' => 'unpaid']);
+            } else {
+                $reservation->update(['status' => 'confirmed', 'payment_status' => 'paid']);
+            }
 
             // Map QRIS to Tripay for the database ENUM (fallback if needed)
             $dbPaymentMethod = $validated['payment_method'];

@@ -14,9 +14,9 @@ class HomeController extends Controller
 {
     public function index()
     {
-        // Get top active facilities ordered by reservation count (cache 1 hour)
         $facilities = \Illuminate\Support\Facades\Cache::remember('home_facilities', 3600, function () {
             return Facility::where('is_active', true)
+                ->whereNotIn('type', ['ticket', 'tiket'])
                 ->withCount('reservations')
                 ->orderByDesc('reservations_count')
                 ->take(3)
