@@ -37,13 +37,17 @@ class ReservationController extends Controller
     {
         $facilities = Facility::active()->get();
 
-        $paymentChannels = \Illuminate\Support\Facades\Cache::remember('tripay_channels', 86400, function () {
+        $paymentChannels = \Illuminate\Support\Facades\Cache::remember('tripay_channels', 3600, function () {
             try {
                 return app(\App\Services\TripayService::class)->getPaymentChannels();
             } catch (\Exception $e) {
                 return [];
             }
         });
+
+        if (empty($paymentChannels)) {
+            \Illuminate\Support\Facades\Cache::forget('tripay_channels');
+        }
 
         return Inertia::render('Customer/Reservations/Create', [
             'facilities' => $facilities,
