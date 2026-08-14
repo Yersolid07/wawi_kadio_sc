@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Ticket, Search, Plus, Minus, Users, Banknote, Calendar, Smartphone, CreditCard, Receipt, Loader2, ArrowLeft } from 'lucide-react';
+import { Ticket, Search, Plus, Minus, Users, Banknote, Calendar, Smartphone, CreditCard, Receipt, Loader2, ArrowLeft, X, ShoppingCart, QrCode } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { useConfirm } from '@/Contexts/ConfirmContext';
@@ -11,6 +11,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     const confirm = useConfirm();
     const [search, setSearch] = useState('');
     const [cart, setCart] = useState([]);
+    const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
     
     // POS Order State
     const [guestName, setGuestName] = useState('Walk-in Customer');
@@ -140,10 +141,10 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     return (
         <AppLayout title="Penjualan Tiket">
             <Head title="Kasir Tiket — Wawi Kadio" />
-            <div className="flex flex-col lg:flex-row h-[calc(100vh-4rem)] bg-stone-50 overflow-hidden">
+            <div className="flex flex-col lg:flex-row h-full min-h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] bg-stone-50 lg:overflow-hidden relative">
                 
                 {/* Main Content (Tickets) */}
-                <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                <div className="flex-1 flex flex-col h-full lg:overflow-hidden relative pb-24 lg:pb-0">
                     {/* Header */}
                     <div className="bg-white border-b border-stone-200 p-4 lg:p-6 flex flex-col sm:flex-row gap-4 items-center justify-between shrink-0 shadow-sm z-10">
                         <div className="flex items-center gap-4 w-full sm:w-auto">
@@ -227,16 +228,38 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                     </div>
                                 </div>
                             ))}
+                            {activeReservations.length === 0 && (
+                                <div className="col-span-full py-8 text-center text-slate-400">
+                                    Belum ada tiket terjual hari ini.
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
 
+                {/* Mobile Cart Toggle Button */}
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-stone-200 z-30 shadow-[0_-4px_24px_rgba(0,0,0,0.05)]">
+                    <button 
+                        onClick={() => setIsMobileCartOpen(true)}
+                        className="w-full bg-sky-500 text-white font-bold py-4 rounded-2xl flex justify-between items-center px-6 shadow-xl shadow-sky-500/20"
+                    >
+                        <div className="flex items-center gap-2">
+                            <ShoppingCart size={20} />
+                            <span>{totalItems} Tiket</span>
+                        </div>
+                        <span className="text-lg">Rp {formatPrice(totalAmount)}</span>
+                    </button>
+                </div>
+
                 {/* Right Sidebar (Cart) */}
-                <div className="w-full lg:w-[450px] bg-white border-l border-stone-200 flex flex-col h-full z-20 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] shrink-0">
-                    <div className="p-5 border-b border-stone-100 shrink-0">
+                <div className={`w-full lg:w-[450px] bg-white lg:border-l border-stone-200 flex flex-col h-[100dvh] lg:h-full z-40 shadow-[-4px_0_24px_rgba(0,0,0,0.02)] shrink-0 fixed inset-0 lg:static transition-transform duration-300 ${isMobileCartOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}`}>
+                    <div className="p-5 border-b border-stone-100 shrink-0 flex justify-between items-center">
                         <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                             <Receipt className="text-sky-500" /> Transaksi Baru
                         </h2>
+                        <button onClick={() => setIsMobileCartOpen(false)} className="lg:hidden p-2 bg-stone-100 text-slate-500 rounded-full hover:bg-stone-200">
+                            <X size={20} />
+                        </button>
                     </div>
 
                     {/* Order Details Form */}
