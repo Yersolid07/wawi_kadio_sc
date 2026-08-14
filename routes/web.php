@@ -45,6 +45,8 @@ Route::get('/fasilitas/{facility}/booked-dates', [PublicFacilityController::clas
 Route::get('/katalog', [MenuItemController::class, 'index'])->name('catalog.public');
 
 Route::get('/fix-tiket', function () {
+    \Illuminate\Support\Facades\DB::statement("ALTER TABLE facilities MODIFY COLUMN type ENUM('homestay', 'gazebo', 'pool', 'cafe', 'ticket') NOT NULL");
+    
     \App\Models\Facility::where('name', 'Tiket Masuk')->where('id', '')->delete();
     \App\Models\Facility::updateOrCreate(
         ['name' => 'Tiket Masuk', 'type' => 'ticket'],
