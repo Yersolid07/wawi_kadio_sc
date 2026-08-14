@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Head, router } from '@inertiajs/react';
-import { Ticket, Search, Plus, Minus, Users, Banknote, Calendar, Smartphone, CreditCard, Receipt, Loader2, ArrowLeft, X, ShoppingCart, QrCode } from 'lucide-react';
+import { Ticket, Search, Plus, Minus, Users, Banknote, Calendar, Smartphone, CreditCard, Receipt, Loader2, ArrowLeft, X, ShoppingCart, QrCode, ChevronDown } from 'lucide-react';
 import TextInput from '@/Components/TextInput';
 import PrimaryButton from '@/Components/PrimaryButton';
 import { useConfirm } from '@/Contexts/ConfirmContext';
@@ -24,6 +24,8 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     const [paymentQR, setPaymentQR] = useState(null);
     const [paymentId, setPaymentId] = useState(null);
     const [printUrl, setPrintUrl] = useState(null);
+    const [autoPrint, setAutoPrint] = useState(true);
+    const [showTodayTickets, setShowTodayTickets] = useState(true);
 
     // Filter Items
     const filteredTickets = tickets.filter(ticket => 
@@ -110,7 +112,9 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                         setPrintUrl(page.props.flash.order_details);
                     }
                 } else if (page.props.flash.print_ticket_id && page.props.flash.order_details) {
-                    handlePrintReceipt(page.props.flash.order_details);
+                    if (autoPrint) {
+                        handlePrintReceipt(page.props.flash.order_details);
+                    }
                 }
             },
             onError: (errors) => {
@@ -136,7 +140,9 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                         
                         // Cek order details
                         if (printUrl) {
-                            handlePrintReceipt(printUrl);
+                            if (autoPrint) {
+                                handlePrintReceipt(printUrl);
+                            }
                             setPrintUrl(null);
                         }
 
@@ -250,34 +256,48 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                     </div>
 
                     {/* Active Reservations / Tickets List */}
-                    <div className="mt-4 p-4 lg:p-6 bg-white border-t border-stone-200">
-                        <h2 className="text-lg font-bold text-slate-800 mb-4">Tiket Hari Ini</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                            {activeReservations.map(res => (
-                                <div key={res.id} className="bg-stone-50 border border-stone-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
-                                    <div>
-                                        <h4 className="font-bold text-slate-800 text-sm">{res.facility?.name}</h4>
-                                        <p className="text-xs text-slate-500 mt-1">
-                                            {res.user?.name || res.customer_name || 'Walk-in'} &bull; {res.guest_count} Orang
-                                        </p>
-                                    </div>
-                                    <div className="mt-4 flex justify-between items-center border-t border-stone-200 pt-3">
-                                        <span className="font-bold text-emerald-600 text-sm">Rp {formatPrice(res.payment?.amount || 0)}</span>
-                                        <button 
-                                            onClick={() => handlePrintReceipt(res)}
-                                            className="p-2 bg-white rounded-xl shadow-sm border border-stone-200 hover:bg-stone-50 text-slate-600 transition-colors"
-                                        >
-                                            <Receipt size={16} />
-                                        </button>
-                                    </div>
+                    <div className="mt-4 bg-white border-t border-stone-200">
+                        <button 
+                            onClick={() => setShowTodayTickets(!showTodayTickets)}
+                            className="w-full flex items-center justify-between p-4 lg:p-6 text-left hover:bg-stone-50 transition-colors"
+                        >
+                            <h2 className="text-lg font-bold text-slate-800">Tiket Hari Ini ({activeReservations.length})</h2>
+                            <span className="text-slate-400">
+                                {showTodayTickets ? <ChevronDown size={20} /> : <span className="transform rotate-180 inline-block"><ChevronDown size={20} /></span>}
+                            </span>
+                        </button>
+                        
+                        {showTodayTickets && (
+                            <div className="px-4 lg:px-6 pb-6 pt-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                    {activeReservations.map(res => (
+                                        <div key={res.id} className="bg-stone-50 border border-stone-100 rounded-2xl p-4 shadow-sm flex flex-col justify-between">
+                                            <div>
+                                                <h4 className="font-bold text-slate-800 text-sm">{res.facility?.name}</h4>
+                                                <p className="text-xs text-slate-500 mt-1">
+                                                    {res.user?.name || res.customer_name || 'Walk-in'} &bull; {res.guest_count} Orang
+                                                </p>
+                                            </div>
+                                            <div className="mt-4 flex justify-between items-center border-t border-stone-200 pt-3">
+                                                <span className="font-bold text-emerald-600 text-sm">Rp {formatPrice(res.payment?.amount || 0)}</span>
+                                                <button 
+                                                    onClick={() => handlePrintReceipt(res)}
+                                                    className="p-2 bg-white rounded-xl shadow-sm border border-stone-200 hover:bg-stone-50 text-slate-600 transition-colors"
+                                                    title="Print Struk"
+                                                >
+                                                    <Receipt size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {activeReservations.length === 0 && (
+                                        <div className="col-span-full py-8 text-center text-slate-400">
+                                            Belum ada tiket terjual hari ini.
+                                        </div>
+                                    )}
                                 </div>
-                            ))}
-                            {activeReservations.length === 0 && (
-                                <div className="col-span-full py-8 text-center text-slate-400">
-                                    Belum ada tiket terjual hari ini.
-                                </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -365,9 +385,20 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
 
                     {/* Checkout Footer */}
                     <div className="p-5 border-t border-stone-100 bg-white shrink-0">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex justify-between items-center mb-4">
                             <span className="text-slate-500 font-medium">Total Harga</span>
                             <span className="text-3xl font-black text-sky-600">Rp {formatPrice(totalAmount)}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mb-4 justify-end">
+                            <label className="text-sm text-slate-600 cursor-pointer flex items-center gap-2 select-none">
+                                <input 
+                                    type="checkbox" 
+                                    checked={autoPrint} 
+                                    onChange={(e) => setAutoPrint(e.target.checked)}
+                                    className="rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                                />
+                                Print Otomatis Bluetooth
+                            </label>
                         </div>
                         <PrimaryButton 
                             onClick={() => setShowPaymentModal(true)}

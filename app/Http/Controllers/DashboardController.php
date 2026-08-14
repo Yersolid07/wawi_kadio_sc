@@ -45,6 +45,14 @@ class DashboardController extends Controller
                 'total_customers' => User::role('customer')->count(),
                 'active_food_orders' => FoodOrder::whereIn('status', ['pending', 'preparing', 'ready'])->count(),
                 'average_rating' => Review::where('is_public', true)->avg('rating'),
+                'tickets_sold_today' => Reservation::whereHas('facility', function($q) {
+                    $q->where('type', 'ticket')
+                      ->orWhere('type', 'tiket')
+                      ->orWhere('type', 'pool')
+                      ->orWhere('type', 'gazebo')
+                      ->orWhere('name', 'like', '%tiket%')
+                      ->orWhere('name', 'like', '%ticket%');
+                })->where('check_in_date', $today)->where('status', 'confirmed')->sum('guest_count'),
             ];
         });
 

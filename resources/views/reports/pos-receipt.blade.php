@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Struk POS - #ORD-{{ strtoupper(substr($order->id, 0, 5)) }}</title>
     <style>
-        @page { margin: 0; }
+        @page { size: 58mm auto; margin: 0; }
         body {
             font-family: 'Courier New', Courier, monospace;
-            width: 80mm; /* Typically 58mm or 80mm for thermal printers */
+            width: 58mm; /* Thermal printers standard 58mm */
             margin: 0 auto;
-            padding: 10px;
-            font-size: 12px;
+            padding: 5px;
+            font-size: 11px;
             line-height: 1.2;
             color: #000;
         }

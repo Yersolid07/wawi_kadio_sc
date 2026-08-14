@@ -1,7 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, CalendarDays, UtensilsCrossed, Star, Activity, ArrowUpRight } from 'lucide-react';
+import { TrendingUp, Users, CalendarDays, UtensilsCrossed, Star, Activity, ArrowUpRight, Ticket } from 'lucide-react';
 
 export default function Admin({ stats = {}, recentReservations = [], revenueChart = [], facilityOccupancy = [], recentReviews = [] }) {
     
@@ -42,7 +42,7 @@ export default function Admin({ stats = {}, recentReservations = [], revenueChar
             <div className="max-w-7xl mx-auto space-y-8">
                 
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                     <StatCard 
                         icon={TrendingUp} label="Pendapatan Bulan Ini" 
                         value={`Rp ${formatPrice(stats.revenue_month)}`} 
@@ -63,6 +63,13 @@ export default function Admin({ stats = {}, recentReservations = [], revenueChar
                         subtext="Pelanggan terdaftar"
                         colorClass="bg-indigo-100 text-indigo-700" 
                         delay={0.3}
+                    />
+                    <StatCard 
+                        icon={Ticket} label="Tiket Terjual Hari Ini" 
+                        value={stats.tickets_sold_today || 0} 
+                        subtext="Jumlah orang masuk"
+                        colorClass="bg-sky-100 text-sky-700" 
+                        delay={0.35}
                     />
                     <StatCard 
                         icon={Star} label="Rata-rata Rating" 
