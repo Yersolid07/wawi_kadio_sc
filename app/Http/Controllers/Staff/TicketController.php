@@ -76,11 +76,17 @@ class TicketController extends Controller
             // Mark as confirmed
             $reservation->update(['status' => 'confirmed', 'payment_status' => 'paid']);
 
+            // Map QRIS to Tripay for the database ENUM
+            $dbPaymentMethod = $validated['payment_method'];
+            if ($dbPaymentMethod === 'qris') {
+                $dbPaymentMethod = 'tripay';
+            }
+
             // Create Payment record (the service doesn't auto-create one for POS tickets)
             $payment = Payment::create([
                 'reservation_id' => $reservation->id,
                 'amount'         => $reservation->total_amount,
-                'payment_method' => $validated['payment_method'],
+                'payment_method' => $dbPaymentMethod,
                 'payment_status' => 'success',
                 'payment_date'   => now(),
             ]);
