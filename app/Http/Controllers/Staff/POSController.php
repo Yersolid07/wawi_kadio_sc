@@ -98,6 +98,8 @@ class POSController extends Controller
             $validated['payment_method'] = 'tripay';
         }
 
+        $checkoutUrl = null;
+        $qrUrl = null;
         try {
             // If it's Tripay, we do NOT mark it as paid immediately
             $markAsPaid = !$isTripay;
@@ -119,13 +121,12 @@ class POSController extends Controller
                 $result = app(\App\Services\PaymentService::class)
                     ->createForFoodOrder($order, 'tripay', $customerInfo, $channel, route('staff.pos.print', $order->id));
 
-                if (!empty($result['checkout_url'])) {
-                    return Inertia::location($result['checkout_url']);
-                }
-
                 if (!empty($result['error'])) {
                     throw new \Exception('Tripay error: ' . $result['error']);
                 }
+                
+                $checkoutUrl = $result['checkout_url'] ?? null;
+                $qrUrl = $result['gateway_response']['qr_url'] ?? null;
             }
         } catch (\Exception $e) {
             return back()->withErrors(['items' => $e->getMessage()]);
@@ -150,6 +151,8 @@ class POSController extends Controller
             'success'        => 'Transaksi berhasil diproses.',
             'print_order_id' => $order->id,
             'print_order_data' => $orderDataForPrint,
+            'checkout_url'   => $checkoutUrl,
+            'qr_url'         => $qrUrl,
             'change_amount'  => $validated['payment_method'] === 'cash'
                 ? (($validated['amount_paid'] ?? 0) - $totalAmount)
                 : 0,

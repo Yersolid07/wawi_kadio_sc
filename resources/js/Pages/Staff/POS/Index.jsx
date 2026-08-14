@@ -29,6 +29,9 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
     const [printUrl, setPrintUrl] = useState(null);
     const [printOrderData, setPrintOrderData] = useState(null);
     const [isPrintingBt, setIsPrintingBt] = useState(false);
+    
+    // QR Modal State
+    const [paymentQR, setPaymentQR] = useState(null);
 
     // Layout State
     const [layoutDirection, setLayoutDirection] = useState('horizontal'); // 'horizontal' or 'vertical'
@@ -234,6 +237,13 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                 clearActiveOrder();
                 setAmountPaid('');
                 setIsProcessing(false);
+                
+                if (page.props.flash.checkout_url || page.props.flash.qr_url) {
+                    setPaymentQR({
+                        checkoutUrl: page.props.flash.checkout_url,
+                        qrUrl: page.props.flash.qr_url
+                    });
+                }
                 
                 if (page.props.flash.print_order_id) {
                     let url = route('staff.pos.print', page.props.flash.print_order_id);
@@ -856,6 +866,46 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                 ) : (
                                     <>SELESAIKAN PESANAN &amp; CETAK STRUK</>
                                 )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* QR Payment Modal */}
+            {paymentQR && (
+                <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+                    <div className="bg-white rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden flex flex-col p-8 items-center text-center">
+                        <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4">
+                            <QrCode size={32} />
+                        </div>
+                        <h3 className="text-2xl font-black text-slate-900 mb-2">Pindai QRIS</h3>
+                        <p className="text-slate-500 text-sm mb-6">Silakan arahkan pelanggan untuk memindai kode QR ini dari layar Anda.</p>
+                        
+                        {paymentQR.qrUrl ? (
+                            <div className="p-4 bg-stone-50 rounded-2xl border border-stone-200 mb-6">
+                                <img src={paymentQR.qrUrl} alt="QRIS" className="w-full h-full object-contain" />
+                            </div>
+                        ) : (
+                            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 mb-6 w-full text-amber-800 text-sm font-medium">
+                                Kode QR image tidak tersedia secara langsung. Silakan klik tombol di bawah.
+                            </div>
+                        )}
+
+                        <div className="w-full flex gap-3 flex-col">
+                            {paymentQR.checkoutUrl && (
+                                <button 
+                                    onClick={() => window.open(paymentQR.checkoutUrl, '_blank', 'width=600,height=800')} 
+                                    className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl font-bold transition-colors shadow-lg flex items-center justify-center gap-2"
+                                >
+                                    Buka Halaman Tripay
+                                </button>
+                            )}
+                            <button 
+                                onClick={() => setPaymentQR(null)} 
+                                className="w-full py-3 bg-stone-100 hover:bg-stone-200 text-stone-600 rounded-xl font-bold transition-colors"
+                            >
+                                Tutup
                             </button>
                         </div>
                     </div>

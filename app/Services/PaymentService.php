@@ -159,7 +159,7 @@ class PaymentService
 
         $payment = Payment::create($paymentData);
 
-        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'error' => $errorMessage];
+        return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'gateway_response' => $result ?? null, 'error' => $errorMessage];
     }
 
     /**
