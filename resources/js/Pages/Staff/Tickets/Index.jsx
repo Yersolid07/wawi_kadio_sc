@@ -70,7 +70,18 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
         setCart(prev => prev.filter(item => item.id !== id));
     };
 
-    const totalAmount = cart.reduce((sum, item) => sum + (parseFloat(item.final_price || item.price) * item.quantity), 0);
+    const ticketFacility = tickets.find(t => ['ticket', 'tiket'].includes(t.type?.toLowerCase()));
+    const ticketPrice = ticketFacility ? parseFloat(ticketFacility.final_price || ticketFacility.price || ticketFacility.price_per_day || 10000) : 10000;
+
+    const totalAmount = cart.reduce((sum, item) => {
+        const itemPrice = parseFloat(item.final_price || item.price || item.price_per_day || 0);
+        if (['ticket', 'tiket'].includes(item.type?.toLowerCase())) {
+            return sum + (itemPrice * item.quantity);
+        } else {
+            return sum + itemPrice + (ticketPrice * item.quantity);
+        }
+    }, 0);
+
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
@@ -383,7 +394,11 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="pr-8">
                                             <h4 className="font-bold text-slate-800 text-sm leading-tight">{item.name}</h4>
-                                            <p className="font-semibold text-sky-600 text-sm mt-1">Rp {formatPrice(item.final_price || item.price)}</p>
+                                            <p className="font-semibold text-sky-600 text-sm mt-1">
+                                                Rp {formatPrice(['ticket', 'tiket'].includes(item.type?.toLowerCase()) 
+                                                    ? parseFloat(item.final_price || item.price || item.price_per_day || 0) 
+                                                    : parseFloat(item.final_price || item.price || item.price_per_day || 0) + (ticketPrice * item.quantity))}
+                                            </p>
                                         </div>
                                         <button
                                             onClick={() => removeFromCart(item.id)}
@@ -632,7 +647,11 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                         <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
                             <div>
                                 <h2 className="text-2xl font-black text-slate-800">{selectedFacility.name}</h2>
-                                <p className="text-xl font-bold text-sky-600 mt-1">Rp {formatPrice(selectedFacility.final_price || selectedFacility.price)}</p>
+                                <p className="text-xl font-bold text-sky-600 mt-1">
+                                    Rp {formatPrice(['ticket', 'tiket'].includes(selectedFacility.type?.toLowerCase()) 
+                                        ? parseFloat(selectedFacility.final_price || selectedFacility.price || selectedFacility.price_per_day || 0) 
+                                        : parseFloat(selectedFacility.final_price || selectedFacility.price || selectedFacility.price_per_day || 0) + (ticketPrice * detailQuantity))}
+                                </p>
                                 {selectedFacility.description && (
                                     <p className="text-slate-500 mt-3 text-sm leading-relaxed">{selectedFacility.description}</p>
                                 )}
