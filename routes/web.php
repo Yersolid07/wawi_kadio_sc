@@ -44,6 +44,19 @@ Route::get('/fasilitas/{facility}', [PublicFacilityController::class, 'show'])->
 Route::get('/fasilitas/{facility}/booked-dates', [PublicFacilityController::class, 'bookedDates'])->name('facilities.public.booked-dates');
 Route::get('/katalog', [MenuItemController::class, 'index'])->name('catalog.public');
 
+Route::get('/fix-tiket', function () {
+    \App\Models\Facility::where('name', 'Tiket Masuk')->where('id', '')->delete();
+    \App\Models\Facility::updateOrCreate(
+        ['name' => 'Tiket Masuk', 'type' => 'ticket'],
+        [
+            'description' => 'Tiket masuk harian untuk pengunjung Wawi Kadio.',
+            'price_per_day' => 10000,
+            'capacity' => 1,
+            'is_active' => true,
+        ]
+    );
+    return 'Database tiket berhasil diperbaiki! Silakan kembali ke Kasir Tiket.';
+});
 // Informational pages
 Route::get('/kebijakan-privasi', function () {
     return inertia('Public/PrivacyPolicy', [
