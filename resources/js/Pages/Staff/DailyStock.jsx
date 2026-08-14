@@ -1,5 +1,5 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, useForm, router } from '@inertiajs/react';
 import { useState, useCallback } from 'react';
 import { PackageOpen, Save, CheckCircle2 } from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -35,7 +35,17 @@ export default function DailyStock({ items }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        post(route('staff.daily-stock.update'), {
+        
+        // Only send items that were actually changed to avoid overwriting NULLs with 0
+        const changedStocks = data.stocks.filter((_, index) => changedIndexes.has(index));
+        
+        if (changedStocks.length === 0) {
+            return;
+        }
+
+        router.post(route('staff.daily-stock.update'), {
+            stocks: changedStocks
+        }, {
             preserveScroll: true,
             onSuccess: () => setChangedIndexes(new Set()),
         });

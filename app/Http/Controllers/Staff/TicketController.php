@@ -74,7 +74,7 @@ class TicketController extends Controller
             $reservation = $reservationService->createReservation($reservationData, auth()->id(), null);
 
             if ($validated['payment_method'] === 'qris') {
-                $reservation->update(['status' => 'pending', 'payment_status' => 'pending']);
+                $reservation->update(['status' => 'pending', 'payment_status' => 'unpaid']);
                 
                 $paymentService = app(\App\Services\PaymentService::class);
                 $result = $paymentService->createForReservation($reservation, 'QRISC', '082197432499', true);

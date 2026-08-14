@@ -57,7 +57,7 @@ class FoodOrderController extends Controller
             ->get()
             ->map(function ($item) {
                 // Mark item as out of stock if it uses daily stock tracking and stock is depleted
-                $item->is_out_of_stock = ($item->daily_stock !== null && $item->current_stock <= 0);
+                $item->is_out_of_stock = ($item->current_stock !== null && $item->current_stock <= 0);
                 return $item;
             })
             ->groupBy('category');

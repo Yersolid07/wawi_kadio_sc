@@ -32,7 +32,7 @@ class POSController extends Controller
                 ->orderBy('name')
                 ->get()
                 ->map(function ($item) {
-                    $item->is_out_of_stock = ($item->daily_stock !== null && $item->current_stock <= 0);
+                    $item->is_out_of_stock = ($item->current_stock !== null && $item->current_stock <= 0);
                     return $item;
                 })
                 ->groupBy('category'),
