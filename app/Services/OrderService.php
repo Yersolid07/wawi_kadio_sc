@@ -99,7 +99,7 @@ class OrderService
      */
     public function processPosOrder(array $validated, int $userId, bool $markAsPaid = true): FoodOrder
     {
-        return DB::transaction(function () use ($validated, $userId) {
+        return DB::transaction(function () use ($validated, $userId, $markAsPaid) {
 
             $paymentMethod = $validated['payment_method'] ?? 'cash';
 
