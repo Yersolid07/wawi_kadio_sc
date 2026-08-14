@@ -13,6 +13,10 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
     const [cart, setCart] = useState([]);
     const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
     
+    // Facility Detail Modal State
+    const [selectedFacility, setSelectedFacility] = useState(null);
+    const [detailQuantity, setDetailQuantity] = useState(1);
+    
     // POS Order State
     const [guestName, setGuestName] = useState('Walk-in Customer');
     
@@ -38,14 +42,18 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
         ticket.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const addToCart = (ticket) => {
-        setCart(prev => {
-            const existing = prev.find(i => i.id === ticket.id);
-            if (existing) {
-                return prev.map(i => i.id === ticket.id ? { ...i, quantity: i.quantity + 1 } : i);
-            }
-            return [...prev, { ...ticket, quantity: 1 }];
-        });
+    const handleSelectFacility = (ticket) => {
+        setSelectedFacility(ticket);
+        setDetailQuantity(1);
+        setCheckInDate(new Date().toISOString().split('T')[0]);
+        setCheckOutDate(new Date().toISOString().split('T')[0]);
+        setCheckInTime('14:00');
+        setCheckOutTime('12:00');
+    };
+
+    const addToCart = () => {
+        setCart([{ ...selectedFacility, quantity: detailQuantity }]);
+        setSelectedFacility(null);
     };
 
     const updateQuantity = (id, delta) => {
@@ -248,7 +256,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                 {filteredTickets.map(ticket => (
                                     <div
                                         key={ticket.id}
-                                        onClick={() => addToCart(ticket)}
+                                        onClick={() => handleSelectFacility(ticket)}
                                         className="group bg-white rounded-3xl border border-stone-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden cursor-pointer flex flex-col"
                                     >
                                         <div className="aspect-[4/3] bg-stone-100 relative overflow-hidden">
@@ -445,32 +453,6 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
 
                         <div className="p-6 sm:p-8 overflow-y-auto">
                             <form id="paymentForm" onSubmit={handleCheckout} className="space-y-6">
-                                {cart.length > 0 && !['ticket', 'tiket'].includes(cart[0].type?.toLowerCase()) && (
-                                    <div className="bg-sky-50 p-6 rounded-2xl border border-sky-100 space-y-4">
-                                        <h3 className="font-bold text-sky-800 flex items-center gap-2">
-                                            <Calendar size={18} /> Jadwal Reservasi Fasilitas
-                                        </h3>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-in Date</label>
-                                                <input type="date" value={checkInDate} onChange={e => setCheckInDate(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-in Time</label>
-                                                <input type="time" value={checkInTime} onChange={e => setCheckInTime(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-out Date</label>
-                                                <input type="date" value={checkOutDate} onChange={e => setCheckOutDate(e.target.value)} min={checkInDate} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-sky-700 mb-1">Check-out Time</label>
-                                                <input type="time" value={checkOutTime} onChange={e => setCheckOutTime(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
                                 <div>
                                     <label className="block text-sm font-bold text-slate-700 mb-3">Metode Pembayaran</label>
                                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -510,18 +492,20 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                             <CreditCard size={24} className={paymentMethod === 'transfer' ? 'text-sky-500' : ''} />
                                             <span className="font-semibold text-sm">Transfer</span>
                                         </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setPaymentMethod('pay_later')}
-                                            className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all text-center ${
-                                                paymentMethod === 'pay_later' 
-                                                ? 'border-sky-500 bg-sky-50 text-sky-700' 
-                                                : 'border-stone-200 hover:border-sky-200 text-slate-600'
-                                            }`}
-                                        >
-                                            <Calendar size={24} className={paymentMethod === 'pay_later' ? 'text-sky-500' : ''} />
-                                            <span className="font-semibold text-sm leading-tight">Bayar Nanti</span>
-                                        </button>
+                                        {cart.length > 0 && !['ticket', 'tiket'].includes(cart[0].type?.toLowerCase()) && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentMethod('pay_later')}
+                                                className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 transition-all text-center ${
+                                                    paymentMethod === 'pay_later' 
+                                                    ? 'border-sky-500 bg-sky-50 text-sky-700' 
+                                                    : 'border-stone-200 hover:border-sky-200 text-slate-600'
+                                                }`}
+                                            >
+                                                <Calendar size={24} className={paymentMethod === 'pay_later' ? 'text-sky-500' : ''} />
+                                                <span className="font-semibold text-sm leading-tight">Bayar Nanti</span>
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
 
@@ -621,6 +605,100 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                 className="flex-1 justify-center bg-sky-500 hover:bg-sky-600 rounded-xl py-4 shadow-xl shadow-sky-500/20 text-lg font-bold"
                             >
                                 Cetak & Selesai (Manual)
+                            </PrimaryButton>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Facility Detail Modal */}
+            {selectedFacility && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setSelectedFacility(null)}></div>
+                    <div className="bg-white rounded-[2rem] w-full max-w-lg shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]">
+                        {/* Header Image */}
+                        <div className="h-48 bg-stone-100 relative">
+                            {selectedFacility.image_url ? (
+                                <img src={`/storage/${selectedFacility.image_url}`} alt={selectedFacility.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-stone-300">
+                                    <Ticket size={48} />
+                                </div>
+                            )}
+                            <button onClick={() => setSelectedFacility(null)} className="absolute top-4 right-4 p-2 bg-white/80 hover:bg-white backdrop-blur-sm text-slate-700 rounded-full shadow-sm transition-colors">
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+                            <div>
+                                <h2 className="text-2xl font-black text-slate-800">{selectedFacility.name}</h2>
+                                <p className="text-xl font-bold text-sky-600 mt-1">Rp {formatPrice(selectedFacility.final_price || selectedFacility.price)}</p>
+                                {selectedFacility.description && (
+                                    <p className="text-slate-500 mt-3 text-sm leading-relaxed">{selectedFacility.description}</p>
+                                )}
+                            </div>
+
+                            {/* Options based on type */}
+                            {(!['ticket', 'tiket'].includes(selectedFacility.type?.toLowerCase())) && (
+                                <div className="bg-sky-50 p-5 rounded-2xl border border-sky-100 space-y-4">
+                                    <h3 className="font-bold text-sky-800 flex items-center gap-2 text-sm">
+                                        <Calendar size={16} /> Jadwal Reservasi
+                                    </h3>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-semibold text-sky-700 mb-1">Check-in Date</label>
+                                            <input type="date" value={checkInDate} onChange={e => setCheckInDate(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-sky-700 mb-1">Check-in Time</label>
+                                            <input type="time" value={checkInTime} onChange={e => setCheckInTime(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-sky-700 mb-1">Check-out Date</label>
+                                            <input type="date" value={checkOutDate} onChange={e => setCheckOutDate(e.target.value)} min={checkInDate} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-semibold text-sky-700 mb-1">Check-out Time</label>
+                                            <input type="time" value={checkOutTime} onChange={e => setCheckOutTime(e.target.value)} className="w-full rounded-xl border-sky-200 text-sm focus:border-sky-500" required />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">Jumlah (Kuantitas / Orang)</label>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        type="button"
+                                        onClick={() => setDetailQuantity(Math.max(1, detailQuantity - 1))} 
+                                        className="w-12 h-12 flex items-center justify-center bg-stone-100 text-slate-600 hover:bg-stone-200 hover:text-slate-800 rounded-xl transition-colors"
+                                    >
+                                        <Minus size={20} />
+                                    </button>
+                                    <input 
+                                        type="number"
+                                        value={detailQuantity}
+                                        onChange={(e) => setDetailQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                                        className="flex-1 h-12 text-center font-bold text-lg border-stone-200 focus:border-sky-500 rounded-xl"
+                                        min="1"
+                                    />
+                                    <button 
+                                        type="button"
+                                        onClick={() => setDetailQuantity(detailQuantity + 1)} 
+                                        className="w-12 h-12 flex items-center justify-center bg-stone-100 text-slate-600 hover:bg-stone-200 hover:text-slate-800 rounded-xl transition-colors"
+                                    >
+                                        <Plus size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="p-6 border-t border-stone-100 bg-stone-50/50 flex gap-4 shrink-0">
+                            <PrimaryButton 
+                                onClick={addToCart}
+                                className="w-full justify-center bg-sky-500 hover:bg-sky-600 rounded-xl py-4 shadow-xl shadow-sky-500/20 text-lg"
+                            >
+                                Tambahkan ke Keranjang
                             </PrimaryButton>
                         </div>
                     </div>
