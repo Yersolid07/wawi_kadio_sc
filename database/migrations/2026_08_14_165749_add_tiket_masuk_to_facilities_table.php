@@ -16,7 +16,7 @@ return new class extends Migration
             'name' => 'Tiket Masuk',
             'type' => 'ticket',
             'description' => 'Tiket masuk harian untuk pengunjung Wawi Kadio.',
-            'price' => 10000,
+            'price_per_day' => 10000,
             'capacity' => 1,
             'is_active' => true,
             'created_at' => now(),
