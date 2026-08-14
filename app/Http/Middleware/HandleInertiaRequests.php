@@ -60,6 +60,11 @@ class HandleInertiaRequests extends Middleware
                 'print_order_id' => fn () => $request->session()->get('print_order_id'),
                 'print_order_data' => fn () => $request->session()->get('print_order_data'),
                 'change_amount' => fn () => $request->session()->get('change_amount'),
+                'checkout_url' => fn () => $request->session()->get('checkout_url'),
+                'qr_url' => fn () => $request->session()->get('qr_url'),
+                'payment_id' => fn () => $request->session()->get('payment_id'),
+                'print_ticket_id' => fn () => $request->session()->get('print_ticket_id'),
+                'order_details' => fn () => $request->session()->get('order_details'),
             ],
             'cms_settings' => $cmsSettings,
         ];
