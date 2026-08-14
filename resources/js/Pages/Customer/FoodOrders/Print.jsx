@@ -45,8 +45,8 @@ export default function Print({ order, company }) {
                 <div className="grid grid-cols-2 gap-8 mb-8">
                     <div className="bg-stone-50 p-6 rounded-2xl print:border print:border-stone-200">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Pemesan</h3>
-                        <p className="font-bold text-lg text-slate-800 mb-1">{order.user.name}</p>
-                        <p className="text-slate-600 mb-1">{order.user.email}</p>
+                        <p className="font-bold text-lg text-slate-800 mb-1">{order.user ? order.user.name : (order.customer_name || 'Tamu')}</p>
+                        <p className="text-slate-600 mb-1">{order.user ? order.user.email : (order.customer_phone || '-')}</p>
                     </div>
                     <div className="bg-stone-50 p-6 rounded-2xl print:border print:border-stone-200">
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Detail Pengantaran</h3>
@@ -77,7 +77,7 @@ export default function Print({ order, company }) {
                             {order.items.map(item => (
                                 <tr key={item.id} className="border-b border-stone-100">
                                     <td className="py-4">
-                                        <p className="font-bold text-slate-800">{item.menuItem.name}</p>
+                                        <p className="font-bold text-slate-800">{item.menu_item?.name || 'Menu Tidak Diketahui'}</p>
                                     </td>
                                     <td className="py-4 text-center font-medium text-slate-600">{item.quantity}</td>
                                     <td className="py-4 text-right text-slate-600">{formatCurrency(item.price)}</td>
