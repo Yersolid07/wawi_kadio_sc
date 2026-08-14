@@ -258,7 +258,7 @@ export default function Create({ menuItems, reservationId, activeReservations = 
 
                 {/* Right: Cart & Checkout (Fixed at bottom on mobile, sticky on desktop) */}
                 <div className={`w-full lg:w-[400px] lg:block ${isMobileCartOpen ? 'fixed inset-0 z-50 bg-black/60 flex items-end lg:static lg:bg-transparent lg:z-auto' : 'hidden'}`}>
-                    <form onSubmit={submit} className={`bg-white border border-stone-100 shadow-xl lg:shadow-sm w-full lg:w-auto transition-transform duration-300 ${isMobileCartOpen ? 'translate-y-0 rounded-t-3xl max-h-[90vh] overflow-y-auto p-6 pb-24' : 'translate-y-full lg:translate-y-0 lg:sticky lg:top-8 lg:rounded-[2rem] p-6'}`}>
+                    <form onSubmit={submit} className={`bg-white border border-stone-100 shadow-xl lg:shadow-sm w-full lg:w-auto transition-transform duration-300 ${isMobileCartOpen ? 'translate-y-0 rounded-t-3xl max-h-[90vh] overflow-y-auto p-6 pb-24' : 'translate-y-full lg:translate-y-0 lg:sticky lg:top-8 lg:rounded-[2rem] p-6 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto'}`}>
                         <div className="flex items-center justify-between mb-6 border-b border-stone-100 pb-4">
                             <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
                                 <ShoppingCart className="text-emerald-500" /> Detail Pesanan

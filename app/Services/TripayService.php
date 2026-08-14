@@ -111,8 +111,14 @@ class TripayService
      */
     public function getPaymentChannels(): array
     {
-        $response = Http::withToken($this->apiKey)
-            ->get($this->getBaseUrl().'/merchant/payment-channel');
+        if (empty($this->apiKey)) {
+            return [];
+        }
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Accept'        => 'application/json',
+        ])->get($this->getBaseUrl().'/merchant/payment-channel');
 
         if ($response->successful()) {
             return $response->json('data', []);

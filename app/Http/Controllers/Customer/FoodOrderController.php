@@ -37,13 +37,17 @@ class FoodOrderController extends Controller
                 ->get();
         }
 
-        $paymentChannels = \Illuminate\Support\Facades\Cache::remember('tripay_channels', 86400, function () {
+        $paymentChannels = \Illuminate\Support\Facades\Cache::remember('tripay_channels', 3600, function () {
             try {
                 return app(\App\Services\TripayService::class)->getPaymentChannels();
             } catch (\Exception $e) {
                 return [];
             }
         });
+        
+        if (empty($paymentChannels)) {
+            \Illuminate\Support\Facades\Cache::forget('tripay_channels');
+        }
 
         // Fetch ALL available (is_available=true) menu items including exhausted ones
         // so we can show "Habis" badge on the frontend

@@ -249,10 +249,10 @@ export default function Welcome({ auth, facilities = [], menuItems = [], reviews
                         >
                             <div className="aspect-[4/3] rounded-[2rem] overflow-hidden shadow-2xl">
                                 <img 
-                                    src={getImageUrl(getSetting('hero_image'))} 
+                                    src={getImageUrl(getSetting('about_image', getSetting('hero_image', '/storage/facilities/Wawi-Kadio-Photo--1253605224.jpeg')))} 
                                     alt="Wawi Kadio Nature" 
                                     className="w-full h-full object-cover" 
-                                    onError={(e) => { e.target.onerror = null; e.target.src = 'https://ui-avatars.com/api/?name=Wawi+Kadio&background=059669&color=fff&size=512'; }}
+                                    onError={(e) => { e.target.onerror = null; e.target.src = '/storage/facilities/Wawi-Kadio-Photo--1253605224.jpeg'; }}
                                 />
                             </div>
                             <div className="absolute -bottom-8 -left-8 bg-white p-6 rounded-3xl shadow-xl border border-stone-100 hidden md:block">
