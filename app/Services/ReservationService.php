@@ -52,6 +52,7 @@ class ReservationService
             if ($checkIn->diffInDays($checkOut) === 1 && $checkOutTime->diffInHours($checkInTime) < 24) {
                 $days = 1;
             }
+        }
 
         // Calculate base total for facility
         $total = 0;
