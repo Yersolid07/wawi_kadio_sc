@@ -527,7 +527,12 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-stone-50">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                         {filteredItems.map(item => {
-                            const isOutOfStock = item.is_out_of_stock;
+                            const isTracked = item.daily_stock !== null;
+                            const cartItem = cart.find(i => i.id === item.id && !i.is_existing);
+                            const cartQty = cartItem ? cartItem.quantity : 0;
+                            const availableStock = isTracked ? Math.max(0, item.current_stock - cartQty) : null;
+                            const isOutOfStock = item.is_out_of_stock || (isTracked && availableStock === 0);
+                            
                             return (
                                 <div 
                                     key={item.id} 
@@ -550,6 +555,11 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                         {isOutOfStock && (
                                             <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
                                                 HABIS
+                                            </span>
+                                        )}
+                                        {isTracked && !isOutOfStock && (
+                                            <span className="bg-orange-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
+                                                SISA: {availableStock}
                                             </span>
                                         )}
                                         <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
