@@ -301,8 +301,11 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                             window.open(printUrl, '_blank', 'width=400,height=600');
                             setPrintUrl(null);
                         }
+                        
+                        // Reload activeOrders to clear the paid order
+                        router.reload({ only: ['activeOrders'] });
                     }
-                } catch (e) {
+                } catch (error) {
                     // Ignore polling errors
                 }
             }, 3000); // Check every 3 seconds

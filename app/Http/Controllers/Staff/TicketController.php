@@ -77,8 +77,13 @@ class TicketController extends Controller
                 $reservation->update(['status' => 'pending', 'payment_status' => 'unpaid']);
                 
                 $paymentService = app(\App\Services\PaymentService::class);
-                $result = $paymentService->createForReservation($reservation, 'tripay', 'QRISC');
+                $result = $paymentService->createForReservation($reservation, 'tripay', 'QRIS');
                 
+                if (!empty($result['error'])) {
+                    DB::rollBack();
+                    return back()->withErrors(['error' => 'Gagal membuat pembayaran QRIS: ' . $result['error']]);
+                }
+
                 DB::commit();
 
                 return back()->with('success', 'Silakan scan QRIS untuk membayar.')

@@ -139,6 +139,9 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                             handlePrintReceipt(printUrl);
                             setPrintUrl(null);
                         }
+
+                        // Reload activeReservations to update list
+                        router.reload({ only: ['activeReservations'] });
                     }
                 } catch (e) {
                     // Ignore errors during polling
