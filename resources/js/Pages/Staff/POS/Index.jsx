@@ -994,14 +994,10 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                         </div>
                         <div className="flex-1 w-full bg-stone-100 overflow-hidden relative">
                             <iframe 
+                                id="receipt-iframe"
                                 src={printUrl} 
                                 className="w-full h-full border-0 absolute inset-0" 
                                 title="Struk Pembayaran"
-                                onLoad={(e) => {
-                                    try {
-                                        e.target.contentWindow.print();
-                                    } catch (err) {}
-                                }}
                             ></iframe>
                         </div>
                         <div className="p-4 bg-white border-t border-stone-200 shrink-0 grid grid-cols-2 gap-3">
@@ -1011,11 +1007,22 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                 className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-stone-300 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
                             >
                                 {isPrintingBt ? <Loader2 size={18} className="animate-spin" /> : <Smartphone size={18} />}
-                                Cetak Bluetooth
+                                Thermal Bluetooth
+                            </button>
+                            <button
+                                onClick={() => {
+                                    try {
+                                        document.getElementById('receipt-iframe').contentWindow.print();
+                                    } catch(err) {}
+                                }}
+                                className="w-full py-3 bg-stone-800 hover:bg-stone-900 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                            >
+                                <Receipt size={18} />
+                                Printer Sistem (USB)
                             </button>
                             <button
                                 onClick={() => { setPrintUrl(null); setPrintOrderData(null); }}
-                                className="w-full py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all"
+                                className="w-full py-3 bg-stone-200 hover:bg-stone-300 text-stone-700 rounded-xl font-bold transition-all col-span-2"
                             >
                                 Tutup & Lanjut
                             </button>

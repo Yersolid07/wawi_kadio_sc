@@ -10,20 +10,42 @@ export async function connectAndPrint(printData) {
         }
 
         const device = await navigator.bluetooth.requestDevice({
-            filters: [{ services: ['000018f0-0000-1000-8000-00805f9b34fb'] }],
-            optionalServices: ['000018f0-0000-1000-8000-00805f9b34fb'] // Common thermal printer service UUID
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Common Chinese Printer
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Other Chinese Printer
+                '0000ff00-0000-1000-8000-00805f9b34fb', // Vendor specific
+                '0000ae30-0000-1000-8000-00805f9b34fb',
+                '0000af30-0000-1000-8000-00805f9b34fb'
+            ]
         });
 
         const server = await device.gatt.connect();
-        const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
-        const characteristic = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb'); // Write characteristic
+        
+        let targetCharacteristic = null;
+        const services = await server.getPrimaryServices();
+        for (const service of services) {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+                if (char.properties.write || char.properties.writeWithoutResponse) {
+                    targetCharacteristic = char;
+                    break;
+                }
+            }
+            if (targetCharacteristic) break;
+        }
+
+        if (!targetCharacteristic) {
+            throw new Error('Tidak dapat menemukan service printer bluetooth yang bisa ditulis (writable).');
+        }
 
         // Helper to send data in chunks to prevent overflowing the printer buffer
         const sendChunks = async (data) => {
             const CHUNK_SIZE = 512;
             for (let i = 0; i < data.length; i += CHUNK_SIZE) {
                 const chunk = data.slice(i, i + CHUNK_SIZE);
-                await characteristic.writeValue(new Uint8Array(chunk));
+                await targetCharacteristic.writeValue(new Uint8Array(chunk));
                 await new Promise(resolve => setTimeout(resolve, 50)); // Small delay between chunks
             }
         };
