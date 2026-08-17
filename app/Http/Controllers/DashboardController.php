@@ -121,7 +121,7 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        $revenue_chart = \App\Models\FinancialTransaction::where('type', 'income')
+        $dbChart = \App\Models\FinancialTransaction::where('type', 'income')
             ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->select(
                 DB::raw('DATE(transaction_date) as date'),
@@ -129,7 +129,36 @@ class DashboardController extends Controller
             )
             ->groupBy('date')
             ->orderBy('date')
-            ->get();
+            ->pluck('total', 'date');
+
+        $revenue_chart = collect();
+
+        if ($dateRange === 'year') {
+            $dbChartMonth = \App\Models\FinancialTransaction::where('type', 'income')
+                ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->select(
+                    DB::raw('MONTH(transaction_date) as month'),
+                    DB::raw('SUM(amount) as total')
+                )
+                ->groupBy('month')
+                ->pluck('total', 'month');
+
+            for ($i = 1; $i <= 12; $i++) {
+                $monthDate = now()->startOfYear()->addMonths($i - 1);
+                $revenue_chart->push([
+                    'date' => $monthDate->toDateString(), // e.g. 2026-01-01
+                    'total' => $dbChartMonth->get($i, 0)
+                ]);
+            }
+        } else {
+            for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+                $dateStr = $date->toDateString();
+                $revenue_chart->push([
+                    'date' => $dateStr,
+                    'total' => $dbChart->get($dateStr, 0)
+                ]);
+            }
+        }
 
         $facility_occupancy = Facility::withCount([
             'reservations as active_reservations_count' => fn ($q) => $q->whereIn('status', ['confirmed'])

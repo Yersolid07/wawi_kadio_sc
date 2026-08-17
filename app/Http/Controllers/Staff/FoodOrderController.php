@@ -13,10 +13,11 @@ use Inertia\Response;
 
 class FoodOrderController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
         return Inertia::render('Staff/FoodOrders/Index', [
-            'activeOrders' => FoodOrder::with(['user', 'items.menuItem', 'reservation'])
+            'activeOrders' => FoodOrder::with(['items.menuItem', 'reservation.facility', 'user'])
+                ->whereDate('created_at', today())
                 ->active()
                 ->where('payment_status', 'paid') // Only show paid orders — unpaid ones wait in POS
                 ->latest()
@@ -26,7 +27,8 @@ class FoodOrderController extends Controller
 
     public function kds(): Response
     {
-        $orders = FoodOrder::with(['items.menuItem', 'reservation.facility'])
+        $orders = FoodOrder::with(['items.menuItem', 'reservation.facility', 'user'])
+            ->whereDate('created_at', today())
             ->whereIn('status', ['pending', 'preparing', 'ready'])
             ->where('payment_status', 'paid') // Gate: unpaid orders must be validated at POS first
             ->oldest()

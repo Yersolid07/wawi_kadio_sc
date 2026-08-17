@@ -266,7 +266,7 @@ class OrderService
                     \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($order));
                 } else {
                     // Tiket-only order: complete immediately
-                    $order->update(['status' => 'completed']);
+                    $order->update(['status' => 'delivered']);
                 }
             }
 

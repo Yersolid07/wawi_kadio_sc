@@ -203,7 +203,9 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
         try {
             // Build simple order object for receipt
             const printOrder = {
+                ...order,
                 customerName: order.user?.name || order.customer_name || 'Walk-in Ticket',
+                paymentStatus: order.payment_status || order.status || 'paid',
             };
             
             // Format items
