@@ -3,81 +3,28 @@
  * Note: Web Bluetooth is only supported on Chrome, Edge, Opera, Android Chrome/Samsung Internet.
  * Not supported on iOS or Firefox/Safari desktop.
  */
-// Cache the connected device globally so we don't have to reconnect or request permission again
-let globalDevice = null;
-let globalServer = null;
-
 export async function connectAndPrint(printData) {
     try {
         if (!navigator.bluetooth) {
             throw new Error('Web Bluetooth API tidak didukung di browser ini. Gunakan Chrome atau Edge.');
         }
 
-        // Use cached connection if still active
-        if (globalDevice && globalDevice.gatt.connected && globalServer) {
-            console.log("Using already connected printer");
-            return await sendToPrinter(globalServer, printData);
-        }
-
-        let device = null;
-        let server = null;
+        const device = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Common Chinese Printer
+                '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Other Chinese Printer
+                '0000ff00-0000-1000-8000-00805f9b34fb', // Vendor specific
+                '0000ae30-0000-1000-8000-00805f9b34fb',
+                '0000af30-0000-1000-8000-00805f9b34fb',
+                '00001101-0000-1000-8000-00805f9b34fb', // SPP Generic Profile
+                '0000180a-0000-1000-8000-00805f9b34fb'  // Device Info
+            ]
+        });
         
-        // Try to fast-connect to previously permitted device if supported
-        if (navigator.bluetooth.getDevices) {
-            const devices = await navigator.bluetooth.getDevices();
-            if (devices.length > 0) {
-                try {
-                    // Try to connect without prompting
-                    server = await devices[0].gatt.connect();
-                    device = devices[0];
-                } catch (e) {
-                    console.log('Auto-connect failed, will prompt user.', e);
-                }
-            }
-        }
+        const server = await device.gatt.connect();
 
-        // If no saved device could be connected, prompt the user
-        // Note: if auto-connect failed and took too long, the browser might block this due to expired user gesture.
-        // In that case, the catch block will alert the user to click Print again.
-        if (!device || !server) {
-            device = await navigator.bluetooth.requestDevice({
-                acceptAllDevices: true,
-                optionalServices: [
-                    '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer
-                    'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Common Chinese Printer
-                    '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Other Chinese Printer
-                    '0000ff00-0000-1000-8000-00805f9b34fb', // Vendor specific
-                    '0000ae30-0000-1000-8000-00805f9b34fb',
-                    '0000af30-0000-1000-8000-00805f9b34fb',
-                    '00001101-0000-1000-8000-00805f9b34fb', // SPP Generic Profile
-                    '0000180a-0000-1000-8000-00805f9b34fb'  // Device Info
-                ]
-            });
-            server = await device.gatt.connect();
-        }
-
-        // Cache it for next time
-        globalDevice = device;
-        globalServer = server;
-
-        return await sendToPrinter(server, printData);
-    } catch (error) {
-        console.error("Print Error:", error);
-        
-        // Reset cache if connection dropped
-        globalDevice = null;
-        globalServer = null;
-
-        if (error.name === 'SecurityError' || error.message.includes('gesture')) {
-            throw new Error("Sistem mencoba konek otomatis tapi gagal. Silakan KLIK CETAK SEKALI LAGI untuk memilih printer.");
-        }
-        
-        throw new Error("Gagal mencetak: " + error.message);
-    }
-}
-
-async function sendToPrinter(server, printData) {
-    try {
         let targetCharacteristic = null;
         const services = await server.getPrimaryServices();
         for (const service of services) {
@@ -107,13 +54,13 @@ async function sendToPrinter(server, printData) {
 
         await sendChunks(printData);
         
-        // Don't disconnect immediately! We cache the server so we can reuse it
-        // device.gatt.disconnect();
+        // Disconnect immediately after printing
+        device.gatt.disconnect();
         
         return { success: true };
     } catch (error) {
         console.error('Print error:', error);
-        throw error;
+        throw new Error("Gagal mencetak: " + error.message);
     }
 }
 
