@@ -80,7 +80,7 @@ class ReportController extends Controller
             'total_revenue'       => $totalRevenue,
             'total_fees'          => (float) $totalFees,
             'total_expense'       => $totalExpense,
-            'net_profit'          => $totalRevenue - $totalExpense - $totalFees,
+            'net_profit'          => $totalRevenue - $totalExpense,
         ];
 
         // Build chart data — index by date for O(1) lookups
