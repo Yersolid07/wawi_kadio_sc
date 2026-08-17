@@ -15,7 +15,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
     const [selectedOrderId, setSelectedOrderId] = useState(null); // ID of existing order if we are editing/paying an active one
     const [orderType, setOrderType] = useState('dine_in');
     const [tableNumber, setTableNumber] = useState('');
-    const [guestName, setGuestName] = useState('Walk-in Customer');
+    const [guestName, setGuestName] = useState('');
     const [notes, setNotes] = useState('');
     
     // Payment State
@@ -187,7 +187,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
         setSelectedOrderId(null);
         setOrderType('dine_in');
         setTableNumber('');
-        setGuestName('Walk-in Customer');
+        setGuestName('');
         setNotes('');
         setCart([]);
     };
@@ -202,6 +202,11 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
         
         if (orderType === 'dine_in' && !tableNumber) {
             alert('Silakan isi Nomor Meja untuk pesanan Dine In.');
+            return;
+        }
+
+        if (!guestName.trim()) {
+            alert('Silakan isi Nama Tamu.');
             return;
         }
 
@@ -720,7 +725,9 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                     </div>
                     
                     <div>
-                        <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">Nama Tamu</label>
+                        <label className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">
+                            Nama Tamu <span className="text-rose-500">*</span>
+                        </label>
                         <input 
                             type="text" 
                             className="w-full mt-1 rounded-xl border-stone-200 text-sm font-bold bg-white focus:ring-emerald-500 focus:border-emerald-500 disabled:bg-stone-100 disabled:text-stone-500"

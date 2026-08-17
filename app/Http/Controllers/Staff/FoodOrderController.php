@@ -29,7 +29,7 @@ class FoodOrderController extends Controller
         $orders = FoodOrder::with(['items.menuItem', 'reservation.facility'])
             ->whereIn('status', ['pending', 'preparing', 'ready'])
             ->where('payment_status', 'paid') // Gate: unpaid orders must be validated at POS first
-            ->latest()
+            ->oldest()
             ->get();
 
         return Inertia::render('Staff/FoodOrders/KDS', [

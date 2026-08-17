@@ -61,7 +61,7 @@ class POSController extends Controller
             'order_id'             => 'nullable|exists:food_orders,id',
             'order_type'           => 'required|in:dine_in,takeaway',
             'table_number'         => 'required_if:order_type,dine_in|nullable|string|max:20',
-            'customer_name'        => 'nullable|string|max:255',
+            'customer_name'        => 'required|string|max:255',
             'notes'                => 'nullable|string',
             'items'                => 'required|array|min:1',
             'items.*.menu_item_id' => 'required|exists:menu_items,id',

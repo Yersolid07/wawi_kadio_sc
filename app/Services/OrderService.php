@@ -149,7 +149,7 @@ class OrderService
                     'customer_name'  => $validated['customer_name'] ?? $order->customer_name,
                     'notes'          => $validated['notes'] ?? $order->notes,
                     'payment_status' => $markAsPaid ? 'paid' : 'unpaid',
-                    'status'         => $markAsPaid ? 'preparing' : 'pending', // Move to kitchen if paid
+                    'status'         => 'pending', // Always start as pending in KDS
                     'user_id'        => $userId,
                 ]);
 
@@ -226,7 +226,7 @@ class OrderService
                     'notes'          => $validated['notes'] ?? null,
                     'customer_name'  => $validated['customer_name'] ?? 'Guest Walk-in',
                     'payment_status' => $markAsPaid ? 'paid' : 'unpaid',
-                    'status'         => $markAsPaid ? 'preparing' : 'pending',
+                    'status'         => 'pending',
                     'user_id'        => $userId,
                 ]);
 

@@ -9,17 +9,32 @@ export async function connectAndPrint(printData) {
             throw new Error('Web Bluetooth API tidak didukung di browser ini. Gunakan Chrome atau Edge.');
         }
 
-        const device = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
-            optionalServices: [
-                '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer
-                'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Common Chinese Printer
-                '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Other Chinese Printer
-                '0000ff00-0000-1000-8000-00805f9b34fb', // Vendor specific
-                '0000ae30-0000-1000-8000-00805f9b34fb',
-                '0000af30-0000-1000-8000-00805f9b34fb'
-            ]
-        });
+        let device = null;
+        
+        // Try to reconnect to a previously permitted device first
+        if (navigator.bluetooth.getDevices) {
+            const devices = await navigator.bluetooth.getDevices();
+            for (const d of devices) {
+                // We assume any previously paired device starting with KPrinter or any saved device is the printer
+                // Or simply try the first available one that is a printer
+                device = d;
+                break;
+            }
+        }
+
+        if (!device) {
+            device = await navigator.bluetooth.requestDevice({
+                acceptAllDevices: true,
+                optionalServices: [
+                    '000018f0-0000-1000-8000-00805f9b34fb', // Standard BLE Printer
+                    'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Common Chinese Printer
+                    '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Other Chinese Printer
+                    '0000ff00-0000-1000-8000-00805f9b34fb', // Vendor specific
+                    '0000ae30-0000-1000-8000-00805f9b34fb',
+                    '0000af30-0000-1000-8000-00805f9b34fb'
+                ]
+            });
+        }
 
         const server = await device.gatt.connect();
         
