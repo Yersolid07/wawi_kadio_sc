@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, useForm } from '@inertiajs/react';
-import { Settings, Save, Image as ImageIcon, MessageSquare, PhoneCall, BookOpen } from 'lucide-react';
+import { Head, useForm, router } from '@inertiajs/react';
+import { Settings, Save, Image as ImageIcon, MessageSquare, PhoneCall, BookOpen, AlertTriangle } from 'lucide-react';
 import { useState } from 'react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
@@ -57,8 +57,22 @@ export default function Index({ settings }) {
         { id: 'contact', label: 'Kontak & Maps', icon: PhoneCall },
         { id: 'static_pages', label: 'Halaman Info (Rich Text)', icon: BookOpen },
         { id: 'general', label: 'Pengaturan Umum', icon: Settings },
-        { id: 'data_management', label: 'Manajemen Data', icon: Save },
+        { id: 'danger_zone', label: 'Zona Bahaya (Reset Data)', icon: AlertTriangle },
     ];
+
+    const [resetDate, setResetDate] = useState('');
+    const handleResetData = () => {
+        if (!resetDate) {
+            alert('Pilih tanggal mulai penghapusan data terlebih dahulu.');
+            return;
+        }
+        if (confirm(`PERINGATAN: Anda akan MENGHAPUS SEMUA data transaksi (Reservasi, Pesanan Makanan, Pembayaran) mulai dari tanggal ${resetDate} ke atas. Stok harian juga akan direset ke setelan awal. Tindakan ini TIDAK DAPAT DIBATALKAN. Anda yakin?`)) {
+            router.post(route('admin.settings.reset-data'), { reset_date: resetDate }, {
+                onSuccess: () => alert('Data berhasil direset dari tanggal ' + resetDate),
+                onError: (e) => alert(e.reset_date || 'Gagal mereset data.')
+            });
+        }
+    };
 
     return (
         <AppLayout title="Pengaturan Situs (CMS)">
@@ -357,61 +371,45 @@ export default function Index({ settings }) {
                                 </div>
                             )}
 
-                            {/* DATA MANAGEMENT SETTINGS */}
-                            {activeTab === 'data_management' && (
-                                <div className="space-y-6 animate-fade-in">
-                                    <h3 className="text-lg font-bold text-slate-900 mb-4 border-b pb-2 text-red-600">Manajemen Data & Reset</h3>
+                            {/* DANGER ZONE SETTINGS */}
+                            {activeTab === 'danger_zone' && (
+                                <div className="space-y-6 animate-fade-in bg-rose-50 p-6 rounded-2xl border-2 border-rose-200">
+                                    <h3 className="text-xl font-black text-rose-700 flex items-center gap-2">
+                                        <AlertTriangle /> Reset Data Transaksi
+                                    </h3>
+                                    <p className="text-rose-600 font-medium">
+                                        Gunakan fitur ini ketika sistem mulai digunakan pada environment production untuk menghapus semua data transaksi testing, tanpa menghapus data master (Fasilitas, Menu, dll).
+                                    </p>
                                     
-                                    <div className="bg-red-50 border border-red-200 p-6 rounded-2xl">
-                                        <h4 className="text-red-700 font-bold mb-2">Reset Data Transaksi Production</h4>
-                                        <p className="text-sm text-red-600 mb-4">
-                                            Tindakan ini akan <strong>MENGHAPUS SEMUA DATA TRANSAKSI</strong> (Reservasi, Pesanan Makanan, Pembayaran, Ulasan, Penutupan Kasir) yang dibuat mulai dari tanggal yang Anda tentukan ke depan. Data utama (Akun, Fasilitas, Menu) tidak akan terhapus. Stok makanan akan dikembalikan ke kapasitas harian awal (daily_stock).<br/><br/>
-                                            Gunakan fitur ini hanya ketika Anda ingin memulai ulang sistem setelah uji coba selesai dan siap untuk production.
-                                        </p>
-
-                                        <div className="mb-4">
-                                            <InputLabel value="Hapus data mulai dari tanggal:" className="text-red-700 font-bold mb-1" />
-                                            <TextInput 
-                                                type="date"
-                                                id="reset_date"
-                                                className="mt-1 block w-full max-w-xs border-red-300 focus:border-red-500 focus:ring-red-500"
-                                            />
-                                        </div>
-
+                                    <div className="bg-white p-6 rounded-xl border border-rose-200">
+                                        <InputLabel value="Tanggal Mulai Reset" className="text-rose-900" />
+                                        <p className="text-sm text-slate-500 mb-4 mt-1">Semua transaksi, reservasi, dan pesanan makanan yang dibuat PADA dan SETELAH tanggal ini akan <strong>Dihapus Permanen</strong>.</p>
+                                        <TextInput 
+                                            type="date"
+                                            value={resetDate}
+                                            onChange={e => setResetDate(e.target.value)}
+                                            className="mt-1 block w-full max-w-sm mb-6"
+                                        />
                                         <button 
-                                            type="button" 
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                const resetDate = document.getElementById('reset_date').value;
-                                                if (!resetDate) {
-                                                    alert('Silakan pilih tanggal terlebih dahulu!');
-                                                    return;
-                                                }
-                                                if (confirm(`PERINGATAN KERAS!\n\nAnda yakin ingin menghapus SEMUA data transaksi yang dibuat mulai dari tanggal ${resetDate}?\n\nTindakan ini TIDAK BISA DIBATALKAN!`)) {
-                                                    import('@inertiajs/react').then(({ router }) => {
-                                                        router.post(route('admin.settings.reset-data'), { reset_date: resetDate }, {
-                                                            preserveScroll: true,
-                                                            onSuccess: () => alert('Data transaksi berhasil direset!'),
-                                                        });
-                                                    });
-                                                }
-                                            }}
-                                            className="px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-600/20 hover:bg-red-700 transition-colors"
+                                            type="button"
+                                            onClick={handleResetData}
+                                            className="bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-rose-600/30 transition-all flex items-center gap-2"
                                         >
-                                            Ya, Saya Paham & Reset Data Sekarang
+                                            <AlertTriangle size={20} /> EKSEKUSI RESET DATA
                                         </button>
                                     </div>
                                 </div>
                             )}
 
-                            {activeTab !== 'data_management' && (
-                                <div className="pt-6 mt-6 border-t border-stone-100 flex justify-end">
-                                    <PrimaryButton type="submit" disabled={processing} className="px-8 py-4 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
-                                        <Save size={18} className="mr-2" /> Simpan Perubahan
+                            {activeTab !== 'danger_zone' && (
+                                <div className="pt-8 border-t border-stone-200 flex justify-end">
+                                    <PrimaryButton type="submit" disabled={processing} className="rounded-xl px-8 py-4 text-base font-bold flex items-center gap-2">
+                                        {processing ? 'Menyimpan...' : (
+                                            <><Save size={20} /> Simpan Pengaturan Umum</>
+                                        )}
                                     </PrimaryButton>
                                 </div>
                             )}
-
                         </form>
                     </div>
                 </div>

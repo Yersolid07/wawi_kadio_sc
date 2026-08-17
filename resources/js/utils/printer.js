@@ -31,7 +31,9 @@ export async function connectAndPrint(printData) {
                     '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Other Chinese Printer
                     '0000ff00-0000-1000-8000-00805f9b34fb', // Vendor specific
                     '0000ae30-0000-1000-8000-00805f9b34fb',
-                    '0000af30-0000-1000-8000-00805f9b34fb'
+                    '0000af30-0000-1000-8000-00805f9b34fb',
+                    '00001101-0000-1000-8000-00805f9b34fb', // SPP Generic Profile
+                    '0000180a-0000-1000-8000-00805f9b34fb'  // Device Info
                 ]
             });
         }

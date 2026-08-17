@@ -152,7 +152,7 @@ export default function KDS({ orders }) {
                         </div>
                         <div className="text-right">
                             <div className="text-stone-400 text-xs mb-1 uppercase tracking-widest font-black">Tamu</div>
-                            <div className="text-stone-300 font-bold text-lg leading-none">{order.guest_name || order.user?.name || 'Walk-in'}</div>
+                            <div className="text-stone-300 font-bold text-lg leading-none">{order.customer_name || order.user?.name || 'Walk-in'}</div>
                         </div>
                     </div>
 

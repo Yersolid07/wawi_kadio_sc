@@ -91,7 +91,6 @@ class Payment extends Model
         if ($this->foodOrder) {
             $this->foodOrder->update([
                 'payment_status' => 'paid',
-                'status' => $this->foodOrder->status === 'pending' ? 'preparing' : $this->foodOrder->status
             ]);
             
             // Check if there are food items to notify kitchen
