@@ -165,19 +165,14 @@ class PaymentService
         return ['payment' => $payment, 'checkout_url' => $checkoutUrl, 'qr_url' => $qrUrl, 'gateway_response' => $result ?? null, 'error' => $errorMessage];
     }
 
-    /**
-     * Record a FinancialTransaction income entry for the given payment.
-     * Called from Payment::markAsSuccess() observer / directly.
-     */
     public static function recordIncome(Payment $payment): void
     {
-        $netAmount = $payment->amount - ($payment->fee_merchant ?? 0);
-
+        // 1. Catat Pemasukan (Gross)
         if ($payment->reservation) {
             FinancialTransaction::create([
                 'type'             => 'income',
                 'category'         => 'reservation',
-                'amount'           => $netAmount,
+                'amount'           => $payment->amount,
                 'description'      => 'Pembayaran Reservasi — '
                     .($payment->reservation->facility->name ?? 'Fasilitas')
                     .' ('.$payment->reservation->unique_code.')',
@@ -189,10 +184,23 @@ class PaymentService
             FinancialTransaction::create([
                 'type'             => 'income',
                 'category'         => 'cafe',
-                'amount'           => $netAmount,
+                'amount'           => $payment->amount,
                 'description'      => 'Pembayaran Pesanan Cafe #'
                     .substr($payment->food_order_id, 0, 8),
                 'reference_id'     => $payment->food_order_id,
+                'transaction_date' => now()->toDateString(),
+                'user_id'          => null,
+            ]);
+        }
+
+        // 2. Catat Pengeluaran (Potongan Tripay) jika ada
+        if (($payment->fee_merchant ?? 0) > 0) {
+            FinancialTransaction::create([
+                'type'             => 'expense',
+                'category'         => 'payment_gateway',
+                'amount'           => $payment->fee_merchant,
+                'description'      => 'Potongan Biaya Payment Gateway (Tripay) Ref: ' . $payment->transaction_id,
+                'reference_id'     => $payment->id,
                 'transaction_date' => now()->toDateString(),
                 'user_id'          => null,
             ]);

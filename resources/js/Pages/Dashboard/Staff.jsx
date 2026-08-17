@@ -3,9 +3,14 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { LogIn, LogOut, UtensilsCrossed, CreditCard, CheckCircle2, Clock, ChefHat, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useState } from 'react';
 
 export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeFoodOrders = [], pendingPayments = [], financials = {}, filters = {} }) {
     const { t } = useTranslation();
+
+    const [dateRange, setDateRange] = useState(filters.date_range || 'today');
+    const [startDate, setStartDate] = useState(filters.start_date || '');
+    const [endDate, setEndDate] = useState(filters.end_date || '');
 
     const formatPrice = (val) => {
         const n = parseFloat(val);
@@ -15,7 +20,16 @@ export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeF
 
     const handleFilterChange = (e) => {
         const val = e.target.value;
-        router.get(route('dashboard'), { date_range: val }, { preserveState: true, preserveScroll: true });
+        setDateRange(val);
+        if (val !== 'custom') {
+            router.get(route('dashboard'), { date_range: val }, { preserveState: true, preserveScroll: true });
+        }
+    };
+
+    const applyCustomFilter = () => {
+        if (startDate && endDate) {
+            router.get(route('dashboard'), { date_range: 'custom', start_date: startDate, end_date: endDate }, { preserveState: true, preserveScroll: true });
+        }
     };
 
     const StatCard = ({ icon: Icon, label, value, subtext, colorClass, delay = 0 }) => (
@@ -44,18 +58,29 @@ export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeF
                 {/* Header with Filter */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-stone-100 shadow-sm">
                     <h2 className="text-xl font-bold text-slate-800 px-2">Ringkasan Laporan Finansial</h2>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-slate-500">Periode:</span>
-                        <select 
-                            value={filters.date_range || 'today'} 
-                            onChange={handleFilterChange}
-                            className="border-stone-200 text-sm rounded-xl focus:border-emerald-500 focus:ring-emerald-500 font-semibold text-slate-700 bg-stone-50"
-                        >
-                            <option value="today">Hari Ini</option>
-                            <option value="week">Minggu Ini</option>
-                            <option value="month">Bulan Ini</option>
-                            <option value="year">Tahun Ini</option>
-                        </select>
+                    <div className="flex flex-col md:flex-row items-center gap-3">
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-slate-500">Periode:</span>
+                            <select 
+                                value={dateRange} 
+                                onChange={handleFilterChange}
+                                className="border-stone-200 text-sm rounded-xl focus:border-emerald-500 focus:ring-emerald-500 font-semibold text-slate-700 bg-stone-50"
+                            >
+                                <option value="today">Hari Ini</option>
+                                <option value="week">Minggu Ini</option>
+                                <option value="month">Bulan Ini</option>
+                                <option value="year">Tahun Ini</option>
+                                <option value="custom">Pilih Tanggal</option>
+                            </select>
+                        </div>
+                        {dateRange === 'custom' && (
+                            <div className="flex items-center gap-2 bg-stone-50 p-1.5 rounded-xl border border-stone-200">
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="border-none bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 p-1" />
+                                <span className="text-slate-400 text-sm">-</span>
+                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border-none bg-transparent text-sm font-semibold text-slate-700 focus:ring-0 p-1" />
+                                <button onClick={applyCustomFilter} className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-emerald-700 transition-colors">Terapkan</button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
