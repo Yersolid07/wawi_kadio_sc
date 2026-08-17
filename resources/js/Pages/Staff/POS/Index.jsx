@@ -328,12 +328,18 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
         // Setup data for Bluetooth printing
         const orderData = {
             id: order.id,
-            customerName: order.guest_name || (order.user ? order.user.name : 'Tamu'),
+            customerName: order.customer_name || 'Walk-in',
+            cashierName: order.user ? order.user.name.split(' ')[0] : 'System',
+            date: order.created_at,
+            orderType: order.order_type === 'dine_in' ? 'DINE IN' : 'TAKEAWAY',
+            tableNumber: order.table_number,
+            paymentStatus: order.payment_status === 'paid' ? 'LUNAS' : 'BELUM LUNAS',
             total: order.total_amount,
             items: order.items.map(item => ({
-                name: item.menu_item.name,
+                name: item.menu_item ? item.menu_item.name : 'Item',
                 quantity: item.quantity,
-                price: item.price
+                price: item.price,
+                notes: item.notes
             }))
         };
         setPrintOrderData(orderData);
@@ -407,7 +413,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
         setIsPrintingBt(true);
         try {
             const buffer = buildReceiptBuffer(
-                { customerName: printOrderData.customerName },
+                printOrderData,
                 printOrderData.items,
                 printOrderData.total
             );

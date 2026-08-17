@@ -78,62 +78,128 @@ export async function connectAndPrint(printData) {
 /**
  * Helper to build an ESC/POS receipt string buffer from order details
  */
-export function buildReceiptBuffer(order, items, total, companyName = 'Wawi Kadio', address = '') {
+export function buildReceiptBuffer(order, items, total, companyName = 'WAWI KADIO', address = 'Jl. Pariwisata No. 1, Minahasa, Sulut') {
     const ESC = 0x1B;
     const GS = 0x1D;
 
     const commands = [];
 
+    // Helpers
+    const text = (str) => commands.push(...new TextEncoder().encode(str));
+    const newline = () => text('\n');
+    const boldOn = () => commands.push(ESC, 0x45, 1);
+    const boldOff = () => commands.push(ESC, 0x45, 0);
+    const centerAlign = () => commands.push(ESC, 0x61, 1);
+    const leftAlign = () => commands.push(ESC, 0x61, 0);
+    const rightAlign = () => commands.push(ESC, 0x61, 2);
+
+    const padRight = (str, len) => str.length >= len ? str.substring(0, len) : str + ' '.repeat(len - str.length);
+    const padLeft = (str, len) => str.length >= len ? str.substring(0, len) : ' '.repeat(len - str.length) + str;
+
     // Initialize printer
     commands.push(ESC, 0x40);
 
-    // Center alignment for header
-    commands.push(ESC, 0x61, 1);
+    // Header
+    centerAlign();
+    boldOn();
+    text(companyName);
+    newline();
+    boldOff();
+    text('Resort & Resto');
+    newline();
+    text('Jl. Pariwisata No. 1, Minahasa,');
+    newline();
+    text('Sulut');
+    newline();
     
-    // Bold on
-    commands.push(ESC, 0x45, 1);
-    commands.push(...new TextEncoder().encode(companyName + '\n'));
-    commands.push(ESC, 0x45, 0); // Bold off
+    text('--------------------------------');
+    newline();
 
-    if (address) {
-        commands.push(...new TextEncoder().encode(address + '\n'));
+    // Meta Data
+    leftAlign();
+    
+    let orderDate = order.date ? new Date(order.date) : new Date();
+    let dateStr = `${orderDate.getDate().toString().padStart(2, '0')}/${(orderDate.getMonth() + 1).toString().padStart(2, '0')}/${orderDate.getFullYear()}`;
+    let timeStr = `${orderDate.getHours().toString().padStart(2, '0')}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
+    
+    text(`Tgl: ${dateStr}`);
+    newline();
+    
+    let cashierStr = `Kasir: ${order.cashierName || 'System'}`;
+    text(`${padRight(timeStr, 32 - cashierStr.length)}${cashierStr}`);
+    newline();
+    
+    let idStr = `ID : #ORD-${(order.id || '').substring(0, 5).toUpperCase()}`;
+    let typeStr = `Tipe : ${order.orderType || 'DINE IN'}`;
+    if (idStr.length + typeStr.length <= 32) {
+        text(`${padRight(idStr, 32 - typeStr.length)}${typeStr}`);
+    } else {
+        text(idStr); newline();
+        text(typeStr);
     }
+    newline();
     
-    commands.push(...new TextEncoder().encode('--------------------------------\n'));
+    let tamuStr = `Tamu: ${order.customerName || 'Walk-in'}`;
+    if (order.tableNumber) tamuStr += ` | Meja: ${order.tableNumber}`;
+    text(tamuStr.substring(0, 32));
+    newline();
+    
+    text('--------------------------------');
+    newline();
 
-    // Left alignment for body
-    commands.push(ESC, 0x61, 0);
-
-    commands.push(...new TextEncoder().encode(`Waktu: ${new Date().toLocaleString('id-ID')}\n`));
-    commands.push(...new TextEncoder().encode(`Pelanggan: ${order.customerName}\n`));
-    commands.push(...new TextEncoder().encode('--------------------------------\n'));
-
-    // Items
+    // Items Header
+    text(padRight('Menu', 22) + padLeft('Qty', 3) + padLeft('Total', 7));
+    newline();
+    
     items.forEach(item => {
-        let name = item.name.substring(0, 32); // Truncate long names
-        commands.push(...new TextEncoder().encode(`${name}\n`));
-        
-        let qtyPrice = `${item.quantity}x ${item.price.toLocaleString('id-ID')}`;
+        let name = item.name.substring(0, 22);
+        let qty = item.quantity.toString();
         let subtotal = (item.quantity * item.price).toLocaleString('id-ID');
         
-        // Pad with spaces for alignment
-        let spaces = 32 - (qtyPrice.length + subtotal.length);
-        if (spaces < 1) spaces = 1;
+        text(padRight(name, 22) + padLeft(qty, 3) + padLeft(subtotal, 7));
+        newline();
         
-        commands.push(...new TextEncoder().encode(`${qtyPrice}${' '.repeat(spaces)}${subtotal}\n`));
+        if (item.notes) {
+            text(`  *${item.notes.substring(0, 28)}`);
+            newline();
+        }
     });
 
-    commands.push(...new TextEncoder().encode('--------------------------------\n'));
+    text('--------------------------------');
+    newline();
+
+    // Totals
+    let subtotalStr = total.toLocaleString('id-ID');
+    text(padRight('Subtotal', 32 - subtotalStr.length) + subtotalStr);
+    newline();
+    text('--------------------------------');
+    newline();
+
+    boldOn();
+    let grandTotalStr = `Rp ${subtotalStr}`;
+    text(padRight('TOTAL', 32 - grandTotalStr.length) + grandTotalStr);
+    newline();
+    boldOff();
     
-    // Total
-    commands.push(ESC, 0x61, 2); // Right align
-    commands.push(ESC, 0x45, 1); // Bold on
-    commands.push(...new TextEncoder().encode(`TOTAL: Rp ${total.toLocaleString('id-ID')}\n`));
-    commands.push(ESC, 0x45, 0); // Bold off
+    let statusStr = order.paymentStatus || 'BELUM LUNAS';
+    text(padRight('Status Bayar', 32 - statusStr.length) + statusStr);
+    newline();
+    
+    text('--------------------------------');
+    newline();
 
-    commands.push(...new TextEncoder().encode('\nTerima Kasih!\n'));
+    // Footer
+    centerAlign();
+    text('Terima Kasih Atas Kunjungan Anda!');
+    newline();
+    text('Silakan tinggalkan ulasan di');
+    newline();
+    text('website kami.');
+    newline();
+    newline();
+    newline();
+    newline(); // Extra spaces for tear-off
 
-    // Feed lines and cut
     commands.push(0x0A, 0x0A, 0x0A); // 3 blank lines
     commands.push(GS, 0x56, 0x41, 0x00); // Partial cut
 
