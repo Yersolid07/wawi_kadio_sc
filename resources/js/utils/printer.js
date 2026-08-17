@@ -10,19 +10,25 @@ export async function connectAndPrint(printData) {
         }
 
         let device = null;
+        let server = null;
         
         // Try to reconnect to a previously permitted device first
         if (navigator.bluetooth.getDevices) {
             const devices = await navigator.bluetooth.getDevices();
             for (const d of devices) {
-                // We assume any previously paired device starting with KPrinter or any saved device is the printer
-                // Or simply try the first available one that is a printer
-                device = d;
-                break;
+                try {
+                    server = await d.gatt.connect();
+                    device = d;
+                    break; // Connected successfully!
+                } catch (e) {
+                    // This device is offline or unreachable, try the next one
+                    console.log('Skipping saved device', d.name, e);
+                }
             }
         }
 
-        if (!device) {
+        // If no saved device could be connected, prompt the user
+        if (!device || !server) {
             device = await navigator.bluetooth.requestDevice({
                 acceptAllDevices: true,
                 optionalServices: [
@@ -36,9 +42,8 @@ export async function connectAndPrint(printData) {
                     '0000180a-0000-1000-8000-00805f9b34fb'  // Device Info
                 ]
             });
+            server = await device.gatt.connect();
         }
-
-        const server = await device.gatt.connect();
         
         let targetCharacteristic = null;
         const services = await server.getPrimaryServices();
