@@ -1,9 +1,9 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Users, CalendarDays, UtensilsCrossed, Star, Activity, ArrowUpRight, Ticket } from 'lucide-react';
+import { TrendingUp, TrendingDown, Wallet, Users, CalendarDays, UtensilsCrossed, Star, Activity, ArrowUpRight, Ticket } from 'lucide-react';
 
-export default function Admin({ stats = {}, recentReservations = [], revenueChart = [], facilityOccupancy = [], recentReviews = [] }) {
+export default function Admin({ stats = {}, recentReservations = [], revenueChart = [], facilityOccupancy = [], recentReviews = [], filters = {} }) {
     
     const formatPrice = (val) => {
         const n = parseFloat(val);
@@ -16,6 +16,11 @@ export default function Admin({ stats = {}, recentReservations = [], revenueChar
         return new Date(dateString).toLocaleDateString('id-ID', {
             month: 'short', day: 'numeric'
         });
+    };
+
+    const handleFilterChange = (e) => {
+        const val = e.target.value;
+        router.get(route('dashboard'), { date_range: val }, { preserveState: true, preserveScroll: true });
     };
 
     const StatCard = ({ icon: Icon, label, value, subtext, colorClass, delay = 0 }) => (
@@ -41,42 +46,81 @@ export default function Admin({ stats = {}, recentReservations = [], revenueChar
 
             <div className="max-w-7xl mx-auto space-y-8">
                 
+                {/* Header with Filter */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-stone-100 shadow-sm">
+                    <h2 className="text-xl font-bold text-slate-800 px-2">Ringkasan Laporan</h2>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-slate-500">Periode:</span>
+                        <select 
+                            value={filters.date_range || 'today'} 
+                            onChange={handleFilterChange}
+                            className="border-stone-200 text-sm rounded-xl focus:border-emerald-500 focus:ring-emerald-500 font-semibold text-slate-700 bg-stone-50"
+                        >
+                            <option value="today">Hari Ini</option>
+                            <option value="week">Minggu Ini</option>
+                            <option value="month">Bulan Ini</option>
+                            <option value="year">Tahun Ini</option>
+                        </select>
+                    </div>
+                </div>
+
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <StatCard 
-                        icon={TrendingUp} label="Pendapatan Bulan Ini" 
-                        value={`Rp ${formatPrice(stats.revenue_month)}`} 
-                        subtext={`Hari ini: Rp ${formatPrice(stats.revenue_today)}`}
+                        icon={Wallet} label="Pendapatan Bersih" 
+                        value={`Rp ${formatPrice(stats.net_range)}`} 
+                        subtext="Pemasukan dikurangi Pengeluaran"
                         colorClass="bg-emerald-100 text-emerald-700" 
                         delay={0.1}
                     />
                     <StatCard 
-                        icon={CalendarDays} label="Reservasi Bulan Ini" 
-                        value={stats.total_reservations} 
-                        subtext={`${stats.confirmed_today} Check-in Hari ini`}
+                        icon={TrendingUp} label="Total Pemasukan" 
+                        value={`Rp ${formatPrice(stats.revenue_range)}`} 
+                        subtext="Kotor (termasuk dipotong payment gateway)"
                         colorClass="bg-blue-100 text-blue-700" 
+                        delay={0.15}
+                    />
+                    <StatCard 
+                        icon={TrendingDown} label="Total Pengeluaran" 
+                        value={`Rp ${formatPrice(stats.expense_range)}`} 
+                        subtext="Potongan admin & operasional"
+                        colorClass="bg-red-100 text-red-700" 
                         delay={0.2}
+                    />
+                    <StatCard 
+                        icon={CalendarDays} label="Total Reservasi" 
+                        value={stats.total_reservations} 
+                        subtext="Pada periode terpilih"
+                        colorClass="bg-indigo-100 text-indigo-700" 
+                        delay={0.25}
+                    />
+                    <StatCard 
+                        icon={Ticket} label="Tiket Terjual" 
+                        value={stats.tickets_sold_range || 0} 
+                        subtext="Pada periode terpilih"
+                        colorClass="bg-sky-100 text-sky-700" 
+                        delay={0.3}
                     />
                     <StatCard 
                         icon={Users} label="Total Pelanggan" 
                         value={stats.total_customers} 
                         subtext="Pelanggan terdaftar"
-                        colorClass="bg-indigo-100 text-indigo-700" 
-                        delay={0.3}
+                        colorClass="bg-purple-100 text-purple-700" 
+                        delay={0.35}
                     />
                     <StatCard 
-                        icon={Ticket} label="Tiket Terjual Hari Ini" 
-                        value={stats.tickets_sold_today || 0} 
-                        subtext="Jumlah orang masuk"
-                        colorClass="bg-sky-100 text-sky-700" 
-                        delay={0.35}
+                        icon={UtensilsCrossed} label="Pesanan Makanan" 
+                        value={stats.active_food_orders || 0} 
+                        subtext="Sedang aktif / diproses"
+                        colorClass="bg-orange-100 text-orange-700" 
+                        delay={0.4}
                     />
                     <StatCard 
                         icon={Star} label="Rata-rata Rating" 
                         value={`${parseFloat(stats.average_rating || 0).toFixed(1)} / 5.0`} 
                         subtext="Dari semua ulasan"
                         colorClass="bg-amber-100 text-amber-700" 
-                        delay={0.4}
+                        delay={0.45}
                     />
                 </div>
 

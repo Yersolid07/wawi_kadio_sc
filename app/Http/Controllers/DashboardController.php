@@ -14,47 +14,107 @@ use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(): Response
+    public function index(\Illuminate\Http\Request $request): Response
     {
         $user = auth()->user();
 
         if ($user->hasAnyRole(['admin', 'manager'])) {
-            return $this->adminDashboard();
+            return $this->adminDashboard($request);
         }
 
         if ($user->hasRole('staff')) {
-            return $this->staffDashboard();
+            return $this->staffDashboard($request);
         }
 
         return $this->customerDashboard();
     }
 
-    private function adminDashboard(): Response
+    private function getDateRange(\Illuminate\Http\Request $request): array
     {
+        $range = $request->query('date_range', 'today');
+        $start = now();
+        $end = now();
+
+        switch ($range) {
+            case 'week':
+                $start = now()->startOfWeek();
+                $end = now()->endOfWeek();
+                break;
+            case 'month':
+                $start = now()->startOfMonth();
+                $end = now()->endOfMonth();
+                break;
+            case 'year':
+                $start = now()->startOfYear();
+                $end = now()->endOfYear();
+                break;
+            case 'custom':
+                if ($request->has('start_date') && $request->has('end_date')) {
+                    $start = \Carbon\Carbon::parse($request->query('start_date'))->startOfDay();
+                    $end = \Carbon\Carbon::parse($request->query('end_date'))->endOfDay();
+                }
+                break;
+            case 'today':
+            default:
+                $start = now()->startOfDay();
+                $end = now()->endOfDay();
+                break;
+        }
+
+        return [$start, $end];
+    }
+
+    private function getFinancialStats($startDate, $endDate): array
+    {
+        $income = \App\Models\FinancialTransaction::where('type', 'income')
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->sum('amount');
+            
+        $expense = \App\Models\FinancialTransaction::where('type', 'expense')
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
+            ->sum('amount');
+
+        return [
+            'income' => $income,
+            'expense' => $expense,
+            'net' => $income - $expense,
+        ];
+    }
+
+    private function adminDashboard(\Illuminate\Http\Request $request): Response
+    {
+        [$startDate, $endDate] = $this->getDateRange($request);
+        $dateRange = $request->query('date_range', 'today');
+        
         $today = now()->toDateString();
         $thisMonth = now()->month;
         $thisYear = now()->year;
 
-        $stats = \Illuminate\Support\Facades\Cache::remember('admin_dashboard_stats', 60, function () use ($today, $thisMonth, $thisYear) {
-            return [
-                'total_reservations' => Reservation::count(),
-                'pending_reservations' => Reservation::where('status', 'pending')->count(),
-                'confirmed_today' => Reservation::where('check_in_date', $today)->where('status', 'confirmed')->count(),
-                'revenue_today' => \App\Models\FinancialTransaction::where('type', 'income')->whereDate('transaction_date', today())->sum('amount'),
-                'revenue_month' => \App\Models\FinancialTransaction::where('type', 'income')->whereMonth('transaction_date', $thisMonth)->whereYear('transaction_date', $thisYear)->sum('amount'),
-                'total_customers' => User::role('customer')->count(),
-                'active_food_orders' => FoodOrder::whereIn('status', ['pending', 'preparing', 'ready'])->count(),
-                'average_rating' => Review::where('is_public', true)->avg('rating'),
-                'tickets_sold_today' => Reservation::whereHas('facility', function($q) {
-                    $q->where('type', 'ticket')
-                      ->orWhere('type', 'tiket')
-                      ->orWhere('type', 'pool')
-                      ->orWhere('type', 'gazebo')
-                      ->orWhere('name', 'like', '%tiket%')
-                      ->orWhere('name', 'like', '%ticket%');
-                })->where('check_in_date', $today)->where('status', 'confirmed')->sum('guest_count'),
-            ];
-        });
+        $financials = $this->getFinancialStats($startDate, $endDate);
+
+        $stats = [
+            'total_reservations' => Reservation::whereBetween('created_at', [$startDate, $endDate])->count(),
+            'pending_reservations' => Reservation::whereBetween('created_at', [$startDate, $endDate])->where('status', 'pending')->count(),
+            'confirmed_today' => Reservation::where('check_in_date', $today)->where('status', 'confirmed')->count(),
+            
+            // Replaced with dynamic financials
+            'revenue_range' => $financials['income'],
+            'expense_range' => $financials['expense'],
+            'net_range' => $financials['net'],
+            
+            'total_customers' => User::role('customer')->count(),
+            'active_food_orders' => FoodOrder::whereIn('status', ['pending', 'preparing', 'ready'])->count(),
+            'average_rating' => Review::where('is_public', true)->avg('rating'),
+            'tickets_sold_range' => Reservation::whereHas('facility', function($q) {
+                $q->where('type', 'ticket')
+                  ->orWhere('type', 'tiket')
+                  ->orWhere('type', 'pool')
+                  ->orWhere('type', 'gazebo')
+                  ->orWhere('name', 'like', '%tiket%')
+                  ->orWhere('name', 'like', '%ticket%');
+            })->whereBetween('check_in_date', [$startDate->toDateString(), $endDate->toDateString()])
+              ->where('status', 'confirmed')->sum('guest_count'),
+        ];
 
         $recent_reservations = Reservation::with(['user', 'facility'])
             ->latest()
@@ -62,8 +122,7 @@ class DashboardController extends Controller
             ->get();
 
         $revenue_chart = \App\Models\FinancialTransaction::where('type', 'income')
-            ->whereMonth('transaction_date', $thisMonth)
-            ->whereYear('transaction_date', $thisYear)
+            ->whereBetween('transaction_date', [$startDate->toDateString(), $endDate->toDateString()])
             ->select(
                 DB::raw('DATE(transaction_date) as date'),
                 DB::raw('SUM(amount) as total')
@@ -74,7 +133,7 @@ class DashboardController extends Controller
 
         $facility_occupancy = Facility::withCount([
             'reservations as active_reservations_count' => fn ($q) => $q->whereIn('status', ['confirmed'])
-                ->whereMonth('check_in_date', $thisMonth),
+                ->whereBetween('check_in_date', [$startDate->toDateString(), $endDate->toDateString()]),
         ])->get(['id', 'name', 'type']);
 
         $recent_reviews = Review::with(['user', 'reservation.facility'])
@@ -89,14 +148,19 @@ class DashboardController extends Controller
             'revenueChart' => $revenue_chart,
             'facilityOccupancy' => $facility_occupancy,
             'recentReviews' => $recent_reviews,
+            'filters' => $request->only(['date_range', 'start_date', 'end_date']),
         ]);
     }
 
-    private function staffDashboard(): Response
+    private function staffDashboard(\Illuminate\Http\Request $request): Response
     {
+        [$startDate, $endDate] = $this->getDateRange($request);
         $today = now()->toDateString();
+        $financials = $this->getFinancialStats($startDate, $endDate);
 
         return Inertia::render('Dashboard/Staff', [
+            'financials' => $financials,
+            'filters' => $request->only(['date_range', 'start_date', 'end_date']),
             'todayCheckIns' => Reservation::with(['user', 'facility'])
                 ->where('check_in_date', $today)
                 ->whereIn('status', ['confirmed'])

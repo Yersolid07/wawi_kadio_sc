@@ -57,6 +57,7 @@ export default function Index({ settings }) {
         { id: 'contact', label: 'Kontak & Maps', icon: PhoneCall },
         { id: 'static_pages', label: 'Halaman Info (Rich Text)', icon: BookOpen },
         { id: 'general', label: 'Pengaturan Umum', icon: Settings },
+        { id: 'data_management', label: 'Manajemen Data', icon: Save },
     ];
 
     return (
@@ -356,11 +357,60 @@ export default function Index({ settings }) {
                                 </div>
                             )}
 
-                            <div className="pt-6 mt-6 border-t border-stone-100 flex justify-end">
-                                <PrimaryButton type="submit" disabled={processing} className="px-8 py-4 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
-                                    <Save size={18} className="mr-2" /> Simpan Perubahan
-                                </PrimaryButton>
-                            </div>
+                            {/* DATA MANAGEMENT SETTINGS */}
+                            {activeTab === 'data_management' && (
+                                <div className="space-y-6 animate-fade-in">
+                                    <h3 className="text-lg font-bold text-slate-900 mb-4 border-b pb-2 text-red-600">Manajemen Data & Reset</h3>
+                                    
+                                    <div className="bg-red-50 border border-red-200 p-6 rounded-2xl">
+                                        <h4 className="text-red-700 font-bold mb-2">Reset Data Transaksi Production</h4>
+                                        <p className="text-sm text-red-600 mb-4">
+                                            Tindakan ini akan <strong>MENGHAPUS SEMUA DATA TRANSAKSI</strong> (Reservasi, Pesanan Makanan, Pembayaran, Ulasan, Penutupan Kasir) yang dibuat mulai dari tanggal yang Anda tentukan ke depan. Data utama (Akun, Fasilitas, Menu) tidak akan terhapus. Stok makanan akan dikembalikan ke kapasitas harian awal (daily_stock).<br/><br/>
+                                            Gunakan fitur ini hanya ketika Anda ingin memulai ulang sistem setelah uji coba selesai dan siap untuk production.
+                                        </p>
+
+                                        <div className="mb-4">
+                                            <InputLabel value="Hapus data mulai dari tanggal:" className="text-red-700 font-bold mb-1" />
+                                            <TextInput 
+                                                type="date"
+                                                id="reset_date"
+                                                className="mt-1 block w-full max-w-xs border-red-300 focus:border-red-500 focus:ring-red-500"
+                                            />
+                                        </div>
+
+                                        <button 
+                                            type="button" 
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                const resetDate = document.getElementById('reset_date').value;
+                                                if (!resetDate) {
+                                                    alert('Silakan pilih tanggal terlebih dahulu!');
+                                                    return;
+                                                }
+                                                if (confirm(`PERINGATAN KERAS!\n\nAnda yakin ingin menghapus SEMUA data transaksi yang dibuat mulai dari tanggal ${resetDate}?\n\nTindakan ini TIDAK BISA DIBATALKAN!`)) {
+                                                    import('@inertiajs/react').then(({ router }) => {
+                                                        router.post(route('admin.settings.reset-data'), { reset_date: resetDate }, {
+                                                            preserveScroll: true,
+                                                            onSuccess: () => alert('Data transaksi berhasil direset!'),
+                                                        });
+                                                    });
+                                                }
+                                            }}
+                                            className="px-6 py-3 bg-red-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-red-600/20 hover:bg-red-700 transition-colors"
+                                        >
+                                            Ya, Saya Paham & Reset Data Sekarang
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {activeTab !== 'data_management' && (
+                                <div className="pt-6 mt-6 border-t border-stone-100 flex justify-end">
+                                    <PrimaryButton type="submit" disabled={processing} className="px-8 py-4 rounded-xl text-sm font-bold shadow-lg shadow-emerald-500/20">
+                                        <Save size={18} className="mr-2" /> Simpan Perubahan
+                                    </PrimaryButton>
+                                </div>
+                            )}
 
                         </form>
                     </div>

@@ -17,8 +17,44 @@ class SettingController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware('role:admin', only: ['index', 'update']),
+            new Middleware('role:admin', only: ['index', 'update', 'resetData']),
         ];
+    }
+
+    public function resetData(Request $request)
+    {
+        $request->validate([
+            'reset_date' => 'required|date',
+        ]);
+
+        $date = \Carbon\Carbon::parse($request->reset_date)->startOfDay();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($date) {
+            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+
+            // Delete records created on or after the reset_date
+            \Illuminate\Support\Facades\DB::table('payments')->where('created_at', '>=', $date)->delete();
+            \Illuminate\Support\Facades\DB::table('financial_transactions')->where('created_at', '>=', $date)->delete();
+            \Illuminate\Support\Facades\DB::table('food_order_items')->where('created_at', '>=', $date)->delete();
+            \Illuminate\Support\Facades\DB::table('food_orders')->where('created_at', '>=', $date)->delete();
+            \Illuminate\Support\Facades\DB::table('pos_closings')->where('created_at', '>=', $date)->delete();
+            
+            if (\Illuminate\Support\Facades\Schema::hasTable('reservation_addons')) {
+                \Illuminate\Support\Facades\DB::table('reservation_addons')->where('created_at', '>=', $date)->delete();
+            }
+            
+            \Illuminate\Support\Facades\DB::table('reservations')->where('created_at', '>=', $date)->delete();
+            \Illuminate\Support\Facades\DB::table('reviews')->where('created_at', '>=', $date)->delete();
+
+            // Reset menu items stock
+            \Illuminate\Support\Facades\DB::table('menu_items')->whereNotNull('daily_stock')->update([
+                'current_stock' => \Illuminate\Support\Facades\DB::raw('daily_stock')
+            ]);
+
+            \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        });
+
+        return redirect()->back()->with('success', 'Data transaksi mulai dari tanggal yang dipilih berhasil dihapus!');
     }
 
     public function index()

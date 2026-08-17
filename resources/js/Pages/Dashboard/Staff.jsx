@@ -1,10 +1,10 @@
 import AppLayout from '@/Layouts/AppLayout';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
-import { LogIn, LogOut, UtensilsCrossed, CreditCard, CheckCircle2, Clock, ChefHat } from 'lucide-react';
+import { LogIn, LogOut, UtensilsCrossed, CreditCard, CheckCircle2, Clock, ChefHat, Wallet, TrendingUp, TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeFoodOrders = [], pendingPayments = [] }) {
+export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeFoodOrders = [], pendingPayments = [], financials = {}, filters = {} }) {
     const { t } = useTranslation();
 
     const formatPrice = (val) => {
@@ -13,13 +13,79 @@ export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeF
         return n.toLocaleString('id-ID');
     };
 
+    const handleFilterChange = (e) => {
+        const val = e.target.value;
+        router.get(route('dashboard'), { date_range: val }, { preserveState: true, preserveScroll: true });
+    };
+
+    const StatCard = ({ icon: Icon, label, value, subtext, colorClass, delay = 0 }) => (
+        <motion.div 
+            initial={{ opacity: 0, y: 20 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            transition={{ delay, duration: 0.5 }}
+            className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 hover:shadow-2xl hover:shadow-emerald-900/5 transition-all duration-300 hover:-translate-y-1"
+        >
+            <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full opacity-10 transition-transform group-hover:scale-150 ${colorClass.split(' ')[0]}`}></div>
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${colorClass}`}>
+                <Icon size={24} />
+            </div>
+            <h4 className="text-slate-500 font-bold text-sm mb-2">{label}</h4>
+            <p className="text-3xl font-black text-slate-900 mb-2 tracking-tight">{value}</p>
+            {subtext && <p className="text-xs text-slate-400 font-semibold">{subtext}</p>}
+        </motion.div>
+    );
+
     return (
         <AppLayout title="Staff Dashboard">
             <Head title="Staff Dashboard — Wawi Kadio" />
 
             <div className="max-w-7xl mx-auto space-y-6">
+                
+                {/* Header with Filter */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-stone-100 shadow-sm">
+                    <h2 className="text-xl font-bold text-slate-800 px-2">Ringkasan Laporan Finansial</h2>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-slate-500">Periode:</span>
+                        <select 
+                            value={filters.date_range || 'today'} 
+                            onChange={handleFilterChange}
+                            className="border-stone-200 text-sm rounded-xl focus:border-emerald-500 focus:ring-emerald-500 font-semibold text-slate-700 bg-stone-50"
+                        >
+                            <option value="today">Hari Ini</option>
+                            <option value="week">Minggu Ini</option>
+                            <option value="month">Bulan Ini</option>
+                            <option value="year">Tahun Ini</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Financial Stats Row */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+                    <StatCard 
+                        icon={Wallet} label="Pendapatan Bersih" 
+                        value={`Rp ${formatPrice(financials.net)}`} 
+                        subtext="Pemasukan dikurangi Pengeluaran"
+                        colorClass="bg-emerald-100 text-emerald-700" 
+                        delay={0.1}
+                    />
+                    <StatCard 
+                        icon={TrendingUp} label="Total Pemasukan" 
+                        value={`Rp ${formatPrice(financials.income)}`} 
+                        subtext="Kotor (termasuk dipotong payment gateway)"
+                        colorClass="bg-blue-100 text-blue-700" 
+                        delay={0.15}
+                    />
+                    <StatCard 
+                        icon={TrendingDown} label="Total Pengeluaran" 
+                        value={`Rp ${formatPrice(financials.expense)}`} 
+                        subtext="Potongan admin & operasional"
+                        colorClass="bg-red-100 text-red-700" 
+                        delay={0.2}
+                    />
+                </div>
+
                 {/* Quick Actions / Main Access */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-8 mt-4">
                     <Link href={route('staff.pos.index')} className="bg-emerald-600 hover:bg-emerald-700 text-white p-6 md:p-8 rounded-[2rem] shadow-xl hover:shadow-2xl transition-all group flex items-center justify-between">
                         <div>
                             <p className="text-emerald-200 font-bold uppercase tracking-widest text-sm mb-2">Kasir Utama</p>
@@ -41,7 +107,7 @@ export default function Staff({ todayCheckIns = [], todayCheckOuts = [], activeF
                     </Link>
                 </div>
 
-                {/* Stats Row */}
+                {/* Operational Stats Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 md:p-8 rounded-[2rem] border border-stone-100 shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-3 mb-2 text-emerald-600">

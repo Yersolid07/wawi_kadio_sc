@@ -259,6 +259,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Settings
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::post('settings', [AdminSettingController::class, 'update'])->name('settings.update');
+            Route::post('settings/reset-data', [AdminSettingController::class, 'resetData'])->name('settings.reset-data');
         });
     });
 });
