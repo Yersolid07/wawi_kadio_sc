@@ -3,31 +3,42 @@
  * Note: Web Bluetooth is only supported on Chrome, Edge, Opera, Android Chrome/Samsung Internet.
  * Not supported on iOS or Firefox/Safari desktop.
  */
+// Cache the connected device globally so we don't have to reconnect or request permission again
+let globalDevice = null;
+let globalServer = null;
+
 export async function connectAndPrint(printData) {
     try {
         if (!navigator.bluetooth) {
             throw new Error('Web Bluetooth API tidak didukung di browser ini. Gunakan Chrome atau Edge.');
         }
 
+        // Use cached connection if still active
+        if (globalDevice && globalDevice.gatt.connected && globalServer) {
+            console.log("Using already connected printer");
+            return await sendToPrinter(globalServer, printData);
+        }
+
         let device = null;
         let server = null;
         
-        // Try to reconnect to a previously permitted device first
+        // Try to fast-connect to previously permitted device if supported
         if (navigator.bluetooth.getDevices) {
             const devices = await navigator.bluetooth.getDevices();
-            for (const d of devices) {
+            if (devices.length > 0) {
                 try {
-                    server = await d.gatt.connect();
-                    device = d;
-                    break; // Connected successfully!
+                    // Try to connect without prompting
+                    server = await devices[0].gatt.connect();
+                    device = devices[0];
                 } catch (e) {
-                    // This device is offline or unreachable, try the next one
-                    console.log('Skipping saved device', d.name, e);
+                    console.log('Auto-connect failed, will prompt user.', e);
                 }
             }
         }
 
         // If no saved device could be connected, prompt the user
+        // Note: if auto-connect failed and took too long, the browser might block this due to expired user gesture.
+        // In that case, the catch block will alert the user to click Print again.
         if (!device || !server) {
             device = await navigator.bluetooth.requestDevice({
                 acceptAllDevices: true,
@@ -44,7 +55,29 @@ export async function connectAndPrint(printData) {
             });
             server = await device.gatt.connect();
         }
+
+        // Cache it for next time
+        globalDevice = device;
+        globalServer = server;
+
+        return await sendToPrinter(server, printData);
+    } catch (error) {
+        console.error("Print Error:", error);
         
+        // Reset cache if connection dropped
+        globalDevice = null;
+        globalServer = null;
+
+        if (error.name === 'SecurityError' || error.message.includes('gesture')) {
+            throw new Error("Sistem mencoba konek otomatis tapi gagal. Silakan KLIK CETAK SEKALI LAGI untuk memilih printer.");
+        }
+        
+        throw new Error("Gagal mencetak: " + error.message);
+    }
+}
+
+async function sendToPrinter(server, printData) {
+    try {
         let targetCharacteristic = null;
         const services = await server.getPrimaryServices();
         for (const service of services) {
@@ -73,12 +106,14 @@ export async function connectAndPrint(printData) {
         };
 
         await sendChunks(printData);
-        device.gatt.disconnect();
+        
+        // Don't disconnect immediately! We cache the server so we can reuse it
+        // device.gatt.disconnect();
         
         return { success: true };
     } catch (error) {
         console.error('Print error:', error);
-        return { success: false, error: error.message };
+        throw error;
     }
 }
 

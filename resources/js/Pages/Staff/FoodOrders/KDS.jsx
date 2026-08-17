@@ -161,7 +161,7 @@ export default function KDS({ orders }) {
                             <div key={item.id} className="flex gap-4 items-start">
                                 <span className="font-black text-3xl w-10 text-center text-stone-500 leading-none shrink-0">{item.quantity}<span className="text-lg">x</span></span>
                                 <div className="flex-1">
-                                    <div className="font-black text-2xl text-white leading-tight mb-1">{item.menu_item.name}</div>
+                                    <div className="font-black text-2xl text-white leading-tight mb-1">{item.menu_item?.name || 'Menu Dihapus'}</div>
                                     {item.notes && (
                                         <div className="bg-yellow-400 text-black px-3 py-2 rounded-lg font-black text-lg flex items-start gap-2 shadow-[0_0_15px_rgba(250,204,21,0.3)] animate-in slide-in-from-left-2">
                                             <AlertCircle size={20} className="shrink-0 mt-0.5" />
