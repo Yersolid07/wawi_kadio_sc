@@ -103,7 +103,7 @@ class Payment extends Model
                 \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($this->foodOrder));
             } else {
                 if ($this->foodOrder->status === 'pending') {
-                    $this->foodOrder->update(['status' => 'completed']);
+                    $this->foodOrder->update(['status' => 'delivered']);
                 }
             }
 

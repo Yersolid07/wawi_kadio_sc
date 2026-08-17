@@ -144,6 +144,7 @@ class POSController extends Controller
             'id' => $order->id,
             'customerName' => $order->customer_name ?? ($order->user?->name ?? 'Tamu'),
             'total' => $order->total_amount,
+            'payment_status' => $order->payment_status,
             'items' => $order->items->map(function ($item) {
                 return [
                     'name' => $item->menuItem->name ?? 'Item',

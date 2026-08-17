@@ -188,7 +188,9 @@ export function buildReceiptBuffer(order, items, total, companyName = 'WAWI KADI
     newline();
     boldOff();
     
-    let statusStr = order.paymentStatus || 'BELUM LUNAS';
+    let rawStatus = order.paymentStatus || order.payment_status || 'unpaid';
+    let isPaid = String(rawStatus).toLowerCase() === 'paid' || String(rawStatus).toLowerCase() === 'lunas' || String(rawStatus).toLowerCase() === 'success';
+    let statusStr = isPaid ? 'LUNAS' : 'BELUM LUNAS';
     text(padRight('Status Bayar', 32 - statusStr.length) + statusStr);
     newline();
     
