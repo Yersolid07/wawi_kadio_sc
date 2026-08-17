@@ -171,11 +171,13 @@ class PaymentService
      */
     public static function recordIncome(Payment $payment): void
     {
+        $netAmount = $payment->amount - ($payment->fee_merchant ?? 0);
+
         if ($payment->reservation) {
             FinancialTransaction::create([
                 'type'             => 'income',
                 'category'         => 'reservation',
-                'amount'           => $payment->amount,
+                'amount'           => $netAmount,
                 'description'      => 'Pembayaran Reservasi — '
                     .($payment->reservation->facility->name ?? 'Fasilitas')
                     .' ('.$payment->reservation->unique_code.')',
@@ -187,7 +189,7 @@ class PaymentService
             FinancialTransaction::create([
                 'type'             => 'income',
                 'category'         => 'cafe',
-                'amount'           => $payment->amount,
+                'amount'           => $netAmount,
                 'description'      => 'Pembayaran Pesanan Cafe #'
                     .substr($payment->food_order_id, 0, 8),
                 'reference_id'     => $payment->food_order_id,
