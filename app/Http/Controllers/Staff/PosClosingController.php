@@ -22,8 +22,32 @@ class PosClosingController extends Controller
             ->whereDate('created_at', $today)
             ->sum('amount');
 
+        $qrisPayments = Payment::where('payment_method', 'qris')
+            ->where('payment_status', 'success')
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+            
+        $transferPayments = Payment::where('payment_method', 'transfer')
+            ->where('payment_status', 'success')
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+            
+        $edcPayments = Payment::where('payment_method', 'edc')
+            ->where('payment_status', 'success')
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+            
+        $ewalletPayments = Payment::where('payment_method', 'ewallet')
+            ->where('payment_status', 'success')
+            ->whereDate('created_at', $today)
+            ->sum('amount');
+
         return Inertia::render('Staff/PosClosing', [
             'expectedCash' => (float) $cashPayments,
+            'expectedQris' => (float) $qrisPayments,
+            'expectedTransfer' => (float) $transferPayments,
+            'expectedEdc' => (float) $edcPayments,
+            'expectedEwallet' => (float) $ewalletPayments,
             'today' => $today->format('Y-m-d')
         ]);
     }
@@ -40,7 +64,19 @@ class PosClosingController extends Controller
             'cash_2k' => 'required|integer|min:0',
             'cash_1k' => 'required|integer|min:0',
             'coins' => 'required|integer|min:0',
-            'note' => 'nullable|string'
+            'note' => 'nullable|string',
+            
+            // Non-cash expected (from system)
+            'qris_expected' => 'required|numeric|min:0',
+            'transfer_expected' => 'required|numeric|min:0',
+            'edc_expected' => 'required|numeric|min:0',
+            'ewallet_expected' => 'required|numeric|min:0',
+            
+            // Non-cash actual (input by cashier)
+            'qris_actual' => 'required|numeric|min:0',
+            'transfer_actual' => 'required|numeric|min:0',
+            'edc_actual' => 'required|numeric|min:0',
+            'ewallet_actual' => 'required|numeric|min:0',
         ]);
 
         $actualCash = 
@@ -70,19 +106,38 @@ class PosClosingController extends Controller
             'coins' => $validated['coins'],
             'total_cash_calculated' => $actualCash,
             'note' => $validated['note'],
+            
+            'qris_expected' => $validated['qris_expected'],
+            'qris_actual' => $validated['qris_actual'],
+            'transfer_expected' => $validated['transfer_expected'],
+            'transfer_actual' => $validated['transfer_actual'],
+            'edc_expected' => $validated['edc_expected'],
+            'edc_actual' => $validated['edc_actual'],
+            'ewallet_expected' => $validated['ewallet_expected'],
+            'ewallet_actual' => $validated['ewallet_actual'],
         ]);
 
-        $diff = $actualCash - $validated['closing_balance'];
-        if (abs($diff) > 0) {
-            \App\Models\FinancialTransaction::create([
-                'type' => $diff > 0 ? 'income' : 'expense',
-                'category' => 'other',
-                'amount' => abs($diff),
-                'description' => ($diff > 0 ? 'Selisih Lebih (Overage) Kasir' : 'Selisih Kurang (Shortage) Kasir') . ' - ' . Carbon::today()->format('d M Y'),
-                'reference_id' => $closing->id,
-                'transaction_date' => Carbon::today(),
-                'user_id' => auth()->id(),
-            ]);
+        // Process differences for all payment types
+        $differences = [
+            'Tunai' => $actualCash - $validated['closing_balance'],
+            'QRIS' => $validated['qris_actual'] - $validated['qris_expected'],
+            'Transfer' => $validated['transfer_actual'] - $validated['transfer_expected'],
+            'EDC' => $validated['edc_actual'] - $validated['edc_expected'],
+            'E-Wallet' => $validated['ewallet_actual'] - $validated['ewallet_expected'],
+        ];
+
+        foreach ($differences as $method => $diff) {
+            if (abs($diff) > 0) {
+                \App\Models\FinancialTransaction::create([
+                    'type' => $diff > 0 ? 'income' : 'expense',
+                    'category' => 'other',
+                    'amount' => abs($diff),
+                    'description' => ($diff > 0 ? 'Selisih Lebih (Overage) Kasir ' . $method : 'Selisih Kurang (Shortage) Kasir ' . $method) . ' - ' . Carbon::today()->format('d M Y'),
+                    'reference_id' => $closing->id,
+                    'transaction_date' => Carbon::today(),
+                    'user_id' => auth()->id(),
+                ]);
+            }
         }
 
         return redirect()->route('dashboard')->with('success', 'Laporan tutup kasir harian berhasil disimpan.');

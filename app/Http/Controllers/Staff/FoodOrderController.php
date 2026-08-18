@@ -18,7 +18,7 @@ class FoodOrderController extends Controller
         return Inertia::render('Staff/FoodOrders/Index', [
             'activeOrders' => FoodOrder::with(['items.menuItem', 'reservation.facility', 'user'])
                 ->active()
-                ->where('payment_status', 'paid') // Only show paid orders — unpaid ones wait in POS
+                ->where('payment_status', 'paid')
                 ->latest()
                 ->get(),
         ]);
@@ -26,9 +26,22 @@ class FoodOrderController extends Controller
 
     public function kds(): Response
     {
-        $orders = FoodOrder::with(['items.menuItem', 'reservation.facility', 'user'])
+        $orders = FoodOrder::with([
+            'items' => function ($query) {
+                $query->whereHas('menuItem', function ($q) {
+                    $q->whereIn('category', ['makanan', 'minuman', 'snack', 'dessert']);
+                })->with('menuItem');
+            },
+            'reservation.facility',
+            'user'
+        ])
             ->whereIn('status', ['pending', 'preparing', 'ready'])
-            ->where('payment_status', 'paid') // Gate: unpaid orders must be validated at POS first
+            ->where('payment_status', 'paid')
+            ->whereHas('items', function ($query) {
+                $query->whereHas('menuItem', function ($q) {
+                    $q->whereIn('category', ['makanan', 'minuman', 'snack', 'dessert']);
+                });
+            })
             ->oldest()
             ->get();
 

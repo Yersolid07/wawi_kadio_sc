@@ -528,7 +528,7 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                         : 'bg-stone-100 text-stone-600 hover:bg-stone-200'
                                 }`}
                             >
-                                {cat}
+                                {cat === 'other_income' ? 'Lainnya' : cat === 'tiket' ? 'Tiket' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                             </button>
                         ))}
                     </div>
@@ -573,8 +573,8 @@ export default function POSIndex({ menuItems, activeOrders = [], user, paymentCh
                                                 SISA: {availableStock}
                                             </span>
                                         )}
-                                        <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm">
-                                            {item.category}
+                                        <span className="bg-white/90 backdrop-blur-sm text-emerald-700 text-[10px] font-black px-2 py-1 rounded-lg shadow-sm uppercase tracking-wider">
+                                            {item.category === 'other_income' ? 'Lainnya' : item.category}
                                         </span>
                                     </div>
                                 </div>

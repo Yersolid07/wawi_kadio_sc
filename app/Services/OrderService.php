@@ -176,7 +176,7 @@ class OrderService
                 // Notify kitchen for newly added food items
                 if ($newItemsAdded) {
                     $hasFood = $order->items->contains(
-                        fn ($i) => $i->menuItem && $i->menuItem->category !== 'tiket'
+                        fn ($i) => $i->menuItem && in_array($i->menuItem->category, ['makanan', 'minuman', 'snack', 'dessert'])
                     );
 
                     if ($hasFood) {
@@ -256,7 +256,7 @@ class OrderService
                         'notes'        => $resolved['notes'],
                     ]);
 
-                    if ($menuItem->category !== 'tiket') {
+                    if (in_array($menuItem->category, ['makanan', 'minuman', 'snack', 'dessert'])) {
                         $hasFood = true;
                     }
                 }

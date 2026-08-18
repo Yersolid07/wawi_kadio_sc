@@ -177,8 +177,10 @@ export default function Index({ inventories }) {
                                     <option value="Bahan Makanan">Bahan Makanan</option>
                                     <option value="Minuman">Minuman</option>
                                     <option value="Perlengkapan Kamar">Perlengkapan Kamar</option>
+                                    <option value="Toiletries">Toiletries</option>
                                     <option value="Kebersihan">Kebersihan</option>
                                     <option value="Operasional">Operasional</option>
+                                    <option value="Other Income">Other Income</option>
                                     <option value="Lainnya">Lainnya</option>
                                 </select>
                             </div>

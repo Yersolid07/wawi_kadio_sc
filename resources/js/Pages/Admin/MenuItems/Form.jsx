@@ -131,6 +131,8 @@ export default function Form({ item = null }) {
                                             <option value="snack">Snack</option>
                                             <option value="dessert">Dessert</option>
                                             <option value="tiket">Tiket Masuk Kolam</option>
+                                            <option value="other_income">Other Income (Lainnya)</option>
+                                            <option value="toiletries">Toiletries</option>
                                         </select>
                                         <InputError message={errors.category} className="mt-2" />
                                     </div>

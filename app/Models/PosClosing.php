@@ -28,6 +28,14 @@ class PosClosing extends Model
         'coins',
         'total_cash_calculated',
         'note',
+        'qris_expected',
+        'qris_actual',
+        'transfer_expected',
+        'transfer_actual',
+        'edc_expected',
+        'edc_actual',
+        'ewallet_expected',
+        'ewallet_actual',
     ];
 
     protected $casts = [

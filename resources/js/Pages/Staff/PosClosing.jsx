@@ -6,7 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 
-export default function PosClosing({ initialCash, todaySales, expectedCash, previousClosing, today }) {
+export default function PosClosing({ initialCash, todaySales, expectedCash, expectedQris, expectedTransfer, expectedEdc, expectedEwallet, previousClosing, today }) {
     const { data, setData, post, processing, errors } = useForm({
         closing_balance: expectedCash || 0,
         cash_100k: 0,
@@ -17,7 +17,15 @@ export default function PosClosing({ initialCash, todaySales, expectedCash, prev
         cash_2k: 0,
         cash_1k: 0,
         coins: 0,
-        note: ''
+        note: '',
+        qris_expected: expectedQris || 0,
+        qris_actual: expectedQris || 0,
+        transfer_expected: expectedTransfer || 0,
+        transfer_actual: expectedTransfer || 0,
+        edc_expected: expectedEdc || 0,
+        edc_actual: expectedEdc || 0,
+        ewallet_expected: expectedEwallet || 0,
+        ewallet_actual: expectedEwallet || 0,
     });
 
     const [totalPhysicalCash, setTotalPhysicalCash] = useState(0);
@@ -44,8 +52,15 @@ export default function PosClosing({ initialCash, todaySales, expectedCash, prev
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (difference !== 0) {
-            if (!(await window.customConfirm(`Terdapat selisih kas sebesar Rp ${difference.toLocaleString('id-ID')}. Anda yakin ingin melanjutkan?`))) {
+        
+        const nonCashDiffTotal = 
+            Math.abs(data.qris_actual - data.qris_expected) +
+            Math.abs(data.transfer_actual - data.transfer_expected) +
+            Math.abs(data.edc_actual - data.edc_expected) +
+            Math.abs(data.ewallet_actual - data.ewallet_expected);
+            
+        if (difference !== 0 || nonCashDiffTotal > 0) {
+            if (!(await window.customConfirm(`Terdapat selisih kas tunai sebesar Rp ${difference.toLocaleString('id-ID')} dan/atau selisih non-tunai. Anda yakin ingin melanjutkan?`))) {
                 return;
             }
         }
@@ -137,6 +152,45 @@ export default function PosClosing({ initialCash, todaySales, expectedCash, prev
                                     />
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <h3 className="text-lg font-bold text-slate-800 border-b border-stone-100 pb-2">Rekapitulasi Non-Tunai (Actual / Riil)</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            
+                            {[
+                                { key: 'qris_actual', expectedKey: 'qris_expected', label: 'QRIS', expectedVal: data.qris_expected },
+                                { key: 'transfer_actual', expectedKey: 'transfer_expected', label: 'Transfer Bank', expectedVal: data.transfer_expected },
+                                { key: 'edc_actual', expectedKey: 'edc_expected', label: 'Mesin EDC', expectedVal: data.edc_expected },
+                                { key: 'ewallet_actual', expectedKey: 'ewallet_expected', label: 'E-Wallet (Ovo/Dana/Shopee)', expectedVal: data.ewallet_expected },
+                            ].map(method => {
+                                const diff = method.expectedVal - data[method.key];
+                                return (
+                                    <div key={method.key} className="bg-stone-50 p-4 rounded-xl border border-stone-100">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <InputLabel value={method.label} />
+                                            <span className="text-xs text-stone-500 font-medium bg-stone-200 px-2 py-1 rounded">Sistem: Rp {parseFloat(method.expectedVal).toLocaleString('id-ID')}</span>
+                                        </div>
+                                        <div className="relative mt-1">
+                                            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-stone-500 font-bold">Rp</span>
+                                            <TextInput
+                                                type="number"
+                                                min="0"
+                                                className={`block w-full pl-10 text-lg font-bold ${diff !== 0 ? 'bg-rose-50 border-rose-300 focus:border-rose-500 focus:ring-rose-500' : 'bg-white'}`}
+                                                value={data[method.key]}
+                                                onChange={(e) => setData(method.key, e.target.value)}
+                                            />
+                                        </div>
+                                        {diff !== 0 && (
+                                            <p className="text-xs text-rose-600 mt-2 font-medium flex items-center gap-1">
+                                                <AlertTriangle size={12} />
+                                                Selisih: Rp {Math.abs(diff).toLocaleString('id-ID')} ({diff > 0 ? 'Kurang' : 'Lebih'})
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 

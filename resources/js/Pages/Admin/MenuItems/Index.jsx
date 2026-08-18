@@ -78,6 +78,8 @@ export default function Index({ items, filters }) {
                             <option value="snack">Snack</option>
                             <option value="dessert">Dessert</option>
                             <option value="tiket">Tiket Masuk</option>
+                            <option value="other_income">Other Income (Lainnya)</option>
+                            <option value="toiletries">Toiletries</option>
                         </select>
                         <select
                             className="bg-stone-50 border-stone-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl md:w-48"

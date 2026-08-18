@@ -95,7 +95,7 @@ class Payment extends Model
             
             // Check if there are food items to notify kitchen
             $hasFood = $this->foodOrder->items->contains(
-                fn($i) => $i->menuItem && $i->menuItem->category !== 'tiket'
+                fn($i) => $i->menuItem && in_array($i->menuItem->category, ['makanan', 'minuman', 'snack', 'dessert'])
             );
 
             if ($hasFood) {
