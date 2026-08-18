@@ -18,7 +18,12 @@ class FoodOrderController extends Controller
         return Inertia::render('Staff/FoodOrders/Index', [
             'activeOrders' => FoodOrder::with(['items.menuItem', 'reservation.facility', 'user'])
                 ->active()
-                ->where('payment_status', 'paid')
+                ->where(function ($query) {
+                    $query->where('payment_status', 'paid')
+                          ->orWhereHas('user', function ($q) {
+                              $q->role(['staff', 'manager', 'admin']);
+                          });
+                })
                 ->latest()
                 ->get(),
         ]);
@@ -36,7 +41,12 @@ class FoodOrderController extends Controller
             'user'
         ])
             ->whereIn('status', ['pending', 'preparing', 'ready'])
-            ->where('payment_status', 'paid')
+            ->where(function ($query) {
+                $query->where('payment_status', 'paid')
+                      ->orWhereHas('user', function ($q) {
+                          $q->role(['staff', 'manager', 'admin']);
+                      });
+            })
             ->whereHas('items', function ($query) {
                 $query->whereHas('menuItem', function ($q) {
                     $q->whereIn('category', ['makanan', 'minuman', 'snack', 'dessert']);
