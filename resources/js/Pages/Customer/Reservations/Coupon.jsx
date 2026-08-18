@@ -3,6 +3,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCircle2, MapPin, Calendar, Clock, Users, ArrowLeft, Download, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Coupon({ reservation }) {
     const facility = reservation.facility;
@@ -125,3 +126,4 @@ export default function Coupon({ reservation }) {
         </AppLayout>
     );
 }
+

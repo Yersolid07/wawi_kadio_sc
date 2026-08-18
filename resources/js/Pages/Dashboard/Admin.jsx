@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Wallet, Users, CalendarDays, UtensilsCrossed, Star, Activity, ArrowUpRight, Ticket } from 'lucide-react';
 import { useState } from 'react';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Admin({ stats = {}, recentReservations = [], revenueChart = [], facilityOccupancy = [], recentReviews = [], filters = {} }) {
     
@@ -299,3 +300,4 @@ export default function Admin({ stats = {}, recentReservations = [], revenueChar
         </AppLayout>
     );
 }
+

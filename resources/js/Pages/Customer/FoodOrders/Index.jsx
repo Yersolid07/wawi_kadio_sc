@@ -1,10 +1,11 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { UtensilsCrossed, Clock, CheckCircle2, ChevronRight, Plus, Package } from 'lucide-react';
+import { formatDateTime } from '@/utils/dateUtils';
 
 export default function Index({ orders }) {
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
 
     const StatusBadge = ({ status }) => {
         const styles = {
@@ -58,7 +59,7 @@ export default function Index({ orders }) {
                                             Order #{order.id.substring(0,6).toUpperCase()}
                                         </h3>
                                         <p className="text-sm text-slate-500 mt-1 flex items-center gap-1">
-                                            <Clock size={14} /> {formatDate(order.created_at)}
+                                            <Clock size={14} /> {formatDateTime(order.created_at)}
                                         </p>
                                     </div>
                                     <StatusBadge status={order.status} />
@@ -115,3 +116,4 @@ export default function Index({ orders }) {
         </AppLayout>
     );
 }
+

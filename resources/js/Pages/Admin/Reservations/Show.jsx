@@ -2,6 +2,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { ArrowLeft, Calendar, User, CreditCard, UtensilsCrossed, CheckCircle2, MessageSquare, Clock } from 'lucide-react';
 import PrimaryButton from '@/Components/PrimaryButton';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Show({ reservation }) {
     const updateStatus = (status) => {
@@ -9,7 +10,7 @@ export default function Show({ reservation }) {
     };
 
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    
 
     const StatusBadge = ({ status }) => {
         const styles = {
@@ -180,3 +181,4 @@ export default function Show({ reservation }) {
         </AppLayout>
     );
 }
+

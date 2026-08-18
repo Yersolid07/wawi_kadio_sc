@@ -2,6 +2,7 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, router } from '@inertiajs/react';
 import { ChefHat, Check, Clock, Utensils, Package, AlertCircle, Maximize, UtensilsCrossed } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { parseServerDate } from '@/utils/dateUtils';
 
 export default function Index({ activeOrders }) {
     // Auto refresh every 30 seconds for KDS
@@ -33,7 +34,7 @@ export default function Index({ activeOrders }) {
                 </div>
                 <div className="text-right">
                     <span className="inline-block px-2 py-1 bg-stone-100 text-stone-700 text-[10px] font-black uppercase rounded">
-                        {new Date(order.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}
+                        {parseServerDate(order.created_at).toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'})}
                     </span>
                     <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">{order.order_type.replace('_', ' ')}</p>
                     <div className="mt-1">

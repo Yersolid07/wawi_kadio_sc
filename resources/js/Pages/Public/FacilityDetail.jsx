@@ -3,6 +3,7 @@ import { getImageUrl } from '@/utils/imagePath';
 import { Coffee, ArrowLeft, Star, CheckCircle2, Bed, Maximize, Wifi, Users, Building2, Calendar, AlertCircle, Tv, AirVent, Bath, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FloatingWhatsApp from '@/Components/FloatingWhatsApp';
+import { parseServerDate } from '@/utils/dateUtils';
 import PublicFooter from '@/Components/PublicFooter';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -241,7 +242,7 @@ export default function FacilityDetail({ facility, reviews = [], avgRating = 0 }
                                             <div>
                                                 <p className="font-semibold text-slate-900">{review?.user?.name || 'Tamu Anonim'}</p>
                                                 <p className="text-xs font-medium text-slate-400 mt-0.5">
-                                                    {review?.created_at ? new Date(review.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
+                                                    {review?.created_at ? parseServerDate(review.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) : '-'}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 border border-amber-100 rounded-xl">

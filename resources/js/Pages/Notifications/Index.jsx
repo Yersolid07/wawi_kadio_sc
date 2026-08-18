@@ -1,6 +1,7 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
 import { Bell, Check, Clock } from 'lucide-react';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Index({ notifications }) {
     const markAsRead = (id) => {
@@ -86,3 +87,4 @@ export default function Index({ notifications }) {
         </AppLayout>
     );
 }
+

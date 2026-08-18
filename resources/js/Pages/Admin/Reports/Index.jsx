@@ -9,6 +9,7 @@ import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import InputError from '@/Components/InputError';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Index({ stats, chartData, filters, bestSellingMenus, recentRestocks }) {
     const [periodFrom, setPeriodFrom] = useState(filters.period_from || '');
@@ -47,11 +48,7 @@ export default function Index({ stats, chartData, filters, bestSellingMenus, rec
         return parseFloat(price).toLocaleString('id-ID');
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'short', year: 'numeric'
-        });
-    };
+    // formatDate imported from @/utils/dateUtils
 
     return (
         <AppLayout title="Laporan & Analitik">
@@ -403,3 +400,4 @@ export default function Index({ stats, chartData, filters, bestSellingMenus, rec
         </AppLayout>
     );
 }
+

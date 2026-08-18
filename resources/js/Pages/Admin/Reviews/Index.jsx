@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Star, MessageSquare, Eye, EyeOff, Trash2, ShieldAlert } from 'lucide-react';
 import { useState } from 'react';
 import debounce from 'lodash/debounce';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Index({ reviews, filters, stats }) {
     const [rating, setRating] = useState(filters.rating || '');
@@ -182,3 +183,4 @@ export default function Index({ reviews, filters, stats }) {
         </AppLayout>
     );
 }
+

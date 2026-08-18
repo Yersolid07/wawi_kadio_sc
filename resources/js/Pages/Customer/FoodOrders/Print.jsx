@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { MapPin, Phone, Mail, UtensilsCrossed, CreditCard } from 'lucide-react';
+import { parseServerDate, formatDateTime } from '@/utils/dateUtils';
 
 export default function Print({ order, company }) {
     useEffect(() => {
@@ -37,7 +38,7 @@ export default function Print({ order, company }) {
                     <div className="text-right">
                         <h2 className="text-3xl font-black text-slate-200 uppercase tracking-widest mb-2">STRUK</h2>
                         <p className="font-bold text-slate-800">#{order.id.split('-')[0].toUpperCase()}</p>
-                        <p className="text-sm text-slate-500">Tanggal: {new Date(order.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                        <p className="text-sm text-slate-500">Tanggal: {formatDateTime(order.created_at)}</p>
                     </div>
                 </div>
 
@@ -105,7 +106,7 @@ export default function Print({ order, company }) {
                             <p className="text-sm opacity-80 mt-1">
                                 Pembayaran menggunakan metode {order.payment.payment_method.toUpperCase()} 
                                 {order.payment.payment_channel ? ` (${order.payment.payment_channel})` : ''} 
-                                pada {new Date(order.payment.created_at).toLocaleString('id-ID')}
+                                pada {parseServerDate(order.payment.created_at).toLocaleString('id-ID')}
                             </p>
                             <p className="text-sm font-bold mt-1 text-emerald-600 uppercase">Status: {order.payment.status}</p>
                         </div>

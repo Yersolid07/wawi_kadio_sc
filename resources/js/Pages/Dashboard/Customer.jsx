@@ -3,6 +3,7 @@ import { Head, Link } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { CalendarDays, UtensilsCrossed, ArrowRight, CreditCard, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Customer({ auth, upcomingReservations = [], recentReservations = [], recentOrders = [] }) {
     const { t } = useTranslation();
@@ -221,3 +222,4 @@ export default function Customer({ auth, upcomingReservations = [], recentReserv
         </AppLayout>
     );
 }
+

@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Scan({ auth }) {
     const { flash } = usePage().props;
@@ -162,3 +163,4 @@ export default function Scan({ auth }) {
         </AppLayout>
     );
 }
+

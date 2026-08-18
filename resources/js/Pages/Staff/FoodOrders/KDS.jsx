@@ -2,23 +2,11 @@ import { useState, useEffect } from 'react';
 import { Head, router, Link } from '@inertiajs/react';
 import { ChefHat, CheckCircle2, Clock, PlayCircle, Maximize, ArrowLeft, Flame, AlertCircle } from 'lucide-react';
 
-// Custom relative time formatter
-const getRelativeTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
-    
-    if (diffInSeconds < 60) return `${diffInSeconds} detik yang lalu`;
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} menit yang lalu`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} jam yang lalu`;
-    return `${Math.floor(diffInSeconds / 86400)} hari yang lalu`;
-};
+import { parseServerDate, getRelativeTime } from '@/utils/dateUtils';
 
-// Calculate if order is delayed (e.g. > 15 minutes)
+// Calculate if order is delayed (> 10 / 20 minutes)
 const getDelayStatus = (dateString) => {
-    const date = new Date(dateString);
-    const diffInMinutes = Math.floor((new Date() - date) / 60000);
-    
+    const diffInMinutes = Math.floor((Date.now() - parseServerDate(dateString).getTime()) / 60000);
     if (diffInMinutes > 20) return 'critical';
     if (diffInMinutes > 10) return 'warning';
     return 'normal';
@@ -69,7 +57,7 @@ export default function KDS({ orders }) {
         
         let newDate;
         if (order.estimated_ready_at) {
-            newDate = new Date(order.estimated_ready_at);
+            newDate = parseServerDate(order.estimated_ready_at);
         } else {
             // Default 15 minutes from now if empty
             newDate = new Date();
@@ -96,7 +84,7 @@ export default function KDS({ orders }) {
         
         if (status === 'preparing') {
             if (order.estimated_ready_at) {
-                const estDate = new Date(order.estimated_ready_at);
+                const estDate = parseServerDate(order.estimated_ready_at);
                 const diffSec = Math.floor((estDate - currentTime) / 1000);
                 
                 if (diffSec < 0) {

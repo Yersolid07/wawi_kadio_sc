@@ -3,10 +3,11 @@ import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, Clock, ChefHat, Check, Printer, Phone, Package } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
+import { formatDateTime } from '@/utils/dateUtils';
 
 export default function Show({ order, isGuest }) {
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
 
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -78,7 +79,7 @@ export default function Show({ order, isGuest }) {
                         <h2 className="text-2xl font-bold text-slate-900">
                             Order #{order.id.substring(0,8).toUpperCase()}
                         </h2>
-                        <p className="text-slate-500 text-sm">Dipesan pada {formatDate(order.created_at)}</p>
+                        <p className="text-slate-500 text-sm">Dipesan pada {formatDateTime(order.created_at)}</p>
                     </div>
                     <div className="ml-auto">
                         <a 
@@ -277,3 +278,4 @@ export default function Show({ order, isGuest }) {
         </AppLayout>
     );
 }
+

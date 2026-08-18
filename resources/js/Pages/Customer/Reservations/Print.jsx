@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import { useEffect } from 'react';
 import { Hotel, MapPin, Phone, Mail, Calendar, Users, CreditCard } from 'lucide-react';
+import { formatDate, parseServerDate } from '@/utils/dateUtils';
 
 export default function Print({ reservation, company }) {
     useEffect(() => {
@@ -119,7 +120,7 @@ export default function Print({ reservation, company }) {
                             <p className="text-sm opacity-80 mt-1">
                                 Pembayaran menggunakan metode {reservation.payment.payment_method.toUpperCase()} 
                                 {reservation.payment.payment_channel ? ` (${reservation.payment.payment_channel})` : ''} 
-                                pada {new Date(reservation.payment.created_at).toLocaleString('id-ID')}
+                                pada {parseServerDate(reservation.payment.created_at).toLocaleString('id-ID')}
                             </p>
                         </div>
                     </div>
@@ -144,3 +145,4 @@ export default function Print({ reservation, company }) {
         </div>
     );
 }
+

@@ -1,10 +1,11 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { CalendarDays, MapPin, CreditCard, ArrowRight, Clock, Plus } from 'lucide-react';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Index({ reservations }) {
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    
 
     const StatusBadge = ({ status }) => {
         const styles = {
@@ -122,3 +123,4 @@ export default function Index({ reservations }) {
         </AppLayout>
     );
 }
+

@@ -2,12 +2,13 @@ import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft, CreditCard, Clock, CheckCircle2, XCircle, Image as ImageIcon, Receipt } from 'lucide-react';
 import { useState } from 'react';
+import { formatDateTime } from '@/utils/dateUtils';
 
 export default function Show({ payment }) {
     const [isImageModalOpen, setIsImageModalOpen] = useState(false);
     
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
 
     const StatusBadge = ({ status }) => {
         const styles = {
@@ -66,7 +67,7 @@ export default function Show({ payment }) {
                                     )}
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Tanggal Bayar</span>
-                                        <span className="font-semibold text-slate-900">{formatDate(payment.created_at)}</span>
+                                        <span className="font-semibold text-slate-900">{formatDateTime(payment.created_at)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-slate-500">Metode</span>
@@ -135,3 +136,4 @@ export default function Show({ payment }) {
         </AppLayout>
     );
 }
+

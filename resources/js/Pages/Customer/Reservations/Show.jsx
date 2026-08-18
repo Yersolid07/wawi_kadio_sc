@@ -7,6 +7,7 @@ import InputLabel from '@/Components/InputLabel';
 import TextInput from '@/Components/TextInput';
 import InputError from '@/Components/InputError';
 import { useState } from 'react';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Show({ reservation, canReview, canCancel }) {
     const [showReviewForm, setShowReviewForm] = useState(false);
@@ -18,7 +19,7 @@ export default function Show({ reservation, canReview, canCancel }) {
     });
 
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    
 
     const handleCancel = async () => {
         if (await window.customConfirm('Apakah Anda yakin ingin membatalkan reservasi ini? Tindakan ini tidak dapat diurungkan.')) {
@@ -294,3 +295,4 @@ export default function Show({ reservation, canReview, canCancel }) {
         </AppLayout>
     );
 }
+

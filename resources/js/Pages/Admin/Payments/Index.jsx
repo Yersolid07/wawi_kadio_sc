@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { Wallet, Search, CheckCircle2, XCircle, Clock, Check, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { useState } from 'react';
 import debounce from 'lodash/debounce';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function Index({ payments, filters, stats }) {
     const [status, setStatus] = useState(filters.status || '');
@@ -277,3 +278,4 @@ export default function Index({ payments, filters, stats }) {
         </AppLayout>
     );
 }
+

@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
+import { parseServerDate } from '@/utils/dateUtils';
 
 export default function ActivityLogsIndex({ auth, logs, filters, users }) {
     const [selectedLog, setSelectedLog] = useState(null);
@@ -190,11 +191,11 @@ export default function ActivityLogsIndex({ auth, logs, filters, users }) {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center text-sm text-gray-900 font-medium">
                                                         <Calendar size={14} className="mr-2 text-gray-400" />
-                                                        {format(new Date(log.created_at), 'dd MMM yyyy', { locale: id })}
+                                                        {format(parseServerDate(log.created_at), 'dd MMM yyyy', { locale: id })}
                                                     </div>
                                                     <div className="flex items-center text-xs text-gray-500 mt-1">
                                                         <Clock size={12} className="mr-2 text-gray-400" />
-                                                        {format(new Date(log.created_at), 'HH:mm:ss')}
+                                                        {format(parseServerDate(log.created_at), 'HH:mm:ss')}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -323,7 +324,7 @@ export default function ActivityLogsIndex({ auth, logs, filters, users }) {
                                 </div>
                                 <div className="flex-1">
                                     <span className="text-gray-500 block mb-1">Waktu:</span>
-                                    <span className="font-semibold text-gray-900">{format(new Date(selectedLog.created_at), 'dd MMM yyyy HH:mm')}</span>
+                                    <span className="font-semibold text-gray-900">{format(parseServerDate(selectedLog.created_at), 'dd MMM yyyy HH:mm')}</span>
                                 </div>
                             </div>
 

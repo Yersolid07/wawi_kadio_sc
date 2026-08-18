@@ -3,6 +3,7 @@ import { Head, Link, router } from '@inertiajs/react';
 import { UtensilsCrossed, Clock, CheckCircle2, XCircle, ChevronDown, Package } from 'lucide-react';
 import { useState } from 'react';
 import debounce from 'lodash/debounce';
+import { formatDateTime } from '@/utils/dateUtils';
 
 export default function Index({ orders, filters, stats }) {
     const [status, setStatus] = useState(filters.status || '');
@@ -26,11 +27,6 @@ export default function Index({ orders, filters, stats }) {
         return parseFloat(price).toLocaleString('id-ID');
     };
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleString('id-ID', {
-            day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-        });
-    };
 
     const StatusBadge = ({ status }) => {
         const styles = {
@@ -163,7 +159,7 @@ export default function Index({ orders, filters, stats }) {
                                     <div className="flex justify-between items-start mb-4">
                                         <div>
                                             <p className="font-bold text-slate-900 text-lg">{order.user?.name}</p>
-                                            <p className="text-sm text-slate-500">{formatDate(order.created_at)}</p>
+                                            <p className="text-sm text-slate-500">{formatDateTime(order.created_at)}</p>
                                         </div>
                                         <StatusBadge status={order.status} />
                                     </div>

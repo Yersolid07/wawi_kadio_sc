@@ -1,10 +1,11 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link } from '@inertiajs/react';
 import { CreditCard, Clock, CheckCircle2, ChevronRight, XCircle } from 'lucide-react';
+import { formatDateTime } from '@/utils/dateUtils';
 
 export default function Index({ payments }) {
     const formatPrice = (price) => parseFloat(price).toLocaleString('id-ID');
-    const formatDate = (date) => new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    
 
     const StatusBadge = ({ status }) => {
         const styles = {
@@ -59,7 +60,7 @@ export default function Index({ payments }) {
                                     Metode: <span className="font-semibold text-slate-700 uppercase">{payment.payment_method.replace('_', ' ')}</span>
                                 </p>
                                 <p className="text-xs text-slate-400">
-                                    {formatDate(payment.created_at)}
+                                    {formatDateTime(payment.created_at)}
                                 </p>
                             </div>
                             <div className="flex items-center gap-4 self-end md:self-auto w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-stone-100 pt-4 md:pt-0">
@@ -84,3 +85,4 @@ export default function Index({ payments }) {
         </AppLayout>
     );
 }
+
