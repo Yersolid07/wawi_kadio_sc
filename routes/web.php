@@ -220,6 +220,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Food Orders
         Route::get('food-orders', [AdminFoodOrderController::class, 'index'])->name('food-orders.index');
         Route::patch('food-orders/{order}/status', [AdminFoodOrderController::class, 'updateStatus'])->name('food-orders.status');
+        Route::delete('food-orders/{order}', [AdminFoodOrderController::class, 'destroy'])->name('food-orders.destroy');
 
         // Payments
         Route::get('payments', [AdminPaymentController::class, 'index'])->name('payments.index');

@@ -92,25 +92,28 @@ class Payment extends Model
             $this->foodOrder->update([
                 'payment_status' => 'paid',
             ]);
-            
+
+            // Fresh-load items with menuItem to avoid stale relation cache
+            $foodOrder = $this->foodOrder->fresh(['items.menuItem']);
+
             // Check if there are food items to notify kitchen
-            $hasFood = $this->foodOrder->items->contains(
+            $hasFood = $foodOrder->items->contains(
                 fn($i) => $i->menuItem && in_array($i->menuItem->category, ['makanan', 'minuman', 'snack', 'dessert'])
             );
 
             if ($hasFood) {
                 $kitchenStaff = \App\Models\User::role(['staff', 'manager', 'admin'])->get();
-                \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($this->foodOrder));
+                \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($foodOrder));
             } else {
-                if ($this->foodOrder->status === 'pending') {
-                    $this->foodOrder->update(['status' => 'delivered']);
+                if ($foodOrder->status === 'pending') {
+                    $foodOrder->update(['status' => 'delivered']);
                 }
             }
 
-            if ($this->foodOrder->user?->email) {
+            if ($foodOrder->user?->email) {
                 try {
-                    Mail::to($this->foodOrder->user->email)
-                        ->send(new OrderSuccessMail($this->foodOrder));
+                    Mail::to($foodOrder->user->email)
+                        ->send(new OrderSuccessMail($foodOrder));
                 } catch (\Exception $e) {
                     \Illuminate\Support\Facades\Log::error('[Payment] Failed to send food order email', ['error' => $e->getMessage()]);
                 }

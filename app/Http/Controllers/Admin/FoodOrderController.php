@@ -81,4 +81,36 @@ class FoodOrderController extends Controller
 
         return back()->with('success', "Status order diperbarui ke {$validated['status']}.");
     }
+
+    public function destroy(FoodOrder $order)
+    {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+            // Restore stock if the order hasn't been cancelled yet
+            if ($order->status !== 'cancelled') {
+                $order->load('items.menuItem');
+                foreach ($order->items as $item) {
+                    if ($item->menuItem && $item->menuItem->daily_stock !== null) {
+                        $item->menuItem->increment('current_stock', $item->quantity);
+                    }
+                }
+            }
+
+            // Delete associated financial transactions if paid
+            if (in_array($order->payment_status, ['paid', 'refunded'])) {
+                // If it was paid, remove the income transaction (or any related transaction)
+                \App\Models\FinancialTransaction::where('reference_id', $order->id)
+                    ->whereIn('type', ['income', 'expense'])
+                    ->delete();
+            }
+
+            // Delete associated payments
+            $order->payments()->delete();
+
+            // Finally delete the order (items will cascade if set up, or we can force it)
+            $order->items()->delete();
+            $order->delete();
+        });
+
+        return back()->with('success', 'Riwayat pesanan berhasil dihapus secara permanen.');
+    }
 }

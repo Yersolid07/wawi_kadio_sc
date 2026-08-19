@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import { Head, Link, router } from '@inertiajs/react';
-import { UtensilsCrossed, Clock, CheckCircle2, XCircle, ChevronDown, Package } from 'lucide-react';
+import { UtensilsCrossed, Clock, CheckCircle2, XCircle, ChevronDown, Package, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import debounce from 'lodash/debounce';
 import { formatDateTime } from '@/utils/dateUtils';
@@ -21,6 +21,12 @@ export default function Index({ orders, filters, stats }) {
 
     const updateStatus = (id, newStatus) => {
         router.patch(route('admin.food-orders.status', id), { status: newStatus }, { preserveScroll: true });
+    };
+
+    const deleteOrder = (id) => {
+        if (confirm('Apakah Anda yakin ingin menghapus pesanan ini secara permanen? Dana dan stok terkait akan dihapus/dikembalikan.')) {
+            router.delete(route('admin.food-orders.destroy', id), { preserveScroll: true });
+        }
     };
 
     const formatPrice = (price) => {
@@ -239,6 +245,12 @@ export default function Index({ orders, filters, stats }) {
                                         <a href={route('staff.pos.print', order.id)} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 border border-slate-200">
                                             Print Struk
                                         </a>
+                                        
+                                        {/* Delete Button */}
+                                        <button onClick={() => deleteOrder(order.id)} className="px-3 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-sm font-bold transition-colors inline-flex items-center gap-2 border border-rose-100 ml-auto">
+                                            <Trash2 size={16} />
+                                            Hapus
+                                        </button>
                                     </div>
                                 </div>
                             </div>

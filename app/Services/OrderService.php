@@ -230,17 +230,6 @@ class OrderService
                     'user_id'        => $userId,
                 ]);
 
-                // Create Payment record for financial tracking
-                if ($markAsPaid) {
-                    $payment = Payment::create([
-                        'food_order_id'  => $order->id,
-                        'amount'         => $realTotal,
-                        'payment_method' => $paymentMethod,
-                        'payment_status' => 'pending',
-                    ]);
-                    $payment->markAsSuccess();
-                }
-
                 $hasFood = false;
                 foreach ($resolvedItems as $resolved) {
                     $menuItem = $resolved['menuItem'];
@@ -261,11 +250,22 @@ class OrderService
                     }
                 }
 
+                // Create Payment record AFTER items so markAsSuccess() sees all items
+                if ($markAsPaid) {
+                    $payment = Payment::create([
+                        'food_order_id'  => $order->id,
+                        'amount'         => $realTotal,
+                        'payment_method' => $paymentMethod,
+                        'payment_status' => 'pending',
+                    ]);
+                    $payment->markAsSuccess();
+                }
+
                 if ($hasFood) {
                     $kitchenStaff = \App\Models\User::role(['staff', 'manager', 'admin'])->get();
                     \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($order));
                 } else {
-                    // Tiket-only order: complete immediately
+                    // Tiket/non-food only order: complete immediately
                     $order->update(['status' => 'delivered']);
                 }
             }
