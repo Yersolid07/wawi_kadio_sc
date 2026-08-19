@@ -72,15 +72,18 @@ class PaymentController extends Controller
             'note' => 'nullable|string|max:500',
         ]);
 
-        if ($validated['action'] === 'approve') {
-            $payment->markAsSuccess();
+        DB::transaction(function () use ($payment, $validated) {
+            $payment = Payment::where('id', $payment->id)->lockForUpdate()->firstOrFail();
 
-            return back()->with('success', 'Pembayaran berhasil diverifikasi.');
-        }
+            if ($validated['action'] === 'approve') {
+                $payment->markAsSuccess();
+            } else {
+                $payment->update(['payment_status' => 'failed']);
+            }
+        });
 
-        $payment->update(['payment_status' => 'failed']);
-
-        return back()->with('success', 'Pembayaran ditolak.');
+        $message = $validated['action'] === 'approve' ? 'Pembayaran berhasil diverifikasi.' : 'Pembayaran ditolak.';
+        return back()->with('success', $message);
     }
 
     /**

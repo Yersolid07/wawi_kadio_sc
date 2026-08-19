@@ -174,7 +174,8 @@ class OrderService
                 }
 
                 // Notify kitchen for newly added food items
-                if ($newItemsAdded) {
+                // Only send if NOT marked as paid, because markAsSuccess() already sends a notification if paid.
+                if (!$markAsPaid && $newItemsAdded) {
                     $hasFood = $order->items->contains(
                         fn ($i) => $i->menuItem && in_array($i->menuItem->category, ['makanan', 'minuman', 'snack', 'dessert'])
                     );
@@ -259,15 +260,18 @@ class OrderService
                         'payment_status' => 'pending',
                     ]);
                     $payment->markAsSuccess();
+                } else {
+                    // Only send notification here if it's NOT paid immediately.
+                    // If paid immediately, Payment::markAsSuccess() will handle the notification.
+                    if ($hasFood) {
+                        $kitchenStaff = \App\Models\User::role(['staff', 'manager', 'admin'])->get();
+                        \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($order));
+                    } else {
+                        // Tiket/non-food only order: complete immediately
+                        $order->update(['status' => 'delivered']);
+                    }
                 }
 
-                if ($hasFood) {
-                    $kitchenStaff = \App\Models\User::role(['staff', 'manager', 'admin'])->get();
-                    \Illuminate\Support\Facades\Notification::send($kitchenStaff, new \App\Notifications\NewFoodOrder($order));
-                } else {
-                    // Tiket/non-food only order: complete immediately
-                    $order->update(['status' => 'delivered']);
-                }
             }
 
             return $order;

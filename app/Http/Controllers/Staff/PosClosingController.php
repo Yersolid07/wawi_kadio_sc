@@ -16,30 +16,31 @@ class PosClosingController extends Controller
         $today = Carbon::today();
         
         // Find expected cash for today. 
-        // We calculate all successful cash payments made today
+        // We calculate all successful cash payments made today based on payment_date
         $cashPayments = Payment::where('payment_method', 'cash')
             ->where('payment_status', 'success')
-            ->whereDate('created_at', $today)
+            ->whereDate('payment_date', $today)
             ->sum('amount');
 
-        $qrisPayments = Payment::where('payment_method', 'qris')
+        // Include tripay in QRIS calculation since QRIS is routed through Tripay
+        $qrisPayments = Payment::whereIn('payment_method', ['qris', 'tripay'])
             ->where('payment_status', 'success')
-            ->whereDate('created_at', $today)
+            ->whereDate('payment_date', $today)
             ->sum('amount');
             
         $transferPayments = Payment::where('payment_method', 'transfer')
             ->where('payment_status', 'success')
-            ->whereDate('created_at', $today)
+            ->whereDate('payment_date', $today)
             ->sum('amount');
             
         $edcPayments = Payment::where('payment_method', 'edc')
             ->where('payment_status', 'success')
-            ->whereDate('created_at', $today)
+            ->whereDate('payment_date', $today)
             ->sum('amount');
             
         $ewalletPayments = Payment::where('payment_method', 'ewallet')
             ->where('payment_status', 'success')
-            ->whereDate('created_at', $today)
+            ->whereDate('payment_date', $today)
             ->sum('amount');
 
         return Inertia::render('Staff/PosClosing', [

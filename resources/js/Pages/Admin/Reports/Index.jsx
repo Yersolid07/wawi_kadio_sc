@@ -19,10 +19,19 @@ export default function Index({ stats, chartData, filters, bestSellingMenus, rec
     
     const { data: txData, setData: setTxData, post: postTx, processing: txProcessing, errors: txErrors, reset: txReset } = useForm({
         type: 'expense',
+        category: 'Operasional Cafe',
         amount: '',
         description: '',
         transaction_date: new Date().toISOString().split('T')[0]
     });
+
+    const expenseCategories = [
+        'Operasional Cafe', 'Operasional Dapur', 'Logistik & Utilitas',
+        'Kebersihan & Perlengkapan', 'Sarana & Tanaman', 'Kesejahteraan Karyawan',
+        'Gaji Karyawan Dapur', 'Gaji Karyawan Café', 'Gaji Karyawan B',
+        'Beban Utilitas & Umum', 'Kas Besar', 'Kas Kecil', 'Pemb. Bensin',
+        'Perbaikan Fasilitas', 'Piutang Bank', 'Lainnya'
+    ];
 
     const handleManualTxSubmit = (e) => {
         e.preventDefault();
@@ -341,6 +350,24 @@ export default function Index({ stats, chartData, filters, bestSellingMenus, rec
                             </select>
                             <InputError message={txErrors.type} className="mt-2" />
                         </div>
+
+                        {txData.type === 'expense' && (
+                            <div>
+                                <InputLabel htmlFor="category" value="Kategori Pengeluaran" />
+                                <select
+                                    id="category"
+                                    className="mt-1 block w-full rounded-xl border-stone-200 focus:border-indigo-500 shadow-sm"
+                                    value={txData.category}
+                                    onChange={(e) => setTxData('category', e.target.value)}
+                                    required
+                                >
+                                    {expenseCategories.map((cat) => (
+                                        <option key={cat} value={cat}>{cat}</option>
+                                    ))}
+                                </select>
+                                <InputError message={txErrors.category} className="mt-2" />
+                            </div>
+                        )}
 
                         <div>
                             <InputLabel htmlFor="amount" value="Jumlah (Rp)" />

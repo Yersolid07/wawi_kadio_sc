@@ -330,6 +330,7 @@ class ReportController extends Controller
     {
         $validated = $request->validate([
             'type' => 'required|in:income,expense',
+            'category' => 'nullable|string|max:255',
             'amount' => 'required|numeric|min:1',
             'description' => 'required|string|max:255',
             'transaction_date' => 'required|date',
@@ -337,7 +338,7 @@ class ReportController extends Controller
 
         FinancialTransaction::create([
             'type' => $validated['type'],
-            'category' => 'manual',
+            'category' => $validated['category'] ?? 'manual',
             'amount' => $validated['amount'],
             'description' => $validated['description'],
             'transaction_date' => $validated['transaction_date'],
