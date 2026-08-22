@@ -80,8 +80,8 @@ class ReservationService
                 $facilityTotal = ($facility->final_price ?? 0) * $days;
             }
 
-            // Total = Facility Cost + (Guest Count * Ticket Price)
-            $total = $facilityTotal + ($ticketPrice * $guestCount);
+            // Total = Facility Cost (Tiket masuk dipisah)
+            $total = $facilityTotal;
         }
 
         return DB::transaction(function () use (&$validated, $total, $days, $userId, $sessionId) {

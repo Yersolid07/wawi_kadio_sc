@@ -78,7 +78,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
         if (['ticket', 'tiket'].includes(item.type?.toLowerCase())) {
             return sum + (itemPrice * item.quantity);
         } else {
-            return sum + itemPrice + (ticketPrice * item.quantity);
+            return sum + itemPrice;
         }
     }, 0);
 
@@ -399,7 +399,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                                             <p className="font-semibold text-sky-600 text-sm mt-1">
                                                 Rp {formatPrice(['ticket', 'tiket'].includes(item.type?.toLowerCase()) 
                                                     ? parseFloat(item.final_price || item.price || item.price_per_day || 0) 
-                                                    : parseFloat(item.final_price || item.price || item.price_per_day || 0) + (ticketPrice * item.quantity))}
+                                                    : parseFloat(item.final_price || item.price || item.price_per_day || 0))}
                                             </p>
                                         </div>
                                         <button
@@ -650,9 +650,7 @@ export default function TicketsIndex({ tickets, activeReservations, user }) {
                             <div>
                                 <h2 className="text-2xl font-black text-slate-800">{selectedFacility.name}</h2>
                                 <p className="text-xl font-bold text-sky-600 mt-1">
-                                    Rp {formatPrice(['ticket', 'tiket'].includes(selectedFacility.type?.toLowerCase()) 
-                                        ? parseFloat(selectedFacility.final_price || selectedFacility.price || selectedFacility.price_per_day || 0) 
-                                        : parseFloat(selectedFacility.final_price || selectedFacility.price || selectedFacility.price_per_day || 0) + (ticketPrice * detailQuantity))}
+                                    Rp {formatPrice(parseFloat(selectedFacility.final_price || selectedFacility.price || selectedFacility.price_per_day || 0))}
                                 </p>
                                 {selectedFacility.description && (
                                     <p className="text-slate-500 mt-3 text-sm leading-relaxed">{selectedFacility.description}</p>
